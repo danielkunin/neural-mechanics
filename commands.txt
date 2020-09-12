@@ -1,0 +1,15 @@
+# LESSONS:
+- Keep flags consistent throughout pipeline.
+- Name three main files by their function? train, extract, visualize?
+- Use args.json file in extract/visualize?
+
+
+
+# Train
+python main.py --epochs=10 --experiment=test --expid=logistic --save-freq=50 --lr=0.001 --weight-decay=0.1
+
+# Extract
+python scripts/extract.py --ckpt_path=Results/test/logistic
+
+# Visualize
+python translation.py --model=logistic --feats_path=Results/test/logistic --eta=0.001 --lamb=0.1 --anchor_freq=50 --stop=9350 --normalize=True --overwrite
