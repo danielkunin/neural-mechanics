@@ -6,7 +6,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from Utils import load
-from Utils import train
+from Utils import optimize
 
 if __name__ == "__main__":
 
@@ -260,7 +260,7 @@ if __name__ == "__main__":
 
     ## Train ##
     print("Training for {} epochs.".format(args.epochs))
-    train.train_eval_loop(
+    optimize.train_eval_loop(
         model,
         loss,
         optimizer,

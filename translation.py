@@ -23,7 +23,7 @@ CACHE_DIR = "."
 def compute_projection(model, feats_dir, stop, anchor_freq, eta, lamb, normalize=False):
     steps = np.arange(0, stop + anchor_freq, anchor_freq)
     features = helpers.load_weights(
-    	model=model, 
+        model=model, 
         feats_dir=f"{feats_dir}/feats",
         steps=[str(steps[0])],
         all_steps=False
@@ -133,6 +133,10 @@ def main(args=None, axes=None):
             ax.locator_params(axis="x", nbins=10)
             ax.set_xlabel("timestep")
             ax.set_ylabel(f"projection")
+            if ARGS.ylim:
+                ax.set_ylim(-1.1,1.1)
+            if ARGS.semilog:
+                ax.set_yscale("log")
 
     if ARGS.use_tex:
         axes.set_xlabel("timestep")
