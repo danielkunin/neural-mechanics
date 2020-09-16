@@ -24,7 +24,7 @@ if __name__ == "__main__":
         "--data-dir",
         type=str,
         default="Data",
-        help="Where to store the datasets to be downloaded",
+        help="Directory to store the datasets to be downloaded",
     )
     training_args.add_argument(
         "--model",
@@ -88,7 +88,7 @@ if __name__ == "__main__":
         "--optimizer",
         type=str,
         default="sgd",
-        choices=["sgd", "momentum", "adam", "rms"],
+        choices=["custom_sgd", "sgd", "momentum", "adam", "rms"],
         help="optimizer (default: sgd)",
     )
     training_args.add_argument(
@@ -138,10 +138,10 @@ if __name__ == "__main__":
         "--expid", type=str, default="", help='name used to save results (default: "")'
     )
     experiment_args.add_argument(
-        "--save-path",
+        "--save-dir",
         type=str,
         default="Results",
-        help='folder within results directory to save checkpoints (default: "Results")',
+        help='Directory to save checkpoints and features (default: "Results")',
     )
     experiment_args.add_argument(
         "--save-freq",
@@ -178,13 +178,13 @@ if __name__ == "__main__":
     if args.expid == "":
         print("WARNING: this experiment is not being saved.")
         setattr(args, "save", False)
+        exp_path = None
     else:
-        save_path = f"{args.save_path}/{args.experiment}/{args.expid}"
-        setattr(args, "save_path", save_path)
+        exp_path = f"{args.save_dir}/{args.experiment}/{args.expid}"
         setattr(args, "save", True)
         try:
-            os.makedirs(args.save_path)
-            os.makedirs(f"{args.save_path}/ckpt")
+            os.makedirs(exp_path)
+            os.makedirs(f"{exp_path}/ckpt")
         except FileExistsError:
             val = ""
             while val not in ["yes", "no"]:
@@ -195,13 +195,13 @@ if __name__ == "__main__":
             if val == "no":
                 quit()
             else:
-                shutil.rmtree(args.save_path)
-                os.makedirs(args.save_path)
-                os.makedirs(f"{args.save_path}/ckpt")
+                shutil.rmtree(exp_path)
+                os.makedirs(exp_path)
+                os.makedirs(f"{exp_path}/ckpt")
 
     ## Save Args ##
     if args.save:
-        with open(args.save_path + "/args.json", "w") as f:
+        with open(exp_path + "/args.json", "w") as f:
             json.dump(args.__dict__, f, sort_keys=True, indent=4)
 
     
@@ -273,6 +273,6 @@ if __name__ == "__main__":
         args.save,
         save_steps=save_steps,
         save_freq=args.save_freq,
-        save_path=args.save_path,
+        path=exp_path,
     )
 

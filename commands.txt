@@ -6,10 +6,10 @@
 
 
 # Train
-python main.py --epochs=10 --experiment=test --expid=logistic --save-freq=50 --lr=0.001 --weight-decay=0.1
+python train.py --epochs=10 --experiment=test --expid=logistic --save-freq=50 --lr=0.001 --weight-decay=0.1
 
 # Extract
-python scripts/extract.py --ckpt_path=Results/test/logistic
+python extract.py --ckpt_path=Results/test/logistic
 
 # Visualize
-python translation.py --model=logistic --feats_path=Results/test/logistic --eta=0.001 --lamb=0.1 --anchor_freq=50 --stop=9350 --normalize=True --overwrite
+python translation.py --model=resnet18 --feats_path=Results/test/resnet --eta=0.001 --lamb=0.1 --anchor_freq=50 --stop=9350 --normalize=True --overwrite

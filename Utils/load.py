@@ -7,6 +7,7 @@ from Models import tinyimagenet_vgg
 from Models import tinyimagenet_resnet
 from Models import imagenet_vgg
 from Models import imagenet_resnet
+from Optimizer import custom_optim
 from Utils import custom_datasets
 
 
@@ -177,9 +178,10 @@ def model(model_architecture, model_class):
 
 def optimizer(optimizer):
     optimizers = {
-        "adam": (optim.Adam, {}),
+        "custom_sgd": (custom_optim.SGD, {"momentum": 0.0, "nesterov": False}),
         "sgd": (optim.SGD, {"momentum": 0.0, "nesterov": False}),
         "momentum": (optim.SGD, {"momentum": 0.9, "nesterov": True}),
+        "adam": (optim.Adam, {}),
         "rms": (optim.RMSprop, {}),
     }
     return optimizers[optimizer]

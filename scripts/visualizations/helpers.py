@@ -85,6 +85,39 @@ def load_weights(model, feats_dir, steps, all_steps=False):
     return weights
 
 
+def load_optimizer(model, feats_dir, steps, all_steps=False):
+    """
+    layers: is the output keys for the layer weights, or computed quantities
+    keys: is the actual keys to be read from the h5 file
+    weights: is the output dict
+    """
+
+    def step_from_path(p):
+        step_str = p.split("/")[-1].split(".h5")[0].split("step")[-1]
+        return int(step_str)
+
+    if all_steps:
+        glob_path = f"{feats_dir}/step*.h5"
+        pths = glob.glob(glob_path)
+        steps = [step_from_path(path) for path in pths]
+
+    layers = PT_MODELS[model]["layers"]
+    keys = PT_MODELS[model]["keys"]
+
+    weights = {layer: {} for layer in layers}
+
+    for step in steps:
+        pth = f"{feats_dir}/step{step}.h5"
+        
+        if os.path.isfile(pth):
+            feature_dict = file_utils.get_features(
+                pth, group_name="optimizer", keys=keys, out_keys=layers,
+            )
+            for layer in layers:
+                weights[layer][f"step_{step}"] = feature_dict[layer]
+    return weights
+
+
 def get_default_plot_parser():
     parser = argparse.ArgumentParser()
 

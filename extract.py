@@ -34,16 +34,23 @@ def main():
             print(f"\t{out_filename} already exists, skipping")
             continue
 
+        checkpoint = torch.load(in_filename, map_location=device)
         weights = {}
         biases = {}
-        checkpoint = torch.load(in_filename, map_location=device)
         for name, tensor in checkpoint["model_state_dict"].items():
             if "weight" in name:
                 weights[name] = tensor.cpu().numpy()
             if "bias" in name:
                 biases[name] = tensor.cpu().numpy()
 
-        dd.io.save(out_filename, {"weights": weights, "biases": biases})
+        optimizer = {}
+        # this assumes the same order of model state dict as optimize state dict
+        param_names = [name for name in checkpoint["model_state_dict"].keys() if ("weight" in name or "bias" in name)]
+        for name, buffers in zip(param_names, checkpoint["optimizer_state_dict"]["state"].values()):
+            if "weight" in name and 'integral_buffer' in buffers.keys():
+                optimizer[name] = buffers['integral_buffer'].cpu().numpy()
+
+        dd.io.save(out_filename, {"weights": weights, "biases": biases, "optimizer": optimizer})
 
 
 if __name__ == "__main__":
