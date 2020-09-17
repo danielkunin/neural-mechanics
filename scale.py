@@ -49,10 +49,10 @@ def compute_projection(model, feats_dir, stop, anchor_freq, eta, lamb):
 
         for layer in layers[0:-1]:
             Wl_t = features[layer][f"step_{steps[0]}"]
-            theoretical[layer][step] = numer / denom * np.linalg.norm(Wl_t)**2 
+            theoretical[layer][step] = numer / denom * np.sum(Wl_t**2, axis=1)
             if i > 0:
                 gl_t_squared = optimizer[layer][f"step_{step}"]
-                theoretical[layer][step] += 2 / denom * eta * np.exp(alpha_p * t) * np.sum(gl_t_squared)
+                theoretical[layer][step] += 2 / denom * eta * np.exp(alpha_p * t) * np.sum(gl_t_squared, axis=1)
 
     empirical = {layer: {} for layer in layers[0:-1]}
     for i in range(len(steps)):
@@ -66,7 +66,7 @@ def compute_projection(model, feats_dir, stop, anchor_freq, eta, lamb):
         if f"step_{step}" in features[layers[0]].keys():
             for layer in layers[0:-1]:
                 Wl_t = features[layer][f"step_{step}"]
-                empirical[layer][step] = np.linalg.norm(Wl_t)**2
+                empirical[layer][step] = np.sum(Wl_t**2, axis=1)
         else:
             print("Feautres don't exist.")
 
@@ -104,22 +104,30 @@ def main(args=None, axes=None):
     print(">> Plotting...")
     plt.rcParams["font.size"] = 18
     fig, axes = plt.subplots(figsize=(15, 15))
-    for layer in empirical.keys():
+
+    if args.layer_list == None:
+        layers = list(empirical.keys())
+    else:
+        layers = [list(empirical.keys())[i] for i in args.layer_list]
+
+    for layer in layers:
         timesteps = list(empirical[layer].keys())
         norm = list(empirical[layer].values())
+        if args.layer_wise:
+            norm = [np.sum(i) for i in norm]
         axes.plot(
             timesteps,
             norm,
-            # color=plt.cm.tab10(int(layer.split("conv")[1]) - 1),
-            label=layer,
+            color=plt.cm.tab10(int(layer.split("fc")[1]) - 1),
         )
-    for layer in theoretical.keys():
+    for layer in layers:
         timesteps = list(theoretical[layer].keys())
         norm = list(theoretical[layer].values())
+        if args.layer_wise:
+            norm = [np.sum(i) for i in norm]
         axes.plot(
             timesteps,
             norm,
-            # color=plt.cm.tab10(int(layer.split("conv")[1]) - 1),
             color='k',
             ls='--',
         )
@@ -157,6 +165,21 @@ def extend_parser(parser):
     )
     parser.add_argument(
         "--lamb", type=float, help="regularization constant", required=True,
+    )
+    parser.add_argument(
+        "--layer-list",
+        type=int,
+        help="list of layer indices to plot",
+        nargs='+',
+        default=None,
+        required=False,
+    )
+    parser.add_argument(
+        "--layer-wise",
+        type=bool,
+        help="whether to plot per neuron",
+        default=False,
+        required=False,
     )
     parser.add_argument(
         "--semilog",
