@@ -30,7 +30,7 @@ def compute_projection(model, feats_dir, stop, anchor_freq, eta, lamb):
     )
     layers = list(features.keys())
 
-    theoretical = {layer: {} for layer in layers[0:-1]}
+    theoretical = {layer: {} for layer in layers[1:]}
     for i in range(len(steps)):
         step = steps[i]
         t = eta * step
@@ -47,14 +47,21 @@ def compute_projection(model, feats_dir, stop, anchor_freq, eta, lamb):
                 all_steps=False
             )
 
-        for layer in layers[0:-1]:
+        W0_t = features[layers[0]][f"step_{steps[0]}"]
+        in_norm = numer / denom * np.linalg.norm(W0_t)**2 
+        if i > 0:
+            gl_t_squared = optimizer[layers[0]][f"step_{step}"]
+            in_norm += 2 / denom * eta * np.exp(alpha_p * t) * np.sum(gl_t_squared)
+        for layer in layers[1:]:
             Wl_t = features[layer][f"step_{steps[0]}"]
-            theoretical[layer][step] = numer / denom * np.linalg.norm(Wl_t)**2 
+            out_norm = numer / denom * np.linalg.norm(Wl_t)**2 
             if i > 0:
                 gl_t_squared = optimizer[layer][f"step_{step}"]
-                theoretical[layer][step] += 2 / denom * eta * np.exp(alpha_p * t) * np.sum(gl_t_squared)
+                out_norm += 2 / denom * eta * np.exp(alpha_p * t) * np.sum(gl_t_squared)
+            theoretical[layer][step] = out_norm - in_norm
+            in_norm = out_norm
 
-    empirical = {layer: {} for layer in layers[0:-1]}
+    empirical = {layer: {} for layer in layers[1:]}
     for i in range(len(steps)):
         step = steps[i]
         features = helpers.load_weights(
@@ -64,9 +71,13 @@ def compute_projection(model, feats_dir, stop, anchor_freq, eta, lamb):
             all_steps=False
         )
         if f"step_{step}" in features[layers[0]].keys():
-            for layer in layers[0:-1]:
+            W0_t = features[layers[0]][f"step_{step}"]
+            in_norm = np.linalg.norm(W0_t)**2
+            for layer in layers[1:]:
                 Wl_t = features[layer][f"step_{step}"]
-                empirical[layer][step] = np.linalg.norm(Wl_t)**2
+                out_norm = np.linalg.norm(Wl_t)**2
+                empirical[layer][step] = out_norm - in_norm
+                in_norm = out_norm
         else:
             print("Feautres don't exist.")
 
@@ -126,7 +137,7 @@ def main(args=None, axes=None):
     axes.locator_params(axis="x", nbins=10)
     axes.legend()
     axes.set_xlabel("timestep")
-    axes.set_ylabel("squared layer norm")
+    axes.set_ylabel("norm")
     axes.title.set_text(
         f"Norm for scale parameters across time"
     )
@@ -134,7 +145,7 @@ def main(args=None, axes=None):
 
     if ARGS.use_tex:
         axes.set_xlabel("timestep")
-        axes.set_ylabel("squared layer norm")
+        axes.set_ylabel("norm")
         axes.set_title(
             r"Norm for scale parameters across time"
         )
@@ -142,7 +153,7 @@ def main(args=None, axes=None):
     # save plot
     plot_path = f"{SAVE_BASE}/{ARGS.feats_path}/img"
     utils.makedir_quiet(plot_path)
-    plot_file = f"{plot_path}/scale{ARGS.image_suffix}.pdf"
+    plot_file = f"{plot_path}/inversion{ARGS.image_suffix}.pdf"
     plt.savefig(plot_file)
     plt.show()
     print(f">> Saving figure to {plot_file}")
