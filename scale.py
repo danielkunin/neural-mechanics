@@ -30,9 +30,6 @@ def compute_projection(model, feats_dir, stop, anchor_freq, eta, lamb):
     )
     layers = list(features.keys())
 
-    # integral_p = {layer: 0 for layer in layers[0:-1]}
-    # integral_m = {layer: 0 for layer in layers[0:-1]}
-
     theoretical = {layer: {} for layer in layers[0:-1]}
     for i in range(len(steps)):
         step = steps[i]
@@ -50,19 +47,12 @@ def compute_projection(model, feats_dir, stop, anchor_freq, eta, lamb):
                 all_steps=False
             )
 
-
         for layer in layers[0:-1]:
             Wl_t = features[layer][f"step_{steps[0]}"]
             theoretical[layer][step] = numer / denom * np.linalg.norm(Wl_t)**2 
-            # if i > 0:
-            #     gl_t_squared = optimizer[layer][f"step_{step}"]
-            #     integral_p[layer] += eta * (step - steps[i-1]) * np.exp(-alpha_p * t) * np.sum(gl_t_squared)
-            #     integral_m[layer] += eta * (step - steps[i-1]) * np.exp(-alpha_m * t) * np.sum(gl_t_squared)
-            #     theoretical[layer][step] += 2 / denom * (np.exp(alpha_p * t) * integral_p[layer] - np.exp(alpha_m * t) * integral_m[layer])
             if i > 0:
                 gl_t_squared = optimizer[layer][f"step_{step}"]
-                theoretical[layer][step] += 2 / denom * eta * np.sum(gl_t_squared)
-
+                theoretical[layer][step] += 2 / denom * eta * np.exp(alpha_p * t) * np.sum(gl_t_squared)
 
     empirical = {layer: {} for layer in layers[0:-1]}
     for i in range(len(steps)):

@@ -62,10 +62,6 @@ class SGD(Optimizer):
         if weight_decay < 0.0:
             raise ValueError("Invalid weight_decay value: {}".format(weight_decay))
 
-        # alpha_p = (-1 + np.sqrt(1 - 4 * lr * weight_decay)) / lr
-        # alpha_m = (-1 - np.sqrt(1 - 4 * lr * weight_decay)) / lr
-        # time = 0
-
         defaults = dict(lr=lr, momentum=momentum, dampening=dampening,
                         weight_decay=weight_decay, nesterov=nesterov)
                         # alpha_p=alpha_p, alpha_m=alpha_m, time=time)
@@ -97,11 +93,6 @@ class SGD(Optimizer):
             momentum = group['momentum']
             dampening = group['dampening']
             nesterov = group['nesterov']
-            
-            # alpha_p = group['alpha_p']
-            # alpha_m = group['alpha_m']
-            # group['time'] += lr
-            # time = group['time']
 
             for p in group['params']:
                 if p.grad is None:
@@ -125,23 +116,12 @@ class SGD(Optimizer):
 
                 # compute integral
                 param_state = self.state[p]
-                if 'integral_buffer' not in param_state:
+                if 'step' not in param_state:
+                    param_state['step'] = 0
                     param_state['integral_buffer'] = torch.zeros_like(d_p)
                 else:
-                    param_state['integral_buffer'].add_(d_p.square())
-
-
-                # param_state = self.state[p]
-                # if 'integral_buffer_p' not in param_state:
-                #     param_state['integral_buffer_p'] = torch.zeros_like(d_p)
-                # else:
-                #     buff = param_state['integral_buffer_p']
-                #     buff.add_(d_p.square(), alpha=1.0)#np.exp(-alpha_p * time))
-                # if 'integral_buffer_m' not in param_state:
-                #     param_state['integral_buffer_m'] = torch.zeros_like(d_p)
-                # else:
-                #     buff = param_state['integral_buffer_m']
-                #     buff.add_(d_p.square(), alpha=1.0)#np.exp(-alpha_m * time))
-                # print(param_state['integral_buffer_m'])
+                    alpha_p = (-1 + np.sqrt(1 - 4 * lr * weight_decay)) / lr
+                    param_state['step'] += 1
+                    param_state['integral_buffer'].add_(np.exp(-alpha_p * lr * param_state['step']) * d_p.square())
 
         return loss
