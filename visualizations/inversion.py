@@ -14,23 +14,23 @@ import numpy as np
 import deepdish as dd
 
 # convergenets imports
-from scripts.visualizations import utils
-from scripts.visualizations import helpers
+import utils
 SAVE_BASE = "."
 CACHE_DIR = "."
 
 
 def compute_projection(model, feats_dir, stop, anchor_freq, eta, lamb):
     steps = np.arange(0, stop, anchor_freq)
-    features = helpers.load_weights(
+    features = utils.load_features(
         model=model, 
         feats_dir=f"{feats_dir}/feats",
+        group="weights",
         steps=[str(steps[0])],
         all_steps=False
     )
     layers = list(features.keys())
 
-    theoretical = {layer: {} for layer in layers[0:-1]}
+    theoretical = {layer: {} for layer in layers[1:]}
     for i in range(len(steps)):
         step = steps[i]
         t = eta * step
@@ -40,33 +40,46 @@ def compute_projection(model, feats_dir, stop, anchor_freq, eta, lamb):
         denom = (alpha_p - alpha_m)
 
         if i > 0:
-            optimizer = helpers.load_optimizer(
+            optimizer = utils.load_features(
                 model=model, 
                 feats_dir=f"{feats_dir}/feats",
+                group="optimizer",
                 steps=[str(step)],
                 all_steps=False
             )
 
-        for layer in layers[0:-1]:
+        W0_t = features[layers[0]][f"step_{steps[0]}"]
+        in_norm = numer / denom * np.linalg.norm(W0_t)**2 
+        if i > 0:
+            gl_t_squared = optimizer[layers[0]][f"step_{step}"]
+            in_norm += 2 / denom * eta * np.exp(alpha_p * t) * np.sum(gl_t_squared)
+        for layer in layers[1:]:
             Wl_t = features[layer][f"step_{steps[0]}"]
-            theoretical[layer][step] = numer / denom * np.sum(Wl_t**2, axis=1)
+            out_norm = numer / denom * np.linalg.norm(Wl_t)**2 
             if i > 0:
                 gl_t_squared = optimizer[layer][f"step_{step}"]
-                theoretical[layer][step] += 2 / denom * eta * np.exp(alpha_p * t) * np.sum(gl_t_squared, axis=1)
+                out_norm += 2 / denom * eta * np.exp(alpha_p * t) * np.sum(gl_t_squared)
+            theoretical[layer][step] = out_norm - in_norm
+            in_norm = out_norm
 
-    empirical = {layer: {} for layer in layers[0:-1]}
+    empirical = {layer: {} for layer in layers[1:]}
     for i in range(len(steps)):
         step = steps[i]
-        features = helpers.load_weights(
+        features = utils.load_features(
             model=model, 
             feats_dir=f"{feats_dir}/feats",
+            group="weights"
             steps=[str(step)],
             all_steps=False
         )
         if f"step_{step}" in features[layers[0]].keys():
-            for layer in layers[0:-1]:
+            W0_t = features[layers[0]][f"step_{step}"]
+            in_norm = np.linalg.norm(W0_t)**2
+            for layer in layers[1:]:
                 Wl_t = features[layer][f"step_{step}"]
-                empirical[layer][step] = np.sum(Wl_t**2, axis=1)
+                out_norm = np.linalg.norm(Wl_t)**2
+                empirical[layer][step] = out_norm - in_norm
+                in_norm = out_norm
         else:
             print("Feautres don't exist.")
 
@@ -103,38 +116,32 @@ def main(args=None, axes=None):
     # plot for each layer
     print(">> Plotting...")
     plt.rcParams["font.size"] = 18
-    fig, axes = plt.subplots(figsize=(15, 15))
-
-    if args.layer_list == None:
-        layers = list(empirical.keys())
-    else:
-        layers = [list(empirical.keys())[i] for i in args.layer_list]
-
-    for layer in layers:
+    if axes is None:
+        fig, axes = plt.subplots(figsize=(15, 15))
+        
+    for layer in empirical.keys():
         timesteps = list(empirical[layer].keys())
         norm = list(empirical[layer].values())
-        if args.layer_wise:
-            norm = [np.sum(i) for i in norm]
         axes.plot(
             timesteps,
             norm,
-            color=plt.cm.tab10(int(layer.split("fc")[1]) - 1),
+            # color=plt.cm.tab10(int(layer.split("conv")[1]) - 1),
+            label=layer,
         )
-    for layer in layers:
+    for layer in theoretical.keys():
         timesteps = list(theoretical[layer].keys())
         norm = list(theoretical[layer].values())
-        if args.layer_wise:
-            norm = [np.sum(i) for i in norm]
         axes.plot(
             timesteps,
             norm,
+            # color=plt.cm.tab10(int(layer.split("conv")[1]) - 1),
             color='k',
             ls='--',
         )
     axes.locator_params(axis="x", nbins=10)
     axes.legend()
     axes.set_xlabel("timestep")
-    axes.set_ylabel("squared layer norm")
+    axes.set_ylabel("norm")
     axes.title.set_text(
         f"Norm for scale parameters across time"
     )
@@ -142,7 +149,7 @@ def main(args=None, axes=None):
 
     if ARGS.use_tex:
         axes.set_xlabel("timestep")
-        axes.set_ylabel("squared layer norm")
+        axes.set_ylabel("norm")
         axes.set_title(
             r"Norm for scale parameters across time"
         )
@@ -150,7 +157,7 @@ def main(args=None, axes=None):
     # save plot
     plot_path = f"{SAVE_BASE}/{ARGS.feats_path}/img"
     utils.makedir_quiet(plot_path)
-    plot_file = f"{plot_path}/scale{ARGS.image_suffix}.pdf"
+    plot_file = f"{plot_path}/inversion{ARGS.image_suffix}.pdf"
     plt.savefig(plot_file)
     plt.show()
     print(f">> Saving figure to {plot_file}")
@@ -165,21 +172,6 @@ def extend_parser(parser):
     )
     parser.add_argument(
         "--lamb", type=float, help="regularization constant", required=True,
-    )
-    parser.add_argument(
-        "--layer-list",
-        type=int,
-        help="list of layer indices to plot",
-        nargs='+',
-        default=None,
-        required=False,
-    )
-    parser.add_argument(
-        "--layer-wise",
-        type=bool,
-        help="whether to plot per neuron",
-        default=False,
-        required=False,
     )
     parser.add_argument(
         "--semilog",
@@ -199,7 +191,7 @@ def extend_parser(parser):
 
 
 if __name__ == "__main__":
-    parser = helpers.get_default_plot_parser()
+    parser = utils.get_default_plot_parser()
     parser = extend_parser(parser)
     ARGS, _ = parser.parse_known_args()
 

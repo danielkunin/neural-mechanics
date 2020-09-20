@@ -14,72 +14,55 @@ import numpy as np
 import deepdish as dd
 
 # convergenets imports
-from scripts.visualizations import utils
-from scripts.visualizations import helpers
+import utils
 SAVE_BASE = "."
 CACHE_DIR = "."
 
 
-def compute_projection(model, feats_dir, stop, anchor_freq, eta, lamb):
-    steps = np.arange(0, stop, anchor_freq)
-    features = helpers.load_weights(
+def compute_projection(model, feats_dir, stop, anchor_freq, eta, lamb, normalize=False):
+    steps = np.arange(0, stop + anchor_freq, anchor_freq)
+    features = utils.load_features(
         model=model, 
         feats_dir=f"{feats_dir}/feats",
+        group="weights",
         steps=[str(steps[0])],
         all_steps=False
     )
     layers = list(features.keys())
+    Wl_0 = features[layers[-1]][f"step_{steps[0]}"]
 
-    theoretical = {layer: {} for layer in layers[1:]}
+    theoretical = []
     for i in range(len(steps)):
-        step = steps[i]
-        t = eta * step
-        alpha_p = (-1 + np.sqrt(1 - 4 * eta * lamb)) / eta 
-        alpha_m = (-1 - np.sqrt(1 - 4 * eta * lamb)) / eta 
+        t = 1.0 * eta * steps[i]
+        alpha_p = (-1 + np.sqrt(1 - 2 * eta * lamb)) / eta 
+        alpha_m = (-1 - np.sqrt(1 - 2 * eta * lamb)) / eta 
         numer = (alpha_p * np.exp(alpha_m * t) - alpha_m * np.exp(alpha_p * t))
         denom = (alpha_p - alpha_m)
+        if normalize:
+            theoretical.append(numer / denom)
+            #theoretical.append(np.exp(-lamb * t))
+        else:
+            theoretical.append(numer / denom * np.sum(Wl_0, axis=0))
+            # theoretical.append(np.exp(-lamb * t) * np.sum(Wl_0, axis=0))
 
-        if i > 0:
-            optimizer = helpers.load_optimizer(
-                model=model, 
-                feats_dir=f"{feats_dir}/feats",
-                steps=[str(step)],
-                all_steps=False
-            )
-
-        W0_t = features[layers[0]][f"step_{steps[0]}"]
-        in_norm = numer / denom * np.linalg.norm(W0_t)**2 
-        if i > 0:
-            gl_t_squared = optimizer[layers[0]][f"step_{step}"]
-            in_norm += 2 / denom * eta * np.exp(alpha_p * t) * np.sum(gl_t_squared)
-        for layer in layers[1:]:
-            Wl_t = features[layer][f"step_{steps[0]}"]
-            out_norm = numer / denom * np.linalg.norm(Wl_t)**2 
-            if i > 0:
-                gl_t_squared = optimizer[layer][f"step_{step}"]
-                out_norm += 2 / denom * eta * np.exp(alpha_p * t) * np.sum(gl_t_squared)
-            theoretical[layer][step] = out_norm - in_norm
-            in_norm = out_norm
-
-    empirical = {layer: {} for layer in layers[1:]}
+    empirical = []
     for i in range(len(steps)):
         step = steps[i]
-        features = helpers.load_weights(
+        features = utils.load_features(
             model=model, 
             feats_dir=f"{feats_dir}/feats",
+            group="weights",
             steps=[str(step)],
             all_steps=False
         )
         if f"step_{step}" in features[layers[0]].keys():
-            W0_t = features[layers[0]][f"step_{step}"]
-            in_norm = np.linalg.norm(W0_t)**2
-            for layer in layers[1:]:
-                Wl_t = features[layer][f"step_{step}"]
-                out_norm = np.linalg.norm(Wl_t)**2
-                empirical[layer][step] = out_norm - in_norm
-                in_norm = out_norm
+            Wl_t = features[layers[-1]][f"step_{step}"]
+            if normalize:
+                empirical.append(np.sum(Wl_t, axis=0) / np.sum(Wl_0, axis=0))
+            else:
+                empirical.append(np.sum(Wl_t, axis=0))
         else:
-            print("Feautres don't exist.")
+            print(f"Feautres for step_{step} don't exist.")
 
     return (steps, empirical, theoretical)
 
@@ -94,10 +77,10 @@ def main(args=None, axes=None):
     print(">> Loading weights...")
     cache_path = f"{CACHE_DIR}/{ARGS.feats_path}/cache"
     utils.makedir_quiet(cache_path)
-    cache_file = f"{cache_path}/scale.h5"
+    cache_file = f"{cache_path}/translation.h5"
 
     if os.path.isfile(cache_file) and not ARGS.overwrite:
-        print("\t\t Loading from cache...")
+        print("\t Loading from cache...")
         steps, empirical, theoretical = dd.io.load(cache_file)
     else:
         steps, empirical, theoretical = compute_projection(
@@ -107,58 +90,72 @@ def main(args=None, axes=None):
             anchor_freq=ARGS.anchor_freq,
             eta=ARGS.eta,
             lamb=ARGS.lamb,
+            normalize=ARGS.normalize,
         )
-        print(f"caching features to {cache_file}")
+        print(f"\t Caching features to {cache_file}")
         dd.io.save(cache_file, (steps, empirical, theoretical))
 
     # plot for each layer
     print(">> Plotting...")
     plt.rcParams["font.size"] = 18
-    fig, axes = plt.subplots(figsize=(15, 15))
-    for layer in empirical.keys():
-        timesteps = list(empirical[layer].keys())
-        norm = list(empirical[layer].values())
+    if ARGS.normalize:
+        fig, axes = plt.subplots(figsize=(15, 15))
+        axes.plot(steps[0 : len(empirical)], empirical, c="r", ls="-", alpha=0.1)
         axes.plot(
-            timesteps,
-            norm,
-            # color=plt.cm.tab10(int(layer.split("conv")[1]) - 1),
-            label=layer,
+            steps[0 : len(theoretical)],
+            theoretical,
+            c="b",
+            lw=3,
+            ls="--",
+            label="theoretical",
         )
-    for layer in theoretical.keys():
-        timesteps = list(theoretical[layer].keys())
-        norm = list(theoretical[layer].values())
-        axes.plot(
-            timesteps,
-            norm,
-            # color=plt.cm.tab10(int(layer.split("conv")[1]) - 1),
-            color='k',
-            ls='--',
-        )
-    axes.locator_params(axis="x", nbins=10)
-    axes.legend()
-    axes.set_xlabel("timestep")
-    axes.set_ylabel("norm")
-    axes.title.set_text(
-        f"Norm for scale parameters across time"
-    )
 
+        axes.locator_params(axis="x", nbins=10)
+        axes.legend()
+        axes.set_xlabel("timestep")
+        axes.set_ylabel(f"projection")
+        if ARGS.ylim:
+            axes.set_ylim(0.0,0.01)
+        if ARGS.semilog:
+            axes.set_yscale("log")
+        axes.title.set_text(
+            f"Projection for translational parameters across time"
+        )
+    else:
+        fig, axes = plt.subplots(1, 2, sharex=True, sharey=True, figsize=(30, 15))
+        axes[0].plot(steps[0 : len(empirical)], empirical, c="r", ls="-", alpha=0.5)
+        axes[1].plot(
+            steps[0 : len(theoretical)], theoretical, c="b", ls="--", alpha=0.5
+        )
+
+        axes[0].title.set_text("Empirical")
+        axes[1].title.set_text("Theoretical")
+        for ax in axes:
+            ax.locator_params(axis="x", nbins=10)
+            ax.set_xlabel("timestep")
+            ax.set_ylabel(f"projection")
+            if ARGS.ylim:
+                ax.set_ylim(-1.1,1.1)
+            if ARGS.semilog:
+                ax.set_yscale("log")
 
     if ARGS.use_tex:
         axes.set_xlabel("timestep")
-        axes.set_ylabel("norm")
+        axes.set_ylabel(r"$\langle W\mathbb{1}\rangle$")
         axes.set_title(
-            r"Norm for scale parameters across time"
+            r"Projection for translational parameters across time"
         )
-    
+
     # save plot
     plot_path = f"{SAVE_BASE}/{ARGS.feats_path}/img"
     utils.makedir_quiet(plot_path)
-    plot_file = f"{plot_path}/inversion{ARGS.image_suffix}.pdf"
+    plot_file = f"{plot_path}/translation{ARGS.image_suffix}.pdf"
     plt.savefig(plot_file)
     plt.show()
     print(f">> Saving figure to {plot_file}")
 
 
+# plot-specific args
 def extend_parser(parser):
     parser.add_argument(
         "--eta",
@@ -168,6 +165,13 @@ def extend_parser(parser):
     )
     parser.add_argument(
         "--lamb", type=float, help="regularization constant", required=True,
+    )
+    parser.add_argument(
+        "--normalize",
+        type=bool,
+        help="whether to normalize by initial condition",
+        default=False,
+        required=False,
     )
     parser.add_argument(
         "--semilog",
@@ -187,13 +191,12 @@ def extend_parser(parser):
 
 
 if __name__ == "__main__":
-    parser = helpers.get_default_plot_parser()
+    parser = utils.get_default_plot_parser()
     parser = extend_parser(parser)
     ARGS, _ = parser.parse_known_args()
 
     if ARGS.use_tex:
         from matplotlib import rc
-
         # For TeX usage in titles
         rc("font", **{"family": "sans-serif", "sans-serif": ["Helvetica"]})
         ## for Palatino and other serif fonts use:
