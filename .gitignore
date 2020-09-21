@@ -138,7 +138,7 @@ hyperopt/.test.txt
 hyperopt/logs/*.txt
 
 # data
-Data/
+data/
 
 # experiments
-Results/
+results/
