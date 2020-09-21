@@ -122,6 +122,6 @@ class SGD(Optimizer):
                 else:
                     alpha_p = (-1 + np.sqrt(1 - 4 * lr * weight_decay)) / lr
                     param_state['step'] += 1
-                    param_state['integral_buffer'].add_(np.exp(-alpha_p * lr * param_state['step']) * d_p.square())
+                    param_state['integral_buffer'].add_(np.exp(-alpha_p * lr * param_state['step']) * d_p**2)
 
         return loss
