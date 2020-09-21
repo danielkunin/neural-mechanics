@@ -17,6 +17,12 @@ def default():
     parser.add_argument(
         "--gpu", type=int, default="0", help="number of GPU device to use (default: 0)"
     )
+    parser.add_argument(
+        "--overwrite", 
+        dest="overwrite", 
+        action="store_true",
+        default=False
+    )
     return parser
 
 
@@ -160,11 +166,4 @@ def train():
 
 def extract():
     parser = default()
-    extract_args = parser.add_argument_group("extract")
-    extract_args.add_argument(
-        "--overwrite", 
-        dest="overwrite", 
-        action="store_true",
-        default=False
-    )
     return parser

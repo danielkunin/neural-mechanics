@@ -16,24 +16,20 @@ def main():
         setattr(ARGS, "save", False)
         exp_path = None
     else:
-        exp_path = f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}"
         setattr(ARGS, "save", True)
+        exp_path = f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}"
         try:
             os.makedirs(exp_path)
             os.makedirs(f"{exp_path}/ckpt")
         except FileExistsError:
-            val = ""
-            while val not in ["yes", "no"]:
-                val = input(
-                    f"Experiment '{ARGS.experiment}' with expid '{ARGS.expid}' "
-                    "exists.  Overwrite (yes/no)? "
+            if not ARGS.overwrite:
+                print(
+                    "Feature directory exists and no-overwrite specified. Rerun with --overwrite"
                 )
-            if val == "no":
                 quit()
-            else:
-                shutil.rmtree(exp_path)
-                os.makedirs(exp_path)
-                os.makedirs(f"{exp_path}/ckpt")
+            shutil.rmtree(exp_path)
+            os.makedirs(exp_path)
+            os.makedirs(f"{exp_path}/ckpt")
 
     ## Save Args ##
     if ARGS.save:
