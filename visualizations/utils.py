@@ -105,7 +105,10 @@ def in_synapses(W, b=None):
     """
     Computes sum of in synapses to next layer
     """
-    in_sum = np.sum(W, axis=1)
+    if np.ndim(W) == 4:
+        in_sum = np.sum(W, axis=(0,1,2))
+    else:
+        in_sum = np.sum(W, axis=1)
     if b is not None:
         in_sum += b
     return in_sum
@@ -114,7 +117,11 @@ def out_synapses(W, b=None):
     """
     Computes sum of out synapses from last layer
     """
-    return np.sum(W, axis=0)
+    if np.ndim(W) == 4:
+        out_sum = np.sum(W, axis=(0,1,3))
+    else:
+        out_sum = np.sum(W, axis=0)
+    return out_sum
 
 def makedir_quiet(d):
     """
