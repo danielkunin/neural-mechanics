@@ -168,4 +168,4 @@ def extract():
         action="store_true",
         default=False
     )
-    return parsers
+    return parser

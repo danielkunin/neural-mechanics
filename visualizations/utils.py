@@ -19,21 +19,24 @@ PT_MODELS = {
         "layers": ["fc1"],
         "weights": ["1.weight"],
         "biases": ["1.bias"],
-        "optimizer": ["1.weight"],
+        "weight_buffers": ["1.weight"],
+        "bias_buffers": ["1.bias"],
     },
     "fc": {
         "layers": [f"fc{x//2 + 1}" for x in range(1, 12, 2)],
         "weights": [f"{x}.weight" for x in range(1, 12, 2)],
         "biases": [f"{x}.bias" for x in range(1, 12, 2)],
-        "optimizer": [f"{x}.weight" for x in range(1, 12, 2)],
+        "weight_buffers": [f"{x}.weight" for x in range(1, 12, 2)],
+        "bias_buffers": [f"{x}.bias" for x in range(1, 12, 2)],
     },
-    "fc_bn": {
+    "fc-bn": {
         "layers": [f"fc{x//3 + 1}" for x in range(1, 17, 3)],
         "weights": [f"{x}.weight" for x in range(1, 17, 3)],
         "biases": [f"{x}.bias" for x in range(1, 17, 3)],
-        "optimizer": [f"{x}.weight" for x in range(1, 17, 3)],
+        "weight_buffers": [f"{x}.weight" for x in range(1, 17, 3)],
+        "bias_buffers": [f"{x}.bias" for x in range(1, 17, 3)],
     },
-    "res18_bn": {
+    "resnet18": {
         "layers": [f"conv{x}" for x in range(1, 19, 1)],
         "weights": [
             "conv1.0.weight",
@@ -97,6 +100,21 @@ PT_MODELS = {
         ],
     },
 }
+
+def in_synapses(W, b=None):
+    """
+    Computes sum of in synapses to next layer
+    """
+    in_sum = np.sum(W, axis=1)
+    if b is not None:
+        in_sum += b
+    return in_sum
+
+def out_synapses(W, b=None):
+    """
+    Computes sum of out synapses from last layer
+    """
+    return np.sum(W, axis=0)
 
 def makedir_quiet(d):
     """

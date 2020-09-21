@@ -6,6 +6,7 @@ import numpy as np
 import deepdish as dd
 import utils
 import glob
+import json
 
 
 def statistics(model, feats_dir, steps, lr, wd):
@@ -33,19 +34,29 @@ def statistics(model, feats_dir, steps, lr, wd):
         denom = (alpha_p - alpha_m)
 
         if i > 0:
-            optimizer = utils.load_features(
+            weight_buffers = utils.load_features(
                 model=model, 
                 feats_dir=feats_dir,
-                group="optimizer",
-                steps=[str(step)]
+                group="weight_buffers",
+                steps=[str(step)],
+                all_steps=False
+            )
+            bias_buffers = utils.load_features(
+                model=model, 
+                feats_dir=feats_dir,
+                group="bias_buffers",
+                steps=[str(step)],
+                all_steps=False
             )
 
         for layer in layers[0:-1]:
             Wl_t = weights[layer][f"step_{steps[0]}"]
-            theoretical[layer][step] = numer / denom * np.sum(Wl_t**2, axis=1)
+            bl_t = biases[layer][f"step_{steps[0]}"]
+            theoretical[layer][step] = numer / denom * utils.in_synapses(Wl_t**2, bl_t**2)
             if i > 0:
-                gl_t_squared = optimizer[layer][f"step_{step}"]
-                theoretical[layer][step] += 2 / denom * lr * np.exp(alpha_p * t) * np.sum(gl_t_squared, axis=1)
+                g_Wl_t = weight_buffers[layer][f"step_{step}"]
+                g_bl_t = bias_buffers[layer][f"step_{step}"]
+                theoretical[layer][step] += 2 / denom * lr * np.exp(alpha_p * t) * utils.in_synapses(g_Wl_t, g_bl_t)
 
     empirical = {layer: {} for layer in layers[0:-1]}
     for i in range(len(steps)):
@@ -56,10 +67,17 @@ def statistics(model, feats_dir, steps, lr, wd):
             group="weights",
             steps=[str(step)]
         )
+        biases = utils.load_features(
+            model=model, 
+            feats_dir=feats_dir,
+            group="biases",
+            steps=[str(step)]
+        )
         if f"step_{step}" in weights[layers[0]].keys():
             for layer in layers[0:-1]:
                 Wl_t = weights[layer][f"step_{step}"]
-                empirical[layer][step] = np.sum(Wl_t**2, axis=1)
+                bl_t = biases[layer][f"step_{step}"]
+                empirical[layer][step] = utils.in_synapses(Wl_t**2, bl_t**2)
         else:
             print("Feautres don't exist.")
 
@@ -74,7 +92,7 @@ def main(args=None, axes=None):
         ARGS.plot_dir = ARGS.save_dir
 
     # load hyperparameters
-    with open(f"{ARGS.plot_dir}/{ARGS.experiment}/{ARGS.expid}/args.json") as f:
+    with open(f"{ARGS.plot_dir}/{ARGS.experiment}/{ARGS.expid}/hyperparameters.json") as f:
         hyperparameters = json.load(f)
 
     # load cache or run statistics

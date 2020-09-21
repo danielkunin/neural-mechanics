@@ -37,7 +37,7 @@ def statistics(model, feats_dir, steps, lr, wd, normalize):
             theoretical.append(numer / denom) 
             # np.exp(-wd * t)s
         else:
-            theoretical.append(numer / denom * np.sum(Wl_0, axis=0)) 
+            theoretical.append(numer / denom * utils.out_synapses(Wl_0)) 
             # np.exp(-wd * t) * np.sum(Wl_0, axis=0)
             
     empirical = []
@@ -77,7 +77,7 @@ def main(args=None, axes=None):
         ARGS.plot_dir = ARGS.save_dir
 
     # load hyperparameters
-    with open(f"{ARGS.plot_dir}/{ARGS.experiment}/{ARGS.expid}/args.json") as f:
+    with open(f"{ARGS.plot_dir}/{ARGS.experiment}/{ARGS.expid}/hyperparameters.json") as f:
         hyperparameters = json.load(f)
 
     # load cache or run statistics

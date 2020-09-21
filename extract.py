@@ -26,7 +26,7 @@ def main():
     for in_filename, step in tqdm(zip(step_names, step_list)):
         out_filename = f"{save_path}/step{step}.h5"
 
-        if os.path.isfile(out_filename) and not FLAGS.overwrite:
+        if os.path.isfile(out_filename) and not ARGS.overwrite:
             print(f"\t{out_filename} already exists, skipping")
             continue
 
