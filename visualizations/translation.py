@@ -96,7 +96,7 @@ def main(args=None, axes=None):
             feats_dir=f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}/feats",
             steps=steps,
             lr=hyperparameters['lr'],
-            wd=hyperparameters['weight_decay'],
+            wd=hyperparameters['wd'],
             normalize=ARGS.normalize,
         )
         print(f"   Caching features to {cache_file}")
