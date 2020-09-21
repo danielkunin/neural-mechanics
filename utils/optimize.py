@@ -31,7 +31,7 @@ def train(
     epoch,
     verbose,
     save,
-    save_freq
+    save_freq,
     path,
     log_interval=10,
 ):
