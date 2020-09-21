@@ -1,5 +1,11 @@
 # Neural Mechanics
 
+# To Do:
+- Condense models and remove model class?
+- Add flag to save +/- k from each checkpoint
+- Handle the PT_MODELS map from pytorch names to labels better?
+- Get the argparser from utils/flags.py in the visualization scripts
+
 
 ## Getting Started
 First clone this repo, then install all dependencies

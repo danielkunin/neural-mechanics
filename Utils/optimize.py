@@ -31,10 +31,9 @@ def train(
     epoch,
     verbose,
     save,
+    save_freq
+    path,
     log_interval=10,
-    save_freq=100,
-    save_steps=None,
-    path=None,
 ):
     model.train()
     total = 0
@@ -67,12 +66,6 @@ def train(
         if save and path is not None and save_freq is not None:
             if curr_step % save_freq == 0:
                 checkpoint(model, optimizer, scheduler, epoch, curr_step, path)
-        if save and path is not None and save_steps is not None:
-            if len(save_steps) > 0 and curr_step == save_steps[0]:
-                save_steps.pop(0)
-                checkpoint(
-                    model, optimizer, scheduler, epoch, curr_step, path, eval_dict
-                )
 
     return total / len(dataloader.dataset)
 
@@ -114,8 +107,7 @@ def train_eval_loop(
     epochs,
     verbose,
     save,
-    save_freq=100,
-    save_steps=None,
+    save_freq=None,
     path=None,
 ):
     test_loss, accuracy1, accuracy5 = eval(model, loss, test_loader, device, verbose)
@@ -139,7 +131,6 @@ def train_eval_loop(
             verbose,
             save,
             save_freq=save_freq,
-            save_steps=save_steps,
             path=path,
         )
         test_loss, accuracy1, accuracy5 = eval(

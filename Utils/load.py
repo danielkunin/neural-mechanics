@@ -2,13 +2,13 @@ import torch
 import numpy as np
 from torchvision import datasets, transforms
 import torch.optim as optim
-from Models import mlp
-from Models import tinyimagenet_vgg
-from Models import tinyimagenet_resnet
-from Models import imagenet_vgg
-from Models import imagenet_resnet
-from Optimizer import custom_optim
-from Utils import custom_datasets
+from models import mlp
+from models import tinyimagenet_vgg
+from models import tinyimagenet_resnet
+from models import imagenet_vgg
+from models import imagenet_resnet
+from optimizers import custom_optim
+from utils import custom_datasets
 
 
 def device(gpu):
@@ -185,11 +185,3 @@ def optimizer(optimizer):
         "rms": (optim.RMSprop, {}),
     }
     return optimizers[optimizer]
-
-
-def save_steps_file(path):
-    save_steps = []
-    with open(path, "rb") as f:
-        for line in f:
-            save_steps.append(int(line))
-    return save_steps

@@ -7,6 +7,8 @@ import h5py
 import glob
 import argparse
 import math
+import socket
+import getpass
 
 # This mapping dict needs to be coded manually for every different model we
 # want to plot for, and is done via manual, interactive checkpoint inspection.
@@ -15,19 +17,65 @@ import math
 PT_MODELS = {
     "logistic": {
         "layers": ["fc1"],
-        "keys": ["1.weight"],
+        "weights": ["1.weight"],
+        "biases": ["1.bias"],
+        "optimizer": ["1.weight"],
     },
     "fc": {
         "layers": [f"fc{x//2 + 1}" for x in range(1, 12, 2)],
-        "keys": [f"{x}.weight" for x in range(1, 12, 2)],
+        "weights": [f"{x}.weight" for x in range(1, 12, 2)],
+        "biases": [f"{x}.bias" for x in range(1, 12, 2)],
+        "optimizer": [f"{x}.weight" for x in range(1, 12, 2)],
     },
     "fc_bn": {
         "layers": [f"fc{x//3 + 1}" for x in range(1, 17, 3)],
-        "keys": [f"{x}.weight" for x in range(1, 17, 3)],
+        "weights": [f"{x}.weight" for x in range(1, 17, 3)],
+        "biases": [f"{x}.bias" for x in range(1, 17, 3)],
+        "optimizer": [f"{x}.weight" for x in range(1, 17, 3)],
     },
     "res18_bn": {
         "layers": [f"conv{x}" for x in range(1, 19, 1)],
-        "keys": [
+        "weights": [
+            "conv1.0.weight",
+            "conv2_x.0.residual_function.0.weight",
+            "conv2_x.0.residual_function.3.weight",
+            "conv2_x.1.residual_function.0.weight",
+            "conv2_x.1.residual_function.3.weight",
+            "conv3_x.0.residual_function.0.weight",
+            "conv3_x.0.residual_function.3.weight",
+            "conv3_x.1.residual_function.0.weight",
+            "conv3_x.1.residual_function.3.weight",
+            "conv4_x.0.residual_function.0.weight",
+            "conv4_x.0.residual_function.3.weight",
+            "conv4_x.1.residual_function.0.weight",
+            "conv4_x.1.residual_function.3.weight",
+            "conv5_x.0.residual_function.0.weight",
+            "conv5_x.0.residual_function.3.weight",
+            "conv5_x.1.residual_function.0.weight",
+            "conv5_x.1.residual_function.3.weight",
+            "fc.weight",
+        ],
+        "biases": [
+            "conv1.0.bias",
+            "conv2_x.0.residual_function.0.bias",
+            "conv2_x.0.residual_function.3.bias",
+            "conv2_x.1.residual_function.0.bias",
+            "conv2_x.1.residual_function.3.bias",
+            "conv3_x.0.residual_function.0.bias",
+            "conv3_x.0.residual_function.3.bias",
+            "conv3_x.1.residual_function.0.bias",
+            "conv3_x.1.residual_function.3.bias",
+            "conv4_x.0.residual_function.0.bias",
+            "conv4_x.0.residual_function.3.bias",
+            "conv4_x.1.residual_function.0.bias",
+            "conv4_x.1.residual_function.3.bias",
+            "conv5_x.0.residual_function.0.bias",
+            "conv5_x.0.residual_function.3.bias",
+            "conv5_x.1.residual_function.0.bias",
+            "conv5_x.1.residual_function.3.bias",
+            "fc.bias",
+        ],
+        "optimizer": [
             "conv1.0.weight",
             "conv2_x.0.residual_function.0.weight",
             "conv2_x.0.residual_function.3.weight",
@@ -65,6 +113,9 @@ def make_iterable(x):
     if not isinstance(x, (list, tuple, np.ndarray)):
         return [x]
     return x
+
+def get_layers(model):
+    return PT_MODELS[model]["layers"]
 
 def get_features(
     validation_path,
@@ -129,7 +180,7 @@ def load_features(model, feats_dir, group, steps, all_steps=False):
         steps = [step_from_path(path) for path in pths]
 
     layers = PT_MODELS[model]["layers"]
-    keys = PT_MODELS[model]["keys"]
+    keys = PT_MODELS[model][group]
 
     feats = {layer: {} for layer in layers}
 
@@ -144,53 +195,50 @@ def load_features(model, feats_dir, group, steps, all_steps=False):
                 feats[layer][f"step_{step}"] = feature_dict[layer]
     return feats
 
-def get_default_plot_parser():
-    parser = argparse.ArgumentParser()
 
+def default_parser():
+    parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--image_suffix",
-        type=str,
-        default="",
-        help="extra image suffix",
-        required=False,
+        "--experiment", type=str, required=True, help='name used to save results (default: "")'
     )
-    # overwrite boolean flag: if True, ignores the fact that file already exists
+    parser.add_argument(
+        "--expid", type=str, required=True, help='name used to save results (default: "")'
+    )
+    parser.add_argument(
+        "--save-dir",
+        type=str,
+        default="results",
+        help='Directory to save checkpoints and features (default: "Results")',
+    )
+    parser.add_argument(
+        "--plot-dir", 
+        type=str, 
+        default=None,
+        help="Directory to save cache and figures (default: 'results')",
+    )
     parser.add_argument(
         "--overwrite", 
         dest="overwrite", 
         action="store_true",
         default=False
     )
-    # use_tex boolean flag: if set, will use tex rendering for matplotlib labels
     parser.add_argument(
-        "--use_tex", 
-        dest="use_tex", 
-        action="store_true", 
+        "--image-suffix",
+        type=str,
+        default="",
+        help="extra image suffix",
+        required=False,
+    )
+    parser.add_argument(
+        "--use-tex", 
+        action="store_true",
+        help="will use tex rendering for matplotlib labels", 
         default=False
     )
     parser.add_argument(
-        "--feats_path", 
-        type=str, 
-        help="feature path for PT checkpoints",
-        default=None
+        "--legend", 
+        action="store_true",
+        help="will add legend", 
+        default=False
     )
-    parser.add_argument(
-        "--model", 
-        type=str, 
-        help="model for PT checkpoints",
-        default=None
-    )
-    parser.add_argument(
-        "--anchor_freq",
-        type=int,
-        help="how many steps per anchor. Will probably differ with different batch sizes",
-        default=5000,
-    )
-    parser.add_argument(
-        "--stop", 
-        type=int, 
-        help="last timestep to consider",
-        default=5000
-    )
-
     return parser
