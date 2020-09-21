@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 
 def checkpoint(
-    model, optimizer, scheduler, epoch, curr_step, path, metric_dict={}
+    model, optimizer, scheduler, epoch, curr_step, save_path, metric_dict={}
 ):
     print(f"Saving model checkpoint for step {curr_step}")
     save_dict = {
@@ -16,7 +16,7 @@ def checkpoint(
     }
     save_dict.update(metric_dict)
     torch.save(
-        save_dict, f"{path}/ckpt/step{curr_step}.tar",
+        save_dict, f"{save_path}/ckpt/step{curr_step}.tar",
     )
 
 
@@ -32,7 +32,7 @@ def train(
     verbose,
     save,
     save_freq,
-    path,
+    save_path,
     log_interval=10,
 ):
     model.train()
@@ -63,9 +63,9 @@ def train(
         #       for a cleaner codebase and can include test metrics
         # TODO: additionally, could integrate tfutils.DBInterface here
         eval_dict = {"train_loss": train_loss.item()}
-        if save and path is not None and save_freq is not None:
+        if save and save_path is not None and save_freq is not None:
             if curr_step % save_freq == 0:
-                checkpoint(model, optimizer, scheduler, epoch, curr_step, path)
+                checkpoint(model, optimizer, scheduler, epoch, curr_step, save_path)
 
     return total / len(dataloader.dataset)
 
@@ -108,7 +108,7 @@ def train_eval_loop(
     verbose,
     save,
     save_freq=None,
-    path=None,
+    save_path=None,
 ):
     test_loss, accuracy1, accuracy5 = eval(model, loss, test_loader, device, verbose)
     metric_dict = {
@@ -118,7 +118,7 @@ def train_eval_loop(
         "accuracy5": accuracy5,
     }
     if save:
-        checkpoint(model, optimizer, scheduler, 0, 0, path, metric_dict)
+        checkpoint(model, optimizer, scheduler, 0, 0, save_path, metric_dict)
     for epoch in tqdm(range(epochs)):
         train_loss = train(
             model,
@@ -131,7 +131,7 @@ def train_eval_loop(
             verbose,
             save,
             save_freq=save_freq,
-            path=path,
+            save_path=save_path,
         )
         test_loss, accuracy1, accuracy5 = eval(
             model, loss, test_loader, device, verbose
@@ -145,6 +145,6 @@ def train_eval_loop(
         curr_step = (epoch + 1) * len(train_loader)
         if save:
             checkpoint(
-                model, optimizer, scheduler, epoch, curr_step, path, metric_dict
+                model, optimizer, scheduler, epoch, curr_step, save_path, metric_dict
             )
         scheduler.step()

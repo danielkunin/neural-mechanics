@@ -31,31 +31,23 @@ def main():
             continue
 
         checkpoint = torch.load(in_filename, map_location=device)
-        weights = {}
-        biases = {}
+        params = {}
         for name, tensor in checkpoint["model_state_dict"].items():
             if "weight" in name:
-                weights[name] = tensor.cpu().numpy()
+                params[name] = tensor.cpu().numpy()
             if "bias" in name:
-                biases[name] = tensor.cpu().numpy()
+                params[name] = tensor.cpu().numpy()
 
-        weight_buffers = {}
-        bias_buffers = {}
+        buffers = {}
         # this assumes the same order of model state dict as optimize state dict
         param_names = [name for name in checkpoint["model_state_dict"].keys() if ("weight" in name or "bias" in name)]
         for name, buffers in zip(param_names, checkpoint["optimizer_state_dict"]["state"].values()):
             if "weight" in name and 'integral_buffer' in buffers.keys():
-                weight_buffers[name] = buffers['integral_buffer'].cpu().numpy()
+                buffers[name] = buffers['integral_buffer'].cpu().numpy()
             if "bias" in name and 'integral_buffer' in buffers.keys():
-                bias_buffers[name] = buffers['integral_buffer'].cpu().numpy()
+                buffers[name] = buffers['integral_buffer'].cpu().numpy()
 
-        dd.io.save(
-            out_filename, 
-            {"weights": weights, 
-             "biases": biases, 
-             "weight_buffers": weight_buffers,
-             "bias_buffers": bias_buffers}
-        )
+        dd.io.save(out_filename, {"params": params, "buffers": buffers})
 
 
 if __name__ == "__main__":

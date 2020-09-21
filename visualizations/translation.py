@@ -10,21 +10,22 @@ import json
 
 
 def statistics(model, feats_dir, steps, lr, wd, normalize):
-    layers = utils.get_layers(model)
     weights = utils.load_features(
+        steps=[str(steps[0])], 
+        feats_dir=feats_dir, 
         model=model, 
-        feats_dir=feats_dir,
-        group="weights",
-        steps=[str(steps[0])]
+        suffix="weight", 
+        group="params"
     )
     biases = utils.load_features(
+        steps=[str(steps[0])], 
+        feats_dir=feats_dir, 
         model=model, 
-        feats_dir=feats_dir,
-        group="biases",
-        steps=[str(steps[0])]
+        suffix="bias", 
+        group="params"
     )
-    wl_0 = weights[layers[-1]][f"step_{steps[0]}"]
-    bl_0 = biases[layers[-1]][f"step_{steps[0]}"]
+    wl_0 = weights["classifier"][f"step_{steps[0]}"]
+    bl_0 = biases["classifier"][f"step_{steps[0]}"]
     Wl_0 = np.column_stack((wl_0, bl_0))
     theoretical = []
     for i in range(len(steps)):
@@ -56,8 +57,8 @@ def statistics(model, feats_dir, steps, lr, wd, normalize):
             steps=[str(step)]
         )
         if f"step_{step}" in weights[layers[0]].keys():
-            wl_t = weights[layers[-1]][f"step_{step}"]
-            bl_t = biases[layers[-1]][f"step_{step}"]
+            wl_t = weights["classifier"][f"step_{step}"]
+            bl_t = biases["classifier"][f"step_{step}"]
             Wl_t = np.column_stack((wl_t, bl_t))
             if normalize:
                 empirical.append(np.sum(Wl_t, axis=0) / np.sum(Wl_0, axis=0))

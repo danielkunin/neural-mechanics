@@ -14,26 +14,26 @@ def main():
     if ARGS.expid == "":
         print("WARNING: this experiment is not being saved.")
         setattr(ARGS, "save", False)
-        exp_path = None
+        save_path = None
     else:
         setattr(ARGS, "save", True)
-        exp_path = f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}"
+        save_path = f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}"
         try:
-            os.makedirs(exp_path)
-            os.makedirs(f"{exp_path}/ckpt")
+            os.makedirs(save_path)
+            os.makedirs(f"{save_path}/ckpt")
         except FileExistsError:
             if not ARGS.overwrite:
                 print(
                     "Feature directory exists and no-overwrite specified. Rerun with --overwrite"
                 )
                 quit()
-            shutil.rmtree(exp_path)
-            os.makedirs(exp_path)
-            os.makedirs(f"{exp_path}/ckpt")
+            shutil.rmtree(save_path)
+            os.makedirs(save_path)
+            os.makedirs(f"{save_path}/ckpt")
 
     ## Save Args ##
     if ARGS.save:
-        with open(exp_path + "/hyperparameters.json", "w") as f:
+        with open(save_path + "/hyperparameters.json", "w") as f:
             json.dump(ARGS.__dict__, f, sort_keys=True, indent=4)
 
     ## Random Seed and Device ##
@@ -91,7 +91,7 @@ def main():
         ARGS.verbose,
         ARGS.save,
         save_freq=ARGS.save_freq,
-        path=exp_path,
+        save_path=save_path,
     )
 
 

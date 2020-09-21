@@ -10,21 +10,23 @@ import json
 
 
 def statistics(model, feats_dir, steps, lr, wd):
-    layers = utils.get_layers(model)
+    layers = [layer if "conv" in layer for layer in utils.get_layers(model)]
     weights = utils.load_features(
+        steps=[str(steps[0])], 
+        feats_dir=feats_dir, 
         model=model, 
-        feats_dir=feats_dir,
-        group="weights",
-        steps=[str(steps[0])]
+        suffix="weight", 
+        group="params"
     )
     biases = utils.load_features(
+        steps=[str(steps[0])], 
+        feats_dir=feats_dir, 
         model=model, 
-        feats_dir=feats_dir,
-        group="biases",
-        steps=[str(steps[0])]
+        suffix="bias", 
+        group="params"
     )
 
-    theoretical = {layer: {} for layer in layers[0:-1]}
+    theoretical = {layer: {} for layer in layers}
     for i in range(len(steps)):
         step = steps[i]
         t = lr * step
@@ -35,21 +37,21 @@ def statistics(model, feats_dir, steps, lr, wd):
 
         if i > 0:
             weight_buffers = utils.load_features(
+                steps=[str(step)], 
+                feats_dir=feats_dir, 
                 model=model, 
-                feats_dir=feats_dir,
-                group="weight_buffers",
-                steps=[str(step)],
-                all_steps=False
+                suffix="weight", 
+                group="buffers"
             )
             bias_buffers = utils.load_features(
+                steps=[str(step)], 
+                feats_dir=feats_dir, 
                 model=model, 
-                feats_dir=feats_dir,
-                group="bias_buffers",
-                steps=[str(step)],
-                all_steps=False
+                suffix="bias", 
+                group="buffers"
             )
 
-        for layer in layers[0:-1]:
+        for layer in layers:
             Wl_t = weights[layer][f"step_{steps[0]}"]
             bl_t = biases[layer][f"step_{steps[0]}"]
             theoretical[layer][step] = numer / denom * utils.in_synapses(Wl_t**2, bl_t**2)
@@ -58,28 +60,27 @@ def statistics(model, feats_dir, steps, lr, wd):
                 g_bl_t = bias_buffers[layer][f"step_{step}"]
                 theoretical[layer][step] += 2 / denom * lr * np.exp(alpha_p * t) * utils.in_synapses(g_Wl_t, g_bl_t)
 
-    empirical = {layer: {} for layer in layers[0:-1]}
+    empirical = {layer: {} for layer in layers}
     for i in range(len(steps)):
         step = steps[i]
         weights = utils.load_features(
+            steps=[str(step)], 
+            feats_dir=feats_dir, 
             model=model, 
-            feats_dir=feats_dir,
-            group="weights",
-            steps=[str(step)]
+            suffix="weight", 
+            group="params"
         )
         biases = utils.load_features(
+            steps=[str(step)], 
+            feats_dir=feats_dir, 
             model=model, 
-            feats_dir=feats_dir,
-            group="biases",
-            steps=[str(step)]
+            suffix="bias", 
+            group="params"
         )
-        if f"step_{step}" in weights[layers[0]].keys():
-            for layer in layers[0:-1]:
-                Wl_t = weights[layer][f"step_{step}"]
-                bl_t = biases[layer][f"step_{step}"]
-                empirical[layer][step] = utils.in_synapses(Wl_t**2, bl_t**2)
-        else:
-            print("Feautres don't exist.")
+        for layer in layers:
+            Wl_t = weights[layer][f"step_{step}"]
+            bl_t = biases[layer][f"step_{step}"]
+            empirical[layer][step] = utils.in_synapses(Wl_t**2, bl_t**2)
 
     return (empirical, theoretical)
 

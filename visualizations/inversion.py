@@ -10,18 +10,20 @@ import json
 
 
 def statistics(model, feats_dir, steps, lr, wd):
-    layers = utils.get_layers(model)
+    layers = [layer if "conv" in layer for layer in utils.get_layers(model)]
     weights = utils.load_features(
+        steps=[str(steps[0])], 
+        feats_dir=feats_dir, 
         model=model, 
-        feats_dir=feats_dir,
-        group="weights",
-        steps=[str(steps[0])]
+        suffix="weight", 
+        group="params"
     )
     biases = utils.load_features(
+        steps=[str(steps[0])], 
+        feats_dir=feats_dir, 
         model=model, 
-        feats_dir=feats_dir,
-        group="biases",
-        steps=[str(steps[0])]
+        suffix="bias", 
+        group="params"
     )
 
     theoretical = {layer: {} for layer in layers[1:]}
@@ -35,18 +37,18 @@ def statistics(model, feats_dir, steps, lr, wd):
 
         if i > 0:
             weight_buffers = utils.load_features(
+                steps=[str(step)], 
+                feats_dir=feats_dir, 
                 model=model, 
-                feats_dir=feats_dir,
-                group="weight_buffers",
-                steps=[str(step)],
-                all_steps=False
+                suffix="weight", 
+                group="buffers"
             )
             bias_buffers = utils.load_features(
+                steps=[str(step)], 
+                feats_dir=feats_dir, 
                 model=model, 
-                feats_dir=feats_dir,
-                group="bias_buffers",
-                steps=[str(step)],
-                all_steps=False
+                suffix="bias", 
+                group="buffers"
             )
 
         W_in = numer / denom * weights[layers[0]][f"step_{steps[0]}"]**2
@@ -72,28 +74,27 @@ def statistics(model, feats_dir, steps, lr, wd):
     for i in range(len(steps)):
         step = steps[i]
         weights = utils.load_features(
+            steps=[str(step)], 
+            feats_dir=feats_dir, 
             model=model, 
-            feats_dir=feats_dir,
-            group="weights",
-            steps=[str(step)]
+            suffix="weight", 
+            group="params"
         )
         biases = utils.load_features(
+            steps=[str(step)], 
+            feats_dir=feats_dir, 
             model=model, 
-            feats_dir=feats_dir,
-            group="biases",
-            steps=[str(step)]
+            suffix="bias", 
+            group="params"
         )
-        if f"step_{step}" in weights[layers[0]].keys():
-            W_in = weights[layers[0]][f"step_{step}"]**2
-            b_in = biases[layers[0]][f"step_{step}"]**2
-            for layer in layers[1:]:
-                W_out = weights[layer][f"step_{step}"]**2
-                b_out = biases[layer][f"step_{step}"]**2
-                empirical[layer][step] = utils.out_synapses(W_out) - utils.in_synapses(W_in, b_in)
-                W_in = W_out
-                b_in = b_out
-        else:
-            print("Feautres don't exist.")
+        W_in = weights[layers[0]][f"step_{step}"]**2
+        b_in = biases[layers[0]][f"step_{step}"]**2
+        for layer in layers[1:]:
+            W_out = weights[layer][f"step_{step}"]**2
+            b_out = biases[layer][f"step_{step}"]**2
+            empirical[layer][step] = utils.out_synapses(W_out) - utils.in_synapses(W_in, b_in)
+            W_in = W_out
+            b_in = b_out
 
     return (empirical, theoretical)
 

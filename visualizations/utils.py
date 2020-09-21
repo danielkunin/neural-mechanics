@@ -14,110 +14,79 @@ import getpass
 # want to plot for, and is done via manual, interactive checkpoint inspection.
 # This is just meant to identify the layers in the checkpoints
 # and map them to pretty, sequential names
-PT_MODELS = {
+MODELS = {
     "logistic": {
-        "layers": ["fc1"],
-        "weights": ["1.weight"],
-        "biases": ["1.bias"],
-        "weight_buffers": ["1.weight"],
-        "bias_buffers": ["1.bias"],
+        "1": "classifier",
     },
     "fc": {
-        "layers": [f"fc{x//2 + 1}" for x in range(1, 12, 2)],
-        "weights": [f"{x}.weight" for x in range(1, 12, 2)],
-        "biases": [f"{x}.bias" for x in range(1, 12, 2)],
-        "weight_buffers": [f"{x}.weight" for x in range(1, 12, 2)],
-        "bias_buffers": [f"{x}.bias" for x in range(1, 12, 2)],
+        "1": "fc1",
+        "3": "fc2",
+        "5": "fc3",
+        "7": "fc4",
+        "9": "fc5",
+        "11": "classifier",
     },
     "fc-bn": {
-        "layers": [f"fc{x//3 + 1}" for x in range(1, 17, 3)],
-        "weights": [f"{x}.weight" for x in range(1, 17, 3)],
-        "biases": [f"{x}.bias" for x in range(1, 17, 3)],
-        "weight_buffers": [f"{x}.weight" for x in range(1, 17, 3)],
-        "bias_buffers": [f"{x}.bias" for x in range(1, 17, 3)],
+        "1": "fc1",
+        "2": "bn1",
+        "4": "fc2",
+        "5": "bn2",
+        "7": "fc3",
+        "8": "bn3",
+        "10": "fc4",
+        "11": "bn4",
+        "13": "fc5",
+        "14": "bn5",
+        "16": "classifier",
     },
-    "resnet18": {
-        "layers": [f"conv{x}" for x in range(1, 19, 1)],
-        "weights": [
-            "conv1.0.weight",
-            "conv2_x.0.residual_function.0.weight",
-            "conv2_x.0.residual_function.3.weight",
-            "conv2_x.1.residual_function.0.weight",
-            "conv2_x.1.residual_function.3.weight",
-            "conv3_x.0.residual_function.0.weight",
-            "conv3_x.0.residual_function.3.weight",
-            "conv3_x.1.residual_function.0.weight",
-            "conv3_x.1.residual_function.3.weight",
-            "conv4_x.0.residual_function.0.weight",
-            "conv4_x.0.residual_function.3.weight",
-            "conv4_x.1.residual_function.0.weight",
-            "conv4_x.1.residual_function.3.weight",
-            "conv5_x.0.residual_function.0.weight",
-            "conv5_x.0.residual_function.3.weight",
-            "conv5_x.1.residual_function.0.weight",
-            "conv5_x.1.residual_function.3.weight",
-            "fc.weight",
-        ],
-        "biases": [
-            "conv1.1.bias",
-            "conv2_x.0.residual_function.1.bias",
-            "conv2_x.0.residual_function.4.bias",
-            "conv2_x.1.residual_function.1.bias",
-            "conv2_x.1.residual_function.4.bias",
-            "conv3_x.0.residual_function.1.bias",
-            "conv3_x.0.residual_function.4.bias",
-            "conv3_x.1.residual_function.1.bias",
-            "conv3_x.1.residual_function.4.bias",
-            "conv4_x.0.residual_function.1.bias",
-            "conv4_x.0.residual_function.4.bias",
-            "conv4_x.1.residual_function.1.bias",
-            "conv4_x.1.residual_function.4.bias",
-            "conv5_x.0.residual_function.1.bias",
-            "conv5_x.0.residual_function.4.bias",
-            "conv5_x.1.residual_function.1.bias",
-            "conv5_x.1.residual_function.4.bias",
-            "fc.bias",
-        ],
-        "weight_buffers": [
-            "conv1.0.weight",
-            "conv2_x.0.residual_function.0.weight",
-            "conv2_x.0.residual_function.3.weight",
-            "conv2_x.1.residual_function.0.weight",
-            "conv2_x.1.residual_function.3.weight",
-            "conv3_x.0.residual_function.0.weight",
-            "conv3_x.0.residual_function.3.weight",
-            "conv3_x.1.residual_function.0.weight",
-            "conv3_x.1.residual_function.3.weight",
-            "conv4_x.0.residual_function.0.weight",
-            "conv4_x.0.residual_function.3.weight",
-            "conv4_x.1.residual_function.0.weight",
-            "conv4_x.1.residual_function.3.weight",
-            "conv5_x.0.residual_function.0.weight",
-            "conv5_x.0.residual_function.3.weight",
-            "conv5_x.1.residual_function.0.weight",
-            "conv5_x.1.residual_function.3.weight",
-            "fc.weight",
-        ],
-        "bias_buffers": [
-            "conv1.1.bias",
-            "conv2_x.0.residual_function.1.bias",
-            "conv2_x.0.residual_function.4.bias",
-            "conv2_x.1.residual_function.1.bias",
-            "conv2_x.1.residual_function.4.bias",
-            "conv3_x.0.residual_function.1.bias",
-            "conv3_x.0.residual_function.4.bias",
-            "conv3_x.1.residual_function.1.bias",
-            "conv3_x.1.residual_function.4.bias",
-            "conv4_x.0.residual_function.1.bias",
-            "conv4_x.0.residual_function.4.bias",
-            "conv4_x.1.residual_function.1.bias",
-            "conv4_x.1.residual_function.4.bias",
-            "conv5_x.0.residual_function.1.bias",
-            "conv5_x.0.residual_function.4.bias",
-            "conv5_x.1.residual_function.1.bias",
-            "conv5_x.1.residual_function.4.bias",
-            "fc.bias",
-        ],
+    "vgg16": {
+        "features.0": "conv1",
+        "features.2": "conv2",
+        "features.5": "conv3",
+        "features.7": "conv4",
+        "features.10": "conv5",
+        "features.12": "conv6",
+        "features.14": "conv7",
+        "features.17": "conv8",
+        "features.19": "conv9",
+        "features.21": "conv10",
+        "features.24": "conv11",
+        "features.26": "conv12",
+        "features.28": "conv13",
+        "classifier.0": "fc1",
+        "classifier.3": "fc2",
+        "classifier.6": "classifier",
+    },
+    "vgg16-bn": {
+        "features.0": "conv1",
+        "features.1": "bn1",
+        "features.3": "conv2",
+        "features.4": "bn2",
+        "features.7": "conv3",
+        "features.8": "bn3",
+        "features.10": "conv4",
+        "features.11": "bn4",
+        "features.14": "conv5",
+        "features.15": "bn5",
+        "features.17": "conv6",
+        "features.18": "bn6",
+        "features.20": "conv7",
+        "features.21": "bn7",
+        "features.24": "conv8",
+        "features.25": "bn8",
+        "features.27": "conv9",
+        "features.28": "bn9",
+        "features.30": "conv10",
+        "features.31": "bn10",
+        "features.34": "conv11",
+        "features.35": "bn11",
+        "features.37": "conv12",
+        "features.38": "bn12",
+        "features.40": "conv13",
+        "features.41": "bn13",
+        "classifier.0": "fc1",
+        "classifier.3": "fc2",
+        "classifier.6": "classifier",
     },
 }
 
@@ -160,12 +129,12 @@ def make_iterable(x):
     return x
 
 def get_layers(model):
-    return PT_MODELS[model]["layers"]
+    return MODELS[model].values()
 
 def get_features(
-    validation_path,
-    group_name="imagenet_features",
-    keys=("images"),
+    feats_path,
+    group,
+    keys,
     out_keys=None,
     verbose=False,
 ):
@@ -178,7 +147,7 @@ def get_features(
         keys (str or list of strs): which keys to extract from the group.
         out_keys (list of strs): keys for the output dict
     """
-    assert os.path.isfile(validation_path), "%s is not a file" % (validation_path)
+    assert os.path.isfile(feats_path), "%s is not a file" % (feats_path)
 
     keys = make_iterable(keys)
 
@@ -191,50 +160,37 @@ def get_features(
     ), "Number of keys does not match number of output keys"
 
     out = {}
-    with h5py.File(validation_path, "r") as open_file:
+    with h5py.File(feats_path, "r") as open_file:
         if verbose:
-            keys_to_print = open_file[group_name].keys()
+            keys_to_print = open_file[group].keys()
             print("Keys in dataset:")
             pprint.pprint(keys_to_print)
 
         for in_key, out_key in zip(keys, out_keys):
-            out[out_key] = open_file[group_name][in_key][:]
+            out[out_key] = open_file[group][in_key][:]
             if verbose:
                 print("Extracted %s:" % out_key, out[out_key].shape)
 
-    # if only one input requested, only provide single output
-    # if len(out.keys()) == 1:
-    #     _, v = out.popitem()
-    #     return v
     return out
 
-def load_features(model, feats_dir, group, steps, all_steps=False):
+def load_features(steps, feats_dir, model, suffix, group):
     """
     layers: is the output keys for the layer feats, or computed quantities
     keys: is the actual keys to be read from the h5 file
     feats: is the output dict
     """
 
-    def step_from_path(p):
-        step_str = p.split("/")[-1].split(".h5")[0].split("step")[-1]
-        return int(step_str)
-
-    if all_steps:
-        glob_path = f"{feats_dir}/step*.h5"
-        pths = glob.glob(glob_path)
-        steps = [step_from_path(path) for path in pths]
-
-    layers = PT_MODELS[model]["layers"]
-    keys = PT_MODELS[model][group]
+    names = [f"{name}.{suffix}" for name in MODELS[model].keys()]
+    layers = MODELS[model].values()
 
     feats = {layer: {} for layer in layers}
 
     for step in steps:
-        pth = f"{feats_dir}/step{step}.h5"
+        feats_path = f"{feats_dir}/step{step}.h5"
         
         if os.path.isfile(pth):
             feature_dict = get_features(
-                pth, group_name=group, keys=keys, out_keys=layers
+                feats_path=feats_path, group=group, keys=names, out_keys=layers
             )
             for layer in layers:
                 feats[layer][f"step_{step}"] = feature_dict[layer]
