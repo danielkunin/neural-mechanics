@@ -41,11 +41,11 @@ def main():
         buffers = {}
         # this assumes the same order of model state dict as optimize state dict
         param_names = [name for name in checkpoint["model_state_dict"].keys() if ("weight" in name or "bias" in name)]
-        for name, buffers in zip(param_names, checkpoint["optimizer_state_dict"]["state"].values()):
-            if "weight" in name and 'integral_buffer' in buffers.keys():
-                buffers[name] = buffers['integral_buffer'].cpu().numpy()
-            if "bias" in name and 'integral_buffer' in buffers.keys():
-                buffers[name] = buffers['integral_buffer'].cpu().numpy()
+        for name, buffer_dict in zip(param_names, checkpoint["optimizer_state_dict"]["state"].values()):
+            if "weight" in name and 'integral_buffer' in buffer_dict.keys():
+                buffers[name] = buffer_dict['integral_buffer'].cpu().numpy()
+            if "bias" in name and 'integral_buffer' in buffer_dict.keys():
+                buffers[name] = buffer_dict['integral_buffer'].cpu().numpy()
 
         dd.io.save(out_filename, {"params": params, "buffers": buffers})
 

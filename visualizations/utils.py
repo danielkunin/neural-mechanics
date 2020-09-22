@@ -136,7 +136,7 @@ def get_features(
     group,
     keys,
     out_keys=None,
-    verbose=False,
+    verbose=True,
 ):
     """
     Returns features from HDF5 DataSet
@@ -181,14 +181,14 @@ def load_features(steps, feats_dir, model, suffix, group):
     """
 
     names = [f"{name}.{suffix}" for name in MODELS[model].keys()]
-    layers = MODELS[model].values()
+    layers = list(MODELS[model].values())
 
     feats = {layer: {} for layer in layers}
 
     for step in steps:
         feats_path = f"{feats_dir}/step{step}.h5"
         
-        if os.path.isfile(pth):
+        if os.path.isfile(feats_path):
             feature_dict = get_features(
                 feats_path=feats_path, group=group, keys=names, out_keys=layers
             )

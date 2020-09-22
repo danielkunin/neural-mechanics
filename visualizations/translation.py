@@ -45,27 +45,26 @@ def statistics(model, feats_dir, steps, lr, wd, normalize):
     for i in range(len(steps)):
         step = steps[i]
         weights = utils.load_features(
+            steps=[str(step)], 
+            feats_dir=feats_dir, 
             model=model, 
-            feats_dir=feats_dir,
-            group="weights",
-            steps=[str(step)]
+            suffix="weight", 
+            group="params"
         )
         biases = utils.load_features(
+            steps=[str(step)], 
+            feats_dir=feats_dir, 
             model=model, 
-            feats_dir=feats_dir,
-            group="biases",
-            steps=[str(step)]
+            suffix="bias", 
+            group="params"
         )
-        if f"step_{step}" in weights[layers[0]].keys():
-            wl_t = weights["classifier"][f"step_{step}"]
-            bl_t = biases["classifier"][f"step_{step}"]
-            Wl_t = np.column_stack((wl_t, bl_t))
-            if normalize:
-                empirical.append(np.sum(Wl_t, axis=0) / np.sum(Wl_0, axis=0))
-            else:
-                empirical.append(np.sum(Wl_t, axis=0))
+        wl_t = weights["classifier"][f"step_{step}"]
+        bl_t = biases["classifier"][f"step_{step}"]
+        Wl_t = np.column_stack((wl_t, bl_t))
+        if normalize:
+            empirical.append(np.sum(Wl_t, axis=0) / np.sum(Wl_0, axis=0))
         else:
-            print(f"Feautres for step_{step} don't exist.")
+            empirical.append(np.sum(Wl_t, axis=0))
 
     return (empirical, theoretical)
 

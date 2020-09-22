@@ -10,7 +10,7 @@ import json
 
 
 def statistics(model, feats_dir, steps, lr, wd):
-    layers = [layer if "conv" in layer for layer in utils.get_layers(model)]
+    layers = [layer for layer in utils.get_layers(model) if "conv" in layer]
     weights = utils.load_features(
         steps=[str(steps[0])], 
         feats_dir=feats_dir, 
