@@ -5,6 +5,7 @@
 - Add flag to save +/- k from each checkpoint
 - Get the argparser from utils/flags.py in the visualization scripts
 - Move all bash scripts into a script folder and find ways to execute from here?
+- Make jupyter notebook calling main make more sense (args should be updated not reassigned) (redo the sys.append "..")
 
 
 ## Getting Started
