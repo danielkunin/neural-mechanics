@@ -136,7 +136,7 @@ def get_features(
     group,
     keys,
     out_keys=None,
-    verbose=True,
+    verbose=False,
 ):
     """
     Returns features from HDF5 DataSet
