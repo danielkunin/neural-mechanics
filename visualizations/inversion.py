@@ -150,7 +150,7 @@ def main(args=None, axes=None):
         axes.plot(
             timesteps,
             norm,
-            color=plt.cm.tab10(int(layer.split("fc")[1]) - 1),
+            color=plt.cm.tab20(int(layer.split("conv")[1]) - 1),
         )
     for layer in layers:
         timesteps = list(theoretical[layer].keys())

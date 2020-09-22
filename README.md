@@ -3,7 +3,6 @@
 ## To Do:
 - Condense models and remove model class?
 - Add flag to save +/- k from each checkpoint
-- Handle the PT_MODELS map from pytorch names to labels better?
 - Get the argparser from utils/flags.py in the visualization scripts
 - Move all bash scripts into a script folder and find ways to execute from here?
 
