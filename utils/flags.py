@@ -158,7 +158,7 @@ def train():
     train_args.add_argument(
         "--save-freq",
         type=int,
-        default=100,
+        default=None,
         help="Frequency (in batches) to save model checkpoints at",
     )
     return parser
