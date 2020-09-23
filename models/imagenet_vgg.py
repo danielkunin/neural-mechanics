@@ -145,13 +145,7 @@ def _vgg(arch, cfg, batch_norm, pretrained, progress, **kwargs):
     return model
 
 
-def vgg11(
-    input_shape,
-    num_classes,
-    pretrained=False,
-    progress=True,
-    **kwargs
-):
+def vgg11(input_shape, num_classes, pretrained=False, progress=True, **kwargs):
     r"""VGG 11-layer model (configuration "A") from
     `"Very Deep Convolutional Networks For Large-Scale Image Recognition" <https://arxiv.org/pdf/1409.1556.pdf>`_
 
@@ -162,13 +156,7 @@ def vgg11(
     return _vgg("vgg11", "A", False, pretrained, progress, **kwargs)
 
 
-def vgg11_bn(
-    input_shape,
-    num_classes,
-    pretrained=False,
-    progress=True,
-    **kwargs
-):
+def vgg11_bn(input_shape, num_classes, pretrained=False, progress=True, **kwargs):
     r"""VGG 11-layer model (configuration "A") with batch normalization
     `"Very Deep Convolutional Networks For Large-Scale Image Recognition" <https://arxiv.org/pdf/1409.1556.pdf>`_
 
@@ -179,13 +167,7 @@ def vgg11_bn(
     return _vgg("vgg11_bn", "A", True, pretrained, progress, **kwargs)
 
 
-def vgg13(
-    input_shape,
-    num_classes,
-    pretrained=False,
-    progress=True,
-    **kwargs
-):
+def vgg13(input_shape, num_classes, pretrained=False, progress=True, **kwargs):
     r"""VGG 13-layer model (configuration "B")
     `"Very Deep Convolutional Networks For Large-Scale Image Recognition" <https://arxiv.org/pdf/1409.1556.pdf>`_
 
@@ -196,13 +178,7 @@ def vgg13(
     return _vgg("vgg13", "B", False, pretrained, progress, **kwargs)
 
 
-def vgg13_bn(
-    input_shape,
-    num_classes,
-    pretrained=False,
-    progress=True,
-    **kwargs
-):
+def vgg13_bn(input_shape, num_classes, pretrained=False, progress=True, **kwargs):
     r"""VGG 13-layer model (configuration "B") with batch normalization
     `"Very Deep Convolutional Networks For Large-Scale Image Recognition" <https://arxiv.org/pdf/1409.1556.pdf>`_
 
@@ -213,13 +189,7 @@ def vgg13_bn(
     return _vgg("vgg13_bn", "B", True, pretrained, progress, **kwargs)
 
 
-def vgg16(
-    input_shape,
-    num_classes,
-    pretrained=False,
-    progress=True,
-    **kwargs
-):
+def vgg16(input_shape, num_classes, pretrained=False, progress=True, **kwargs):
     r"""VGG 16-layer model (configuration "D")
     `"Very Deep Convolutional Networks For Large-Scale Image Recognition" <https://arxiv.org/pdf/1409.1556.pdf>`_
 
@@ -230,13 +200,7 @@ def vgg16(
     return _vgg("vgg16", "D", False, pretrained, progress, **kwargs)
 
 
-def vgg16_bn(
-    input_shape,
-    num_classes,
-    pretrained=False,
-    progress=True,
-    **kwargs
-):
+def vgg16_bn(input_shape, num_classes, pretrained=False, progress=True, **kwargs):
     r"""VGG 16-layer model (configuration "D") with batch normalization
     `"Very Deep Convolutional Networks For Large-Scale Image Recognition" <https://arxiv.org/pdf/1409.1556.pdf>`_
 
@@ -247,13 +211,7 @@ def vgg16_bn(
     return _vgg("vgg16_bn", "D", True, pretrained, progress, **kwargs)
 
 
-def vgg19(
-    input_shape,
-    num_classes,
-    pretrained=False,
-    progress=True,
-    **kwargs
-):
+def vgg19(input_shape, num_classes, pretrained=False, progress=True, **kwargs):
     r"""VGG 19-layer model (configuration "E")
     `"Very Deep Convolutional Networks For Large-Scale Image Recognition" <https://arxiv.org/pdf/1409.1556.pdf>`_
 
@@ -264,13 +222,7 @@ def vgg19(
     return _vgg("vgg19", "E", False, pretrained, progress, **kwargs)
 
 
-def vgg19_bn(
-    input_shape,
-    num_classes,
-    pretrained=False,
-    progress=True,
-    **kwargs
-):
+def vgg19_bn(input_shape, num_classes, pretrained=False, progress=True, **kwargs):
     r"""VGG 19-layer model (configuration 'E') with batch normalization
     `"Very Deep Convolutional Networks For Large-Scale Image Recognition" <https://arxiv.org/pdf/1409.1556.pdf>`_
 

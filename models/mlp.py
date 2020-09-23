@@ -5,12 +5,10 @@ from torch.nn import functional as F
 
 
 def logistic(
-    input_shape,
-    num_classes,
-    pretrained=False,
+    input_shape, num_classes, pretrained=False,
 ):
     size = np.prod(input_shape)
-    
+
     modules = [nn.Flatten()]
     modules.append(nn.Linear(size, num_classes))
     model = nn.Sequential(*modules)
@@ -21,13 +19,9 @@ def logistic(
 
     return model
 
+
 def fc(
-    input_shape,
-    num_classes,
-    pretrained=False,
-    L=6,
-    N=100,
-    nonlinearity=nn.ReLU(),
+    input_shape, num_classes, pretrained=False, L=6, N=100, nonlinearity=nn.ReLU(),
 ):
     size = np.prod(input_shape)
 
@@ -49,13 +43,9 @@ def fc(
 
     return model
 
+
 def fc_bn(
-    input_shape,
-    num_classes,
-    pretrained=False,
-    L=6,
-    N=100,
-    nonlinearity=nn.ReLU(),
+    input_shape, num_classes, pretrained=False, L=6, N=100, nonlinearity=nn.ReLU(),
 ):
     size = np.prod(input_shape)
 
@@ -81,12 +71,7 @@ def fc_bn(
 
 
 def conv(
-    input_shape,
-    num_classes,
-    pretrained=False,
-    L=3,
-    N=32,
-    nonlinearity=nn.ReLU(),
+    input_shape, num_classes, pretrained=False, L=3, N=32, nonlinearity=nn.ReLU(),
 ):
     channels, width, height = input_shape
 

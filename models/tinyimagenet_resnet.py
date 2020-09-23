@@ -25,7 +25,9 @@ class BasicBlock(nn.Module):
     # to distinct
     expansion = 1
 
-    def __init__(self, in_channels, out_channels, stride=1, base_width=64, batch_norm=True):
+    def __init__(
+        self, in_channels, out_channels, stride=1, base_width=64, batch_norm=True
+    ):
         super().__init__()
 
         self.batch_norm = batch_norm
@@ -42,7 +44,7 @@ class BasicBlock(nn.Module):
             ),
         ]
         if self.batch_norm:
-                layer_list.append(nn.BatchNorm2d(out_channels))
+            layer_list.append(nn.BatchNorm2d(out_channels))
         layer_list += [
             nn.ReLU(inplace=True),
             nn.Conv2d(
@@ -54,7 +56,7 @@ class BasicBlock(nn.Module):
             ),
         ]
         if self.batch_norm:
-                layer_list.append(nn.BatchNorm2d(out_channels * BasicBlock.expansion))
+            layer_list.append(nn.BatchNorm2d(out_channels * BasicBlock.expansion))
         self.residual_function = nn.Sequential(*layer_list)
 
         # shortcut
@@ -87,7 +89,9 @@ class BottleNeck(nn.Module):
 
     expansion = 4
 
-    def __init__(self, in_channels, out_channels, stride=1, base_width=64, batch_norm=True):
+    def __init__(
+        self, in_channels, out_channels, stride=1, base_width=64, batch_norm=True
+    ):
         super().__init__()
 
         self.batch_norm = batch_norm
@@ -97,7 +101,7 @@ class BottleNeck(nn.Module):
             nn.Conv2d(in_channels, width, kernel_size=1, bias=False),
         ]
         if self.batch_norm:
-                layer_list.append(nn.BatchNorm2d(width))
+            layer_list.append(nn.BatchNorm2d(width))
         layer_list += [
             nn.ReLU(inplace=True),
             nn.Conv2d(
@@ -105,7 +109,7 @@ class BottleNeck(nn.Module):
             ),
         ]
         if self.batch_norm:
-                layer_list.append(nn.BatchNorm2d(width))
+            layer_list.append(nn.BatchNorm2d(width))
         layer_list += [
             nn.ReLU(inplace=True),
             nn.Conv2d(
@@ -113,7 +117,7 @@ class BottleNeck(nn.Module):
             ),
         ]
         if self.batch_norm:
-                layer_list.append(nn.BatchNorm2d(out_channels * BottleNeck.expansion))
+            layer_list.append(nn.BatchNorm2d(out_channels * BottleNeck.expansion))
         self.residual_function = nn.Sequential(*layer_list)
 
         self.shortcut = nn.Sequential()
@@ -127,7 +131,6 @@ class BottleNeck(nn.Module):
                     kernel_size=1,
                     bias=False,
                 ),
-
             ]
             if self.batch_norm:
                 layer_list.append(nn.BatchNorm2d(out_channels * BottleNeck.expansion))
@@ -196,7 +199,11 @@ class ResNet(nn.Module):
         strides = [stride] + [1] * (num_blocks - 1)
         layer_list = []
         for stride in strides:
-            layer_list.append(block(self.in_channels, out_channels, stride, base_width, self.batch_norm))
+            layer_list.append(
+                block(
+                    self.in_channels, out_channels, stride, base_width, self.batch_norm
+                )
+            )
             self.in_channels = out_channels * block.expansion
 
         return nn.Sequential(*layer_list)
@@ -214,9 +221,7 @@ class ResNet(nn.Module):
         return output
 
 
-def _resnet(
-    arch, block, num_block, base_width, num_classes, pretrained, batch_norm
-):
+def _resnet(arch, block, num_block, base_width, num_classes, pretrained, batch_norm):
     model = ResNet(block, num_block, base_width, num_classes, batch_norm)
     if pretrained:
         pretrained_path = "Models/pretrained/{}-cifar{}.pt".format(arch, num_classes)

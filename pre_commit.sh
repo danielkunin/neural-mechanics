@@ -4,7 +4,7 @@ echo "Checking code style"
 echo ">>>>>>>>>>>>>>>>>>>>>>>"
 
 format_occurred=false
-declare -a black_dirs=("Experiments/" "Layers/" "Models/" "Pruners/" "./" "Utils/")
+declare -a black_dirs=("models/" "optimizers/" "utils/" "visualizations/" "./")
 for black_dir in "${black_dirs[@]}"; do
     echo ">>> Checking $black_dir"
     black --check "$black_dir"

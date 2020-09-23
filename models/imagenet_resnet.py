@@ -48,9 +48,7 @@ def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
 
 def conv1x1(in_planes, out_planes, stride=1):
     """1x1 convolution"""
-    return nn.Conv2d(
-        in_planes, out_planes, kernel_size=1, stride=stride, bias=False
-    )
+    return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
 
 
 class BasicBlock(nn.Module):
@@ -299,13 +297,7 @@ def _resnet(arch, block, layer_list, pretrained, progress, **kwargs):
     return model
 
 
-def resnet18(
-    input_shape,
-    num_classes,
-    pretrained=False,
-    progress=True,
-    **kwargs
-):
+def resnet18(input_shape, num_classes, pretrained=False, progress=True, **kwargs):
     r"""ResNet-18 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_
 
@@ -316,13 +308,7 @@ def resnet18(
     return _resnet("resnet18", BasicBlock, [2, 2, 2, 2], pretrained, progress, **kwargs)
 
 
-def resnet34(
-    input_shape,
-    num_classes,
-    pretrained=False,
-    progress=True,
-    **kwargs
-):
+def resnet34(input_shape, num_classes, pretrained=False, progress=True, **kwargs):
     r"""ResNet-34 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_
 
@@ -333,13 +319,7 @@ def resnet34(
     return _resnet("resnet34", BasicBlock, [3, 4, 6, 3], pretrained, progress, **kwargs)
 
 
-def resnet50(
-    input_shape,
-    num_classes,
-    pretrained=False,
-    progress=True,
-    **kwargs
-):
+def resnet50(input_shape, num_classes, pretrained=False, progress=True, **kwargs):
     r"""ResNet-50 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_
 
@@ -350,13 +330,7 @@ def resnet50(
     return _resnet("resnet50", Bottleneck, [3, 4, 6, 3], pretrained, progress, **kwargs)
 
 
-def resnet101(
-    input_shape,
-    num_classes,
-    pretrained=False,
-    progress=True,
-    **kwargs
-):
+def resnet101(input_shape, num_classes, pretrained=False, progress=True, **kwargs):
     r"""ResNet-101 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_
 
@@ -369,13 +343,7 @@ def resnet101(
     )
 
 
-def resnet152(
-    input_shape,
-    num_classes,
-    pretrained=False,
-    progress=True,
-    **kwargs
-):
+def resnet152(input_shape, num_classes, pretrained=False, progress=True, **kwargs):
     r"""ResNet-152 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_
 
@@ -389,11 +357,7 @@ def resnet152(
 
 
 def wide_resnet50_2(
-    input_shape,
-    num_classes,
-    pretrained=False,
-    progress=True,
-    **kwargs
+    input_shape, num_classes, pretrained=False, progress=True, **kwargs
 ):
     r"""Wide ResNet-50-2 model from
     `"Wide Residual Networks" <https://arxiv.org/pdf/1605.07146.pdf>`_
@@ -414,11 +378,7 @@ def wide_resnet50_2(
 
 
 def wide_resnet101_2(
-    input_shape,
-    num_classes,
-    pretrained=False,
-    progress=True,
-    **kwargs
+    input_shape, num_classes, pretrained=False, progress=True, **kwargs
 ):
     r"""Wide ResNet-101-2 model from
     `"Wide Residual Networks" <https://arxiv.org/pdf/1605.07146.pdf>`_

@@ -1,4 +1,5 @@
 import matplotlib as mpl
+
 mpl.use("Agg")
 import matplotlib.pyplot as plt
 import os
@@ -12,75 +13,83 @@ import json
 def statistics(model, feats_dir, steps, lr, wd):
     layers = [layer for layer in utils.get_layers(model) if "conv" in layer]
     weights = utils.load_features(
-        steps=[str(steps[0])], 
-        feats_dir=feats_dir, 
-        model=model, 
-        suffix="weight", 
-        group="params"
+        steps=[str(steps[0])],
+        feats_dir=feats_dir,
+        model=model,
+        suffix="weight",
+        group="params",
     )
     biases = utils.load_features(
-        steps=[str(steps[0])], 
-        feats_dir=feats_dir, 
-        model=model, 
-        suffix="bias", 
-        group="params"
+        steps=[str(steps[0])],
+        feats_dir=feats_dir,
+        model=model,
+        suffix="bias",
+        group="params",
     )
 
     theoretical = {layer: {} for layer in layers}
     for i in range(len(steps)):
         step = steps[i]
         t = lr * step
-        alpha_p = (-1 + np.sqrt(1 - 4 * lr * wd)) / lr 
-        alpha_m = (-1 - np.sqrt(1 - 4 * lr * wd)) / lr 
-        numer = (alpha_p * np.exp(alpha_m * t) - alpha_m * np.exp(alpha_p * t))
-        denom = (alpha_p - alpha_m)
+        alpha_p = (-1 + np.sqrt(1 - 4 * lr * wd)) / lr
+        alpha_m = (-1 - np.sqrt(1 - 4 * lr * wd)) / lr
+        numer = alpha_p * np.exp(alpha_m * t) - alpha_m * np.exp(alpha_p * t)
+        denom = alpha_p - alpha_m
 
         if i > 0:
             weight_buffers = utils.load_features(
-                steps=[str(step)], 
-                feats_dir=feats_dir, 
-                model=model, 
-                suffix="weight", 
-                group="buffers"
+                steps=[str(step)],
+                feats_dir=feats_dir,
+                model=model,
+                suffix="weight",
+                group="buffers",
             )
             bias_buffers = utils.load_features(
-                steps=[str(step)], 
-                feats_dir=feats_dir, 
-                model=model, 
-                suffix="bias", 
-                group="buffers"
+                steps=[str(step)],
+                feats_dir=feats_dir,
+                model=model,
+                suffix="bias",
+                group="buffers",
             )
 
         for layer in layers:
             Wl_t = weights[layer][f"step_{steps[0]}"]
             bl_t = biases[layer][f"step_{steps[0]}"]
-            theoretical[layer][step] = numer / denom * utils.in_synapses(Wl_t**2, bl_t**2)
+            theoretical[layer][step] = (
+                numer / denom * utils.in_synapses(Wl_t ** 2, bl_t ** 2)
+            )
             if i > 0:
                 g_Wl_t = weight_buffers[layer][f"step_{step}"]
                 g_bl_t = bias_buffers[layer][f"step_{step}"]
-                theoretical[layer][step] += 2 / denom * lr * np.exp(alpha_p * t) * utils.in_synapses(g_Wl_t, g_bl_t)
+                theoretical[layer][step] += (
+                    2
+                    / denom
+                    * lr
+                    * np.exp(alpha_p * t)
+                    * utils.in_synapses(g_Wl_t, g_bl_t)
+                )
 
     empirical = {layer: {} for layer in layers}
     for i in range(len(steps)):
         step = steps[i]
         weights = utils.load_features(
-            steps=[str(step)], 
-            feats_dir=feats_dir, 
-            model=model, 
-            suffix="weight", 
-            group="params"
+            steps=[str(step)],
+            feats_dir=feats_dir,
+            model=model,
+            suffix="weight",
+            group="params",
         )
         biases = utils.load_features(
-            steps=[str(step)], 
-            feats_dir=feats_dir, 
-            model=model, 
-            suffix="bias", 
-            group="params"
+            steps=[str(step)],
+            feats_dir=feats_dir,
+            model=model,
+            suffix="bias",
+            group="params",
         )
         for layer in layers:
             Wl_t = weights[layer][f"step_{step}"]
             bl_t = biases[layer][f"step_{step}"]
-            empirical[layer][step] = utils.in_synapses(Wl_t**2, bl_t**2)
+            empirical[layer][step] = utils.in_synapses(Wl_t ** 2, bl_t ** 2)
 
     return (empirical, theoretical)
 
@@ -93,7 +102,9 @@ def main(args=None, axes=None):
         ARGS.plot_dir = ARGS.save_dir
 
     # load hyperparameters
-    with open(f"{ARGS.plot_dir}/{ARGS.experiment}/{ARGS.expid}/hyperparameters.json") as f:
+    with open(
+        f"{ARGS.plot_dir}/{ARGS.experiment}/{ARGS.expid}/hyperparameters.json"
+    ) as f:
         hyperparameters = json.load(f)
 
     # load cache or run statistics
@@ -105,14 +116,16 @@ def main(args=None, axes=None):
         print("   Loading from cache...")
         steps, empirical, theoretical = dd.io.load(cache_file)
     else:
-        step_names = glob.glob(f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}/feats/*.h5")
+        step_names = glob.glob(
+            f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}/feats/*.h5"
+        )
         steps = sorted([int(s.split(".h5")[0].split("step")[1]) for s in step_names])
         empirical, theoretical = statistics(
-            model=hyperparameters['model'],
+            model=hyperparameters["model"],
             feats_dir=f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}/feats",
             steps=steps,
-            lr=hyperparameters['lr'],
-            wd=hyperparameters['wd'],
+            lr=hyperparameters["lr"],
+            wd=hyperparameters["wd"],
         )
         print(f"   Caching features to {cache_file}")
         dd.io.save(cache_file, (steps, empirical, theoretical))
@@ -134,9 +147,7 @@ def main(args=None, axes=None):
         if args.layer_wise:
             norm = [np.sum(i) for i in norm]
         axes.plot(
-            timesteps,
-            norm,
-            color=plt.cm.tab20(int(layer.split("conv")[1]) - 1),
+            timesteps, norm, color=plt.cm.tab20(int(layer.split("conv")[1]) - 1),
         )
     for layer in layers:
         timesteps = list(theoretical[layer].keys())
@@ -144,24 +155,17 @@ def main(args=None, axes=None):
         if args.layer_wise:
             norm = [np.sum(i) for i in norm]
         axes.plot(
-            timesteps,
-            norm,
-            color='k',
-            ls='--',
+            timesteps, norm, color="k", ls="--",
         )
-    
+
     # axes labels and title
     axes.set_xlabel("timestep")
     axes.set_ylabel(f"projection")
-    axes.title.set_text(
-        f"Projection for translational parameters across time"
-    )
+    axes.title.set_text(f"Projection for translational parameters across time")
     if ARGS.use_tex:
         axes.set_xlabel("timestep")
         axes.set_ylabel(r"$\langle W, \mathbb{1}\rangle$")
-        axes.set_title(
-            r"Projection for translational parameters across time"
-        )
+        axes.set_title(r"Projection for translational parameters across time")
 
     if ARGS.legend:
         axes.legend()
@@ -179,7 +183,7 @@ def extend_parser(parser):
         "--layer-list",
         type=int,
         help="list of layer indices to plot",
-        nargs='+',
+        nargs="+",
         default=None,
         required=False,
     )
@@ -200,6 +204,7 @@ if __name__ == "__main__":
 
     if ARGS.use_tex:
         from matplotlib import rc
+
         # For TeX usage in titles
         rc("font", **{"family": "sans-serif", "sans-serif": ["Helvetica"]})
         ## for Palatino and other serif fonts use:
