@@ -1,9 +1,13 @@
 import argparse
 
+
 def default():
     parser = argparse.ArgumentParser(description="Neural Mechanics")
     parser.add_argument(
-        "--experiment", type=str, default="", help='name used to save results (default: "")'
+        "--experiment",
+        type=str,
+        default="",
+        help='name used to save results (default: "")',
     )
     parser.add_argument(
         "--expid", type=str, default="", help='name used to save results (default: "")'
@@ -18,10 +22,7 @@ def default():
         "--gpu", type=int, default="0", help="number of GPU device to use (default: 0)"
     )
     parser.add_argument(
-        "--overwrite", 
-        dest="overwrite", 
-        action="store_true",
-        default=False
+        "--overwrite", dest="overwrite", action="store_true", default=False
     )
     return parser
 
@@ -90,7 +91,7 @@ def train():
         "--model-class",
         type=str,
         default="default",
-        choices=["default","tinyimagenet", "imagenet"],
+        choices=["default", "tinyimagenet", "imagenet"],
         help="model class (default: default)",
     )
     train_args.add_argument(
@@ -119,10 +120,7 @@ def train():
         help="input batch size for testing (default: 256)",
     )
     train_args.add_argument(
-        "--epochs",
-        type=int,
-        default=0,
-        help="number of epochs to train (default: 0)",
+        "--epochs", type=int, default=0, help="number of epochs to train (default: 0)",
     )
     train_args.add_argument(
         "--lr", type=float, default=0.001, help="learning rate (default: 0.001)"
@@ -149,7 +147,9 @@ def train():
         default="4",
         help="number of data loading workers (default: 4)",
     )
-    train_args.add_argument("--seed", type=int, default=1, help="random seed (default: 1)")
+    train_args.add_argument(
+        "--seed", type=int, default=1, help="random seed (default: 1)"
+    )
     train_args.add_argument(
         "--verbose",
         action="store_true",

@@ -1,4 +1,5 @@
 import matplotlib as mpl
+
 mpl.use("Agg")
 import matplotlib.pyplot as plt
 import os
@@ -11,18 +12,18 @@ import json
 
 def statistics(model, feats_dir, steps, lr, wd, normalize):
     weights = utils.load_features(
-        steps=[str(steps[0])], 
-        feats_dir=feats_dir, 
-        model=model, 
-        suffix="weight", 
-        group="params"
+        steps=[str(steps[0])],
+        feats_dir=feats_dir,
+        model=model,
+        suffix="weight",
+        group="params",
     )
     biases = utils.load_features(
-        steps=[str(steps[0])], 
-        feats_dir=feats_dir, 
-        model=model, 
-        suffix="bias", 
-        group="params"
+        steps=[str(steps[0])],
+        feats_dir=feats_dir,
+        model=model,
+        suffix="bias",
+        group="params",
     )
     wl_0 = weights["classifier"][f"step_{steps[0]}"]
     bl_0 = biases["classifier"][f"step_{steps[0]}"]
@@ -30,33 +31,33 @@ def statistics(model, feats_dir, steps, lr, wd, normalize):
     theoretical = []
     for i in range(len(steps)):
         t = 1.0 * lr * steps[i]
-        alpha_p = (-1 + np.sqrt(1 - 2 * lr * wd)) / lr 
-        alpha_m = (-1 - np.sqrt(1 - 2 * lr * wd)) / lr 
-        numer = (alpha_p * np.exp(alpha_m * t) - alpha_m * np.exp(alpha_p * t))
-        denom = (alpha_p - alpha_m)
+        alpha_p = (-1 + np.sqrt(1 - 2 * lr * wd)) / lr
+        alpha_m = (-1 - np.sqrt(1 - 2 * lr * wd)) / lr
+        numer = alpha_p * np.exp(alpha_m * t) - alpha_m * np.exp(alpha_p * t)
+        denom = alpha_p - alpha_m
         if normalize:
-            theoretical.append(numer / denom) 
+            theoretical.append(numer / denom)
             # np.exp(-wd * t)s
         else:
-            theoretical.append(numer / denom * utils.out_synapses(Wl_0)) 
+            theoretical.append(numer / denom * utils.out_synapses(Wl_0))
             # np.exp(-wd * t) * np.sum(Wl_0, axis=0)
-            
+
     empirical = []
     for i in range(len(steps)):
         step = steps[i]
         weights = utils.load_features(
-            steps=[str(step)], 
-            feats_dir=feats_dir, 
-            model=model, 
-            suffix="weight", 
-            group="params"
+            steps=[str(step)],
+            feats_dir=feats_dir,
+            model=model,
+            suffix="weight",
+            group="params",
         )
         biases = utils.load_features(
-            steps=[str(step)], 
-            feats_dir=feats_dir, 
-            model=model, 
-            suffix="bias", 
-            group="params"
+            steps=[str(step)],
+            feats_dir=feats_dir,
+            model=model,
+            suffix="bias",
+            group="params",
         )
         wl_t = weights["classifier"][f"step_{step}"]
         bl_t = biases["classifier"][f"step_{step}"]
@@ -77,7 +78,9 @@ def main(args=None, axes=None):
         ARGS.plot_dir = ARGS.save_dir
 
     # load hyperparameters
-    with open(f"{ARGS.plot_dir}/{ARGS.experiment}/{ARGS.expid}/hyperparameters.json") as f:
+    with open(
+        f"{ARGS.plot_dir}/{ARGS.experiment}/{ARGS.expid}/hyperparameters.json"
+    ) as f:
         hyperparameters = json.load(f)
 
     # load cache or run statistics
@@ -89,14 +92,16 @@ def main(args=None, axes=None):
         print("   Loading from cache...")
         steps, empirical, theoretical = dd.io.load(cache_file)
     else:
-        step_names = glob.glob(f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}/feats/*.h5")
+        step_names = glob.glob(
+            f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}/feats/*.h5"
+        )
         steps = sorted([int(s.split(".h5")[0].split("step")[1]) for s in step_names])
         empirical, theoretical = statistics(
-            model=hyperparameters['model'],
+            model=hyperparameters["model"],
             feats_dir=f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}/feats",
             steps=steps,
-            lr=hyperparameters['lr'],
-            wd=hyperparameters['wd'],
+            lr=hyperparameters["lr"],
+            wd=hyperparameters["wd"],
             normalize=ARGS.normalize,
         )
         print(f"   Caching features to {cache_file}")
@@ -109,7 +114,14 @@ def main(args=None, axes=None):
         fig, axes = plt.subplots(figsize=(15, 15))
 
     # plot data
-    axes.plot(steps[0 : len(empirical)], empirical, c="r", ls="-", alpha=0.1, label="empirical")
+    axes.plot(
+        steps[0 : len(empirical)],
+        empirical,
+        c="r",
+        ls="-",
+        alpha=0.1,
+        label="empirical",
+    )
     axes.plot(
         steps[0 : len(theoretical)],
         theoretical,
@@ -118,19 +130,15 @@ def main(args=None, axes=None):
         ls="--",
         label="theoretical",
     )
-    
+
     # axes labels and title
     axes.set_xlabel("timestep")
     axes.set_ylabel(f"projection")
-    axes.title.set_text(
-        f"Projection for translational parameters across time"
-    )
+    axes.title.set_text(f"Projection for translational parameters across time")
     if ARGS.use_tex:
         axes.set_xlabel("timestep")
         axes.set_ylabel(r"$\langle W, \mathbb{1}\rangle$")
-        axes.set_title(
-            r"Projection for translational parameters across time"
-        )
+        axes.set_title(r"Projection for translational parameters across time")
 
     if ARGS.legend:
         axes.legend()
@@ -161,6 +169,7 @@ if __name__ == "__main__":
 
     if ARGS.use_tex:
         from matplotlib import rc
+
         # For TeX usage in titles
         rc("font", **{"family": "sans-serif", "sans-serif": ["Helvetica"]})
         ## for Palatino and other serif fonts use:

@@ -15,9 +15,7 @@ import getpass
 # This is just meant to identify the layers in the checkpoints
 # and map them to pretty, sequential names
 MODELS = {
-    "logistic": {
-        "1": "classifier",
-    },
+    "logistic": {"1": "classifier",},
     "fc": {
         "1": "fc1",
         "3": "fc2",
@@ -90,70 +88,73 @@ MODELS = {
     },
     "resnet18": {
         "conv1.0": "conv1_0",
-        "conv1.1": "conv1_1", # no bias
-        "conv2_x.0.residual_function.0": "conv2_0_0", # no bias
+        "conv1.1": "conv1_1",  # no bias
+        "conv2_x.0.residual_function.0": "conv2_0_0",  # no bias
         "conv2_x.0.residual_function.1": "conv2_0_1",
-        "conv2_x.0.residual_function.3": "conv2_0_3", # no bias
+        "conv2_x.0.residual_function.3": "conv2_0_3",  # no bias
         "conv2_x.0.residual_function.4": "conv2_0_4",
-        "conv2_x.1.residual_function.0": "conv2_1_0", # no bias
+        "conv2_x.1.residual_function.0": "conv2_1_0",  # no bias
         "conv2_x.1.residual_function.1": "conv2_1_1",
-        "conv2_x.1.residual_function.3": "conv2_1_3", # no bias
+        "conv2_x.1.residual_function.3": "conv2_1_3",  # no bias
         "conv2_x.1.residual_function.4": "conv2_1_4",
-        "conv3_x.0.residual_function.0": "conv3_0_0", # no bias
+        "conv3_x.0.residual_function.0": "conv3_0_0",  # no bias
         "conv3_x.0.residual_function.1": "conv3_0_1",
-        "conv3_x.0.residual_function.3": "conv3_0_3", # no bias
+        "conv3_x.0.residual_function.3": "conv3_0_3",  # no bias
         "conv3_x.0.residual_function.4": "conv3_0_4",
-        "conv3_x.0.shortcut.0": "conv3_0_s_0", # no bias
+        "conv3_x.0.shortcut.0": "conv3_0_s_0",  # no bias
         "conv3_x.0.shortcut.1": "conv3_0_s_1",
-        "conv3_x.1.residual_function.0": "conv3_1_0", # no bias
+        "conv3_x.1.residual_function.0": "conv3_1_0",  # no bias
         "conv3_x.1.residual_function.1": "conv3_1_1",
-        "conv3_x.1.residual_function.3": "conv3_1_3", # no bias
+        "conv3_x.1.residual_function.3": "conv3_1_3",  # no bias
         "conv3_x.1.residual_function.4": "conv3_1_4",
-        "conv4_x.0.residual_function.0": "conv4_0_0", # no bias
+        "conv4_x.0.residual_function.0": "conv4_0_0",  # no bias
         "conv4_x.0.residual_function.1": "conv4_0_1",
-        "conv4_x.0.residual_function.3": "conv4_0_3", # no bias
+        "conv4_x.0.residual_function.3": "conv4_0_3",  # no bias
         "conv4_x.0.residual_function.4": "conv4_0_4",
-        "conv4_x.0.shortcut.0": "conv4_0_s_0", # no bias
+        "conv4_x.0.shortcut.0": "conv4_0_s_0",  # no bias
         "conv4_x.0.shortcut.1": "conv4_0_s_1",
-        "conv4_x.1.residual_function.0": "conv4_1_0", # no bias
+        "conv4_x.1.residual_function.0": "conv4_1_0",  # no bias
         "conv4_x.1.residual_function.1": "conv4_1_1",
-        "conv4_x.1.residual_function.3": "conv4_1_3", # no bias
+        "conv4_x.1.residual_function.3": "conv4_1_3",  # no bias
         "conv4_x.1.residual_function.4": "conv4_1_4",
-        "conv5_x.0.residual_function.0": "conv5_0_0", # no bias
+        "conv5_x.0.residual_function.0": "conv5_0_0",  # no bias
         "conv5_x.0.residual_function.1": "conv5_0_1",
-        "conv5_x.0.residual_function.3": "conv5_0_3", # no bias
+        "conv5_x.0.residual_function.3": "conv5_0_3",  # no bias
         "conv5_x.0.residual_function.4": "conv5_0_4",
-        "conv5_x.0.shortcut.0": "conv5_0_s_0", # no bias
+        "conv5_x.0.shortcut.0": "conv5_0_s_0",  # no bias
         "conv5_x.0.shortcut.1": "conv5_0_s_1",
-        "conv5_x.1.residual_function.0": "conv5_1_0", # no bias
+        "conv5_x.1.residual_function.0": "conv5_1_0",  # no bias
         "conv5_x.1.residual_function.1": "conv5_1_1",
-        "conv5_x.1.residual_function.3": "conv5_1_3", # no bias
+        "conv5_x.1.residual_function.3": "conv5_1_3",  # no bias
         "conv5_x.1.residual_function.4": "conv5_1_4",
         "fc": "fc",
-    }
+    },
 }
+
 
 def in_synapses(W, b=None):
     """
     Computes sum of in synapses to next layer
     """
     if np.ndim(W) == 4:
-        in_sum = np.sum(W, axis=(1,2,3))
+        in_sum = np.sum(W, axis=(1, 2, 3))
     else:
         in_sum = np.sum(W, axis=1)
     if b is not None:
         in_sum += b
     return in_sum
 
+
 def out_synapses(W, b=None):
     """
     Computes sum of out synapses from last layer
     """
     if np.ndim(W) == 4:
-        out_sum = np.sum(W, axis=(0,2,3))
+        out_sum = np.sum(W, axis=(0, 2, 3))
     else:
         out_sum = np.sum(W, axis=0)
     return out_sum
+
 
 def makedir_quiet(d):
     """
@@ -171,15 +172,13 @@ def make_iterable(x):
         return [x]
     return x
 
+
 def get_layers(model):
     return MODELS[model].values()
 
+
 def get_features(
-    feats_path,
-    group,
-    keys,
-    out_keys=None,
-    verbose=False,
+    feats_path, group, keys, out_keys=None, verbose=False,
 ):
     """
     Returns features from HDF5 DataSet
@@ -216,6 +215,7 @@ def get_features(
 
     return out
 
+
 def load_features(steps, feats_dir, model, suffix, group):
     """
     layers: is the output keys for the layer feats, or computed quantities
@@ -243,10 +243,16 @@ def load_features(steps, feats_dir, model, suffix, group):
 def default_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--experiment", type=str, required=True, help='name used to save results (default: "")'
+        "--experiment",
+        type=str,
+        required=True,
+        help='name used to save results (default: "")',
     )
     parser.add_argument(
-        "--expid", type=str, required=True, help='name used to save results (default: "")'
+        "--expid",
+        type=str,
+        required=True,
+        help='name used to save results (default: "")',
     )
     parser.add_argument(
         "--save-dir",
@@ -261,10 +267,7 @@ def default_parser():
         help="Directory to save cache and figures (default: 'results')",
     )
     parser.add_argument(
-        "--overwrite",
-        dest="overwrite",
-        action="store_true",
-        default=False
+        "--overwrite", dest="overwrite", action="store_true", default=False
     )
     parser.add_argument(
         "--image-suffix",
@@ -277,12 +280,9 @@ def default_parser():
         "--use-tex",
         action="store_true",
         help="will use tex rendering for matplotlib labels",
-        default=False
+        default=False,
     )
     parser.add_argument(
-        "--legend",
-        action="store_true",
-        help="will add legend",
-        default=False
+        "--legend", action="store_true", help="will add legend", default=False
     )
     return parser

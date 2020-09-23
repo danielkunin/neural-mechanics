@@ -61,17 +61,12 @@ def main():
     ## Model, Loss, Optimizer ##
     print("Creating {}-{} model.".format(ARGS.model_class, ARGS.model))
     model = load.model(ARGS.model, ARGS.model_class)(
-        input_shape=input_shape,
-        num_classes=num_classes,
-        pretrained=ARGS.pretrained,
+        input_shape=input_shape, num_classes=num_classes, pretrained=ARGS.pretrained,
     ).to(device)
     loss = nn.CrossEntropyLoss()
     opt_class, opt_kwargs = load.optimizer(ARGS.optimizer)
     optimizer = opt_class(
-        model.parameters(),
-        lr=ARGS.lr,
-        weight_decay=ARGS.wd,
-        **opt_kwargs,
+        model.parameters(), lr=ARGS.lr, weight_decay=ARGS.wd, **opt_kwargs,
     )
     scheduler = torch.optim.lr_scheduler.MultiStepLR(
         optimizer, milestones=ARGS.lr_drops, gamma=ARGS.lr_drop_rate

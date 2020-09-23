@@ -12,7 +12,7 @@ def main():
     step_names = glob.glob(f"{exp_path}/ckpt/*.tar")
     step_list = [int(s.split(".tar")[0].split("step")[1]) for s in step_names]
     device = load.device(ARGS.gpu)
-    
+
     save_path = f"{exp_path}/feats"
     try:
         os.makedirs(save_path)
@@ -40,12 +40,18 @@ def main():
 
         buffers = {}
         # this assumes the same order of model state dict as optimize state dict
-        param_names = [name for name in checkpoint["model_state_dict"].keys() if ("weight" in name or "bias" in name)]
-        for name, buffer_dict in zip(param_names, checkpoint["optimizer_state_dict"]["state"].values()):
-            if "weight" in name and 'integral_buffer' in buffer_dict.keys():
-                buffers[name] = buffer_dict['integral_buffer'].cpu().numpy()
-            if "bias" in name and 'integral_buffer' in buffer_dict.keys():
-                buffers[name] = buffer_dict['integral_buffer'].cpu().numpy()
+        param_names = [
+            name
+            for name in checkpoint["model_state_dict"].keys()
+            if ("weight" in name or "bias" in name)
+        ]
+        for name, buffer_dict in zip(
+            param_names, checkpoint["optimizer_state_dict"]["state"].values()
+        ):
+            if "weight" in name and "integral_buffer" in buffer_dict.keys():
+                buffers[name] = buffer_dict["integral_buffer"].cpu().numpy()
+            if "bias" in name and "integral_buffer" in buffer_dict.keys():
+                buffers[name] = buffer_dict["integral_buffer"].cpu().numpy()
 
         dd.io.save(out_filename, {"params": params, "buffers": buffers})
 
