@@ -11,6 +11,7 @@ import json
 
 
 def statistics(model, feats_dir, steps, lr, wd, normalize):
+    layers = [layer for layer in utils.get_layers(model) if "classifier" in layer]
     weights = utils.load_features(
         steps=[str(steps[0])],
         feats_dir=feats_dir,
@@ -28,21 +29,17 @@ def statistics(model, feats_dir, steps, lr, wd, normalize):
     wl_0 = weights["classifier"][f"step_{steps[0]}"]
     bl_0 = biases["classifier"][f"step_{steps[0]}"]
     Wl_0 = np.column_stack((wl_0, bl_0))
-    theoretical = []
+    theoretical = {layer: {} for layer in layers}
     for i in range(len(steps)):
         t = 1.0 * lr * steps[i]
         alpha_p = (-1 + np.sqrt(1 - 2 * lr * wd)) / lr
         alpha_m = (-1 - np.sqrt(1 - 2 * lr * wd)) / lr
         numer = alpha_p * np.exp(alpha_m * t) - alpha_m * np.exp(alpha_p * t)
         denom = alpha_p - alpha_m
-        if normalize:
-            theoretical.append(numer / denom)
-            # np.exp(-wd * t)s
-        else:
-            theoretical.append(numer / denom * utils.out_synapses(Wl_0))
-            # np.exp(-wd * t) * np.sum(Wl_0, axis=0)
+        for layer in layers:
+            theoretical[layer][step] = numer / denom * utils.out_synapses(Wl_0)
 
-    empirical = []
+    empirical = {layer: {} for layer in layers}
     for i in range(len(steps)):
         step = steps[i]
         weights = utils.load_features(
@@ -62,10 +59,8 @@ def statistics(model, feats_dir, steps, lr, wd, normalize):
         wl_t = weights["classifier"][f"step_{step}"]
         bl_t = biases["classifier"][f"step_{step}"]
         Wl_t = np.column_stack((wl_t, bl_t))
-        if normalize:
-            empirical.append(np.sum(Wl_t, axis=0) / np.sum(Wl_0, axis=0))
-        else:
-            empirical.append(np.sum(Wl_t, axis=0))
+        for layer in layers:
+            empirical[layer][step] =utils.out_synapses(Wl_t)
 
     return (empirical, theoretical)
 
