@@ -87,47 +87,47 @@ MODELS = {
         "classifier.6": "classifier",
     },
     "resnet18": {
-        "conv1.0": "conv1_0",
-        "conv1.1": "conv1_1",  # no bias
-        "conv2_x.0.residual_function.0": "conv2_0_0",  # no bias
+        #"conv1.0": "conv1_0", # no bias
+        "conv1.1": "conv1_1",
+        #"conv2_x.0.residual_function.0": "conv2_0_0",  # no bias
         "conv2_x.0.residual_function.1": "conv2_0_1",
-        "conv2_x.0.residual_function.3": "conv2_0_3",  # no bias
+        #"conv2_x.0.residual_function.3": "conv2_0_3",  # no bias
         "conv2_x.0.residual_function.4": "conv2_0_4",
-        "conv2_x.1.residual_function.0": "conv2_1_0",  # no bias
+        #"conv2_x.1.residual_function.0": "conv2_1_0",  # no bias
         "conv2_x.1.residual_function.1": "conv2_1_1",
-        "conv2_x.1.residual_function.3": "conv2_1_3",  # no bias
+        #"conv2_x.1.residual_function.3": "conv2_1_3",  # no bias
         "conv2_x.1.residual_function.4": "conv2_1_4",
-        "conv3_x.0.residual_function.0": "conv3_0_0",  # no bias
+        #"conv3_x.0.residual_function.0": "conv3_0_0",  # no bias
         "conv3_x.0.residual_function.1": "conv3_0_1",
-        "conv3_x.0.residual_function.3": "conv3_0_3",  # no bias
+        #"conv3_x.0.residual_function.3": "conv3_0_3",  # no bias
         "conv3_x.0.residual_function.4": "conv3_0_4",
-        "conv3_x.0.shortcut.0": "conv3_0_s_0",  # no bias
+        #"conv3_x.0.shortcut.0": "conv3_0_s_0",  # no bias
         "conv3_x.0.shortcut.1": "conv3_0_s_1",
-        "conv3_x.1.residual_function.0": "conv3_1_0",  # no bias
+        #"conv3_x.1.residual_function.0": "conv3_1_0",  # no bias
         "conv3_x.1.residual_function.1": "conv3_1_1",
-        "conv3_x.1.residual_function.3": "conv3_1_3",  # no bias
+        #"conv3_x.1.residual_function.3": "conv3_1_3",  # no bias
         "conv3_x.1.residual_function.4": "conv3_1_4",
-        "conv4_x.0.residual_function.0": "conv4_0_0",  # no bias
+        #"conv4_x.0.residual_function.0": "conv4_0_0",  # no bias
         "conv4_x.0.residual_function.1": "conv4_0_1",
-        "conv4_x.0.residual_function.3": "conv4_0_3",  # no bias
+        #"conv4_x.0.residual_function.3": "conv4_0_3",  # no bias
         "conv4_x.0.residual_function.4": "conv4_0_4",
-        "conv4_x.0.shortcut.0": "conv4_0_s_0",  # no bias
+        #"conv4_x.0.shortcut.0": "conv4_0_s_0",  # no bias
         "conv4_x.0.shortcut.1": "conv4_0_s_1",
-        "conv4_x.1.residual_function.0": "conv4_1_0",  # no bias
+        #"conv4_x.1.residual_function.0": "conv4_1_0",  # no bias
         "conv4_x.1.residual_function.1": "conv4_1_1",
-        "conv4_x.1.residual_function.3": "conv4_1_3",  # no bias
+        #"conv4_x.1.residual_function.3": "conv4_1_3",  # no bias
         "conv4_x.1.residual_function.4": "conv4_1_4",
-        "conv5_x.0.residual_function.0": "conv5_0_0",  # no bias
+        #"conv5_x.0.residual_function.0": "conv5_0_0",  # no bias
         "conv5_x.0.residual_function.1": "conv5_0_1",
-        "conv5_x.0.residual_function.3": "conv5_0_3",  # no bias
+        #"conv5_x.0.residual_function.3": "conv5_0_3",  # no bias
         "conv5_x.0.residual_function.4": "conv5_0_4",
-        "conv5_x.0.shortcut.0": "conv5_0_s_0",  # no bias
+        #"conv5_x.0.shortcut.0": "conv5_0_s_0",  # no bias
         "conv5_x.0.shortcut.1": "conv5_0_s_1",
-        "conv5_x.1.residual_function.0": "conv5_1_0",  # no bias
+        #"conv5_x.1.residual_function.0": "conv5_1_0",  # no bias
         "conv5_x.1.residual_function.1": "conv5_1_1",
-        "conv5_x.1.residual_function.3": "conv5_1_3",  # no bias
+        #"conv5_x.1.residual_function.3": "conv5_1_3",  # no bias
         "conv5_x.1.residual_function.4": "conv5_1_4",
-        "fc": "fc",
+        "fc": "classifier",
     },
 }
 
