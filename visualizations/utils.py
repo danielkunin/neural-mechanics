@@ -88,6 +88,49 @@ MODELS = {
         "classifier.3": "fc2",
         "classifier.6": "classifier",
     },
+    "resnet18": {
+        "conv1.0": "conv1_0",
+        "conv1.1": "conv1_1", # no bias
+        "conv2_x.0.residual_function.0": "conv2_0_0", # no bias
+        "conv2_x.0.residual_function.1": "conv2_0_1",
+        "conv2_x.0.residual_function.3": "conv2_0_3", # no bias
+        "conv2_x.0.residual_function.4": "conv2_0_4",
+        "conv2_x.1.residual_function.0": "conv2_1_0", # no bias
+        "conv2_x.1.residual_function.1": "conv2_1_1",
+        "conv2_x.1.residual_function.3": "conv2_1_3", # no bias
+        "conv2_x.1.residual_function.4": "conv2_1_4",
+        "conv3_x.0.residual_function.0": "conv3_0_0", # no bias
+        "conv3_x.0.residual_function.1": "conv3_0_1",
+        "conv3_x.0.residual_function.3": "conv3_0_3", # no bias
+        "conv3_x.0.residual_function.4": "conv3_0_4",
+        "conv3_x.0.shortcut.0": "conv3_0_s_0", # no bias
+        "conv3_x.0.shortcut.1": "conv3_0_s_1",
+        "conv3_x.1.residual_function.0": "conv3_1_0", # no bias
+        "conv3_x.1.residual_function.1": "conv3_1_1",
+        "conv3_x.1.residual_function.3": "conv3_1_3", # no bias
+        "conv3_x.1.residual_function.4": "conv3_1_4",
+        "conv4_x.0.residual_function.0": "conv4_0_0", # no bias
+        "conv4_x.0.residual_function.1": "conv4_0_1",
+        "conv4_x.0.residual_function.3": "conv4_0_3", # no bias
+        "conv4_x.0.residual_function.4": "conv4_0_4",
+        "conv4_x.0.shortcut.0": "conv4_0_s_0", # no bias
+        "conv4_x.0.shortcut.1": "conv4_0_s_1",
+        "conv4_x.1.residual_function.0": "conv4_1_0", # no bias
+        "conv4_x.1.residual_function.1": "conv4_1_1",
+        "conv4_x.1.residual_function.3": "conv4_1_3", # no bias
+        "conv4_x.1.residual_function.4": "conv4_1_4",
+        "conv5_x.0.residual_function.0": "conv5_0_0", # no bias
+        "conv5_x.0.residual_function.1": "conv5_0_1",
+        "conv5_x.0.residual_function.3": "conv5_0_3", # no bias
+        "conv5_x.0.residual_function.4": "conv5_0_4",
+        "conv5_x.0.shortcut.0": "conv5_0_s_0", # no bias
+        "conv5_x.0.shortcut.1": "conv5_0_s_1",
+        "conv5_x.1.residual_function.0": "conv5_1_0", # no bias
+        "conv5_x.1.residual_function.1": "conv5_1_1",
+        "conv5_x.1.residual_function.3": "conv5_1_3", # no bias
+        "conv5_x.1.residual_function.4": "conv5_1_4",
+        "fc": "fc",
+    }
 }
 
 def in_synapses(W, b=None):
@@ -187,7 +230,7 @@ def load_features(steps, feats_dir, model, suffix, group):
 
     for step in steps:
         feats_path = f"{feats_dir}/step{step}.h5"
-        
+
         if os.path.isfile(feats_path):
             feature_dict = get_features(
                 feats_path=feats_path, group=group, keys=names, out_keys=layers
@@ -212,14 +255,14 @@ def default_parser():
         help='Directory to save checkpoints and features (default: "Results")',
     )
     parser.add_argument(
-        "--plot-dir", 
-        type=str, 
+        "--plot-dir",
+        type=str,
         default=None,
         help="Directory to save cache and figures (default: 'results')",
     )
     parser.add_argument(
-        "--overwrite", 
-        dest="overwrite", 
+        "--overwrite",
+        dest="overwrite",
         action="store_true",
         default=False
     )
@@ -231,15 +274,15 @@ def default_parser():
         required=False,
     )
     parser.add_argument(
-        "--use-tex", 
+        "--use-tex",
         action="store_true",
-        help="will use tex rendering for matplotlib labels", 
+        help="will use tex rendering for matplotlib labels",
         default=False
     )
     parser.add_argument(
-        "--legend", 
+        "--legend",
         action="store_true",
-        help="will add legend", 
+        help="will add legend",
         default=False
     )
     return parser
