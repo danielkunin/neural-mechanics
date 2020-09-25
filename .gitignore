@@ -142,3 +142,9 @@ data/
 
 # experiments
 results/
+
+# scripts
+*.script
+
+# figures
+notebooks/*.pdf

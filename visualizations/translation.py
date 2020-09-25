@@ -10,7 +10,7 @@ import glob
 import json
 
 
-def statistics(model, feats_dir, steps, lr, wd, normalize):
+def statistics(model, feats_dir, steps, lr, wd):
     layers = [layer for layer in utils.get_layers(model) if "classifier" in layer]
     weights = utils.load_features(
         steps=[str(steps[0])],
@@ -31,7 +31,8 @@ def statistics(model, feats_dir, steps, lr, wd, normalize):
     Wl_0 = np.column_stack((wl_0, bl_0))
     theoretical = {layer: {} for layer in layers}
     for i in range(len(steps)):
-        t = 1.0 * lr * steps[i]
+        step = steps[i]
+        t = lr * step
         alpha_p = (-1 + np.sqrt(1 - 2 * lr * wd)) / lr
         alpha_m = (-1 - np.sqrt(1 - 2 * lr * wd)) / lr
         numer = alpha_p * np.exp(alpha_m * t) - alpha_m * np.exp(alpha_p * t)
@@ -56,10 +57,10 @@ def statistics(model, feats_dir, steps, lr, wd, normalize):
             suffix="bias",
             group="params",
         )
-        wl_t = weights["classifier"][f"step_{step}"]
-        bl_t = biases["classifier"][f"step_{step}"]
-        Wl_t = np.column_stack((wl_t, bl_t))
         for layer in layers:
+            wl_t = weights[layer][f"step_{step}"]
+            bl_t = biases[layer][f"step_{step}"]
+            Wl_t = np.column_stack((wl_t, bl_t))
             empirical[layer][step] =utils.out_synapses(Wl_t)
 
     return (empirical, theoretical)
@@ -97,7 +98,6 @@ def main(args=None, axes=None):
             steps=steps,
             lr=hyperparameters["lr"],
             wd=hyperparameters["wd"],
-            normalize=ARGS.normalize,
         )
         print(f"   Caching features to {cache_file}")
         dd.io.save(cache_file, (steps, empirical, theoretical))
@@ -109,22 +109,23 @@ def main(args=None, axes=None):
         fig, axes = plt.subplots(figsize=(15, 15))
 
     # plot data
-    axes.plot(
-        steps[0 : len(empirical)],
-        empirical,
-        c="r",
-        ls="-",
-        alpha=0.1,
-        label="empirical",
-    )
-    axes.plot(
-        steps[0 : len(theoretical)],
-        theoretical,
-        c="b",
-        lw=3,
-        ls="--",
-        label="theoretical",
-    )
+    layers = list(empirical.keys())
+    for layer in layers:
+        timesteps = list(empirical[layer].keys())
+        norm = list(empirical[layer].values())
+        if ARGS.layer_wise:
+            norm = [np.sum(i) for i in norm]
+        axes.plot(
+            timesteps, norm,
+        )
+    for layer in layers:
+        timesteps = list(theoretical[layer].keys())
+        norm = list(theoretical[layer].values())
+        if ARGS.layer_wise:
+            norm = [np.sum(i) for i in norm]
+        axes.plot(
+            timesteps, norm, color="k", ls="--",
+        )
 
     # axes labels and title
     axes.set_xlabel("timestep")
@@ -153,6 +154,13 @@ def extend_parser(parser):
         type=bool,
         help="whether to normalize by initial condition",
         default=False,
+    )
+    parser.add_argument(
+        "--layer-wise",
+        type=bool,
+        help="whether to plot per neuron",
+        default=False,
+        required=False,
     )
     return parser
 
