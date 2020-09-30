@@ -22,6 +22,12 @@ def default():
         "--gpu", type=int, default="0", help="number of GPU device to use (default: 0)"
     )
     parser.add_argument(
+        "--tpu",
+        type=bool,
+        default=False,
+        help="Whether to use TPU training. Uses env variables to select device",
+    )
+    parser.add_argument(
         "--overwrite", dest="overwrite", action="store_true", default=False
     )
     return parser

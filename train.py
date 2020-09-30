@@ -8,11 +8,20 @@ from utils import load
 from utils import optimize
 from utils import flags
 
+# TPU
+import torch_xla.core.xla_model as xm
+import torch_xla.distributed.xla_multiprocessing as xmp
 
-def main():
+
+def main(ARGS):
+    if ARGS.tpu:
+        print_fn = xm.master_print
+    else:
+        print_fn = print
+
     ## Construct Result Directory ##
     if ARGS.expid == "":
-        print("WARNING: this experiment is not being saved.")
+        print_fn("WARNING: this experiment is not being saved.")
         setattr(ARGS, "save", False)
         save_path = None
     else:
@@ -23,7 +32,7 @@ def main():
             os.makedirs(f"{save_path}/ckpt")
         except FileExistsError:
             if not ARGS.overwrite:
-                print(
+                print_fn(
                     "Feature directory exists and no-overwrite specified. Rerun with --overwrite"
                 )
                 quit()
@@ -38,10 +47,10 @@ def main():
 
     ## Random Seed and Device ##
     torch.manual_seed(ARGS.seed)
-    device = load.device(ARGS.gpu)
+    device = load.device(ARGS.gpu, tpu=args.tpu)
 
     ## Data ##
-    print("Loading {} dataset.".format(ARGS.dataset))
+    print_fn("Loading {} dataset.".format(ARGS.dataset))
     input_shape, num_classes = load.dimension(ARGS.dataset)
     train_loader = load.dataloader(
         dataset=ARGS.dataset,
@@ -59,10 +68,20 @@ def main():
     )
 
     ## Model, Loss, Optimizer ##
-    print("Creating {}-{} model.".format(ARGS.model_class, ARGS.model))
+    print_fn("Creating {}-{} model.".format(ARGS.model_class, ARGS.model))
     model = load.model(ARGS.model, ARGS.model_class)(
         input_shape=input_shape, num_classes=num_classes, pretrained=ARGS.pretrained,
     ).to(device)
+
+    if ARGS.tpu:
+        # Model wrapper:
+        # For the MP approach: nothing
+        # For the DP approach: (this would also change how data is fed in train loop)
+        # model_parallel = dp.DataParallel(model, device_ids=devices)
+
+        # LR Rescale
+        ARGS.lr *= xm.xrt_world_size()
+
     loss = nn.CrossEntropyLoss()
     opt_class, opt_kwargs = load.optimizer(ARGS.optimizer)
     optimizer = opt_class(
@@ -72,8 +91,27 @@ def main():
         optimizer, milestones=ARGS.lr_drops, gamma=ARGS.lr_drop_rate
     )
 
+    if ARGS.tpu:
+        # Two approaches to data loading MP and DP?
+        # MP: https://github.com/pytorch/xla/blob/master/test/test_train_mp_imagenet.py
+        # train_loader = pl.MpDeviceLoader(train_loader, device)
+        # test_loader = pl.MpDeviceLoader(test_loader, device)
+        # DP: https://github.com/pytorch/xla/blob/master/test/test_train_imagenet.py
+        #   Do nothing
+        #
+        # For torch_xla == 1.5
+        train_kwargs = {
+            "batch_size": train_loader.batch_size,
+            "dataset_size": len(train_loader.dataset),
+            "num_batches": len(train_loader),
+        }
+        # train_loader = pl.ParallelLoader(train_loader, [device])
+        # train_loader = train_loader.per_device_loader(device)
+        # test_loader = pl.ParallelLoader(test_loader, [device])
+        # test_loader = test_loader.per_device_loader(device)
+
     ## Train ##
-    print("Training for {} epochs.".format(ARGS.epochs))
+    print_fn("Training for {} epochs.".format(ARGS.epochs))
     optimize.train_eval_loop(
         model,
         loss,
@@ -87,10 +125,20 @@ def main():
         ARGS.save,
         save_freq=ARGS.save_freq,
         save_path=save_path,
+        **train_kwargs,
     )
 
 
 if __name__ == "__main__":
     parser = flags.train()
     ARGS = parser.parse_args()
-    main()
+    if ARGS.tpu:
+        # TODO: check: function might need to take a "rank" argument?
+        tpu_cores = 8
+
+        def _mp_fn(rank, args):
+            main(args)
+
+        xmp.spawn(_mp_fn, args=(ARGS,), nprocs=tpu_cores, start_method="fork")
+    else:
+        main(ARGS)
