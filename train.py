@@ -58,6 +58,7 @@ def main(ARGS):
         train=True,
         workers=ARGS.workers,
         datadir=ARGS.data_dir,
+        tpu=ARGS.tpu,
     )
     test_loader = load.dataloader(
         dataset=ARGS.dataset,
@@ -65,6 +66,7 @@ def main(ARGS):
         train=False,
         workers=ARGS.workers,
         datadir=ARGS.data_dir,
+        tpu=ARGS.tpu,
     )
 
     ## Model, Loss, Optimizer ##
@@ -92,23 +94,12 @@ def main(ARGS):
     )
 
     if ARGS.tpu:
-        # Two approaches to data loading MP and DP?
-        # MP: https://github.com/pytorch/xla/blob/master/test/test_train_mp_imagenet.py
-        # train_loader = pl.MpDeviceLoader(train_loader, device)
-        # test_loader = pl.MpDeviceLoader(test_loader, device)
-        # DP: https://github.com/pytorch/xla/blob/master/test/test_train_imagenet.py
-        #   Do nothing
-        #
         # For torch_xla == 1.5
         train_kwargs = {
             "batch_size": train_loader.batch_size,
             "dataset_size": len(train_loader.dataset),
             "num_batches": len(train_loader),
-        }
-        # train_loader = pl.ParallelLoader(train_loader, [device])
-        # train_loader = train_loader.per_device_loader(device)
-        # test_loader = pl.ParallelLoader(test_loader, [device])
-        # test_loader = test_loader.per_device_loader(device)
+            } # TODO: pass ordinal and world size here
 
     ## Train ##
     print_fn("Training for {} epochs.".format(ARGS.epochs))

@@ -98,17 +98,20 @@ def tpu_train(
     batch_size = kwargs.get("batch_size")
     num_batches = kwargs.get("num_batches")
     dataset_size = kwargs.get("dataset_size")
-
-    model.train()
+    xrt_world_size = 8 # TODO: pass from wkards
+    xm_orginal = 0 # TODO: pass from kwards: too many calls baffle it
     tracker = xm.RateTracker()
+    model.train()
     total = 0
     for batch_idx, (data, target) in enumerate(dataloader):
         # data, target = data.to(device), target.to(device)
-        curr_step = epoch * num_batches + batch_idx
+        step = batch_idx*xrt_world_size #+ xm.get_ordinal()
+        #step = batch_idx
+        curr_step = epoch * num_batches + step
         optimizer.zero_grad()
         output = model(data)
         train_loss = loss(output, target)
-        # total += train_loss.item() * data.size(0)
+        total += train_loss.item() * data.size(0)
         train_loss.backward()
         xm.optimizer_step(optimizer)
         tracker.add(batch_size)
@@ -116,10 +119,11 @@ def tpu_train(
             print(
                 f"[xla:{xm.get_ordinal()}, rate: {tracker.rate():.2f}, global_rate: {tracker.global_rate():.2f}] "
                 f"\tTrain Epoch: {epoch} "
-                f"[{batch_idx*batch_size}/{dataset_size} "
+                f"[{step*batch_size}/{dataset_size} "
                 f"({100.0*batch_idx/num_batches:.0f}%)]"
                 f"\tLoss: {train_loss.item():.6f}"
                 f"\tStep: {curr_step}"
+                f"\tData size: {data.size(0)}"
             )
         # TODO: this is just to be able to save at any step (even mid-epoch)
         #       it might make more sense to checkpoint only on epoch: makes
@@ -227,11 +231,11 @@ def train_eval_loop(
         xm.master_print("Using TPU train/eval functions")
         train_fn = tpu_train
         eval_fn = tpu_eval
-
+        # It is necessary to wrap at every epoch, cause otherwise the iterator does nor teinitialize
         def loader_wrap(loader):
             para_loader = pl.ParallelLoader(loader, [device])
             return para_loader.per_device_loader(device)
-
+    
     else:
         train_fn = train
         eval_fn = eval

@@ -128,11 +128,10 @@ def dataloader(
             rank=xm.get_ordinal(),
             shuffle=shuffle,
         )
-
     dataloader = torch.utils.data.DataLoader(
         dataset=dataset,
         batch_size=batch_size,
-        shuffle=shuffle,
+        shuffle=False if sampler else shuffle,
         sampler=sampler,
         **kwargs,
     )
