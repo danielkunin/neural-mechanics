@@ -47,7 +47,7 @@ def main(ARGS):
 
     ## Random Seed and Device ##
     torch.manual_seed(ARGS.seed)
-    device = load.device(ARGS.gpu, tpu=args.tpu)
+    device = load.device(ARGS.gpu, tpu=ARGS.tpu)
 
     ## Data ##
     print_fn("Loading {} dataset.".format(ARGS.dataset))

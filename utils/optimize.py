@@ -99,8 +99,6 @@ def tpu_train(
     num_batches = kwargs.get("num_batches")
     dataset_size = kwargs.get("dataset_size")
 
-
-def eval(model, loss, dataloader, device, verbose):
     model.train()
     tracker = xm.RateTracker()
     total = 0
@@ -188,7 +186,7 @@ def tpu_eval(model, loss, dataloader, device, verbose, **kwargs):
     total_samples = 0
     with torch.no_grad():
         for data, target in dataloader:
-            # data, target = data.to(device), target.to(device)
+            data, target = data.to(device), target.to(device)
             output = model(data)
             total += loss(output, target).item() * data.size(0)
             _, pred = output.topk(5, dim=1)
