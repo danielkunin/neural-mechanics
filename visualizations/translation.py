@@ -139,9 +139,9 @@ def main(args=None, axes=None):
 
     # save plot
     if ARGS.plot_dir is None:
-        plot_path = f"{ARGS.save_dir}/img"
+        plot_path = f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}/img"
     else:
-        plot_path = f"{ARGS.plot_dir}/{ARGS.experiment}/{ARGS.expid}/img"
+        plot_path = f"{ARGS.plot_dir}/img"
     utils.makedir_quiet(plot_path)
     plot_file = f"{plot_path}/translation{ARGS.image_suffix}.pdf"
     plt.savefig(plot_file)
