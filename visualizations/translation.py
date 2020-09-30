@@ -61,7 +61,7 @@ def statistics(model, feats_dir, steps, lr, wd):
             wl_t = weights[layer][f"step_{step}"]
             bl_t = biases[layer][f"step_{step}"]
             Wl_t = np.column_stack((wl_t, bl_t))
-            empirical[layer][step] =utils.out_synapses(Wl_t)
+            empirical[layer][step] = utils.out_synapses(Wl_t)
 
     return (empirical, theoretical)
 
