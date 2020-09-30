@@ -61,7 +61,7 @@ def statistics(model, feats_dir, steps, lr, wd):
             wl_t = weights[layer][f"step_{step}"]
             bl_t = biases[layer][f"step_{step}"]
             Wl_t = np.column_stack((wl_t, bl_t))
-            empirical[layer][step] =utils.out_synapses(Wl_t)
+            empirical[layer][step] = utils.out_synapses(Wl_t)
 
     return (empirical, theoretical)
 
@@ -70,18 +70,16 @@ def main(args=None, axes=None):
 
     if args is not None:
         ARGS = args
-    if ARGS.plot_dir is None:
-        ARGS.plot_dir = ARGS.save_dir
 
     # load hyperparameters
     with open(
-        f"{ARGS.plot_dir}/{ARGS.experiment}/{ARGS.expid}/hyperparameters.json"
+        f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}/hyperparameters.json"
     ) as f:
         hyperparameters = json.load(f)
 
     # load cache or run statistics
     print(">> Loading weights...")
-    cache_path = f"{ARGS.plot_dir}/{ARGS.experiment}/{ARGS.expid}/cache"
+    cache_path = f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}/cache"
     utils.makedir_quiet(cache_path)
     cache_file = f"{cache_path}/translation.h5"
     if os.path.isfile(cache_file) and not ARGS.overwrite:
@@ -140,7 +138,10 @@ def main(args=None, axes=None):
         axes.legend()
 
     # save plot
-    plot_path = f"{ARGS.plot_dir}/{ARGS.experiment}/{ARGS.expid}/img"
+    if ARGS.plot_dir is None:
+        plot_path = f"{ARGS.save_dir}/img"
+    else:
+        plot_path = f"{ARGS.plot_dir}/{ARGS.experiment}/{ARGS.expid}/img"
     utils.makedir_quiet(plot_path)
     plot_file = f"{plot_path}/translation{ARGS.image_suffix}.pdf"
     plt.savefig(plot_file)
