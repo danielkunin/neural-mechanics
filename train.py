@@ -8,10 +8,6 @@ from utils import load
 from utils import optimize
 from utils import flags
 
-# TPU
-import torch_xla.core.xla_model as xm
-import torch_xla.distributed.xla_multiprocessing as xmp
-
 
 def main(ARGS):
     if ARGS.tpu:
@@ -76,13 +72,13 @@ def main(ARGS):
     ).to(device)
 
     if ARGS.tpu:
-        # Model wrapper:
-        # For the MP approach: nothing
-        # For the DP approach: (this would also change how data is fed in train loop)
-        # model_parallel = dp.DataParallel(model, device_ids=devices)
-
-        # LR Rescale
+        # TODO: LR Rescale since batch size is per core?
         ARGS.lr *= xm.xrt_world_size()
+        train_kwargs = {
+            "batch_size": train_loader.batch_size,
+            "dataset_size": len(train_loader.dataset),
+            "num_batches": len(train_loader),
+        }  # TODO: pass ordinal and world size here
 
     loss = nn.CrossEntropyLoss()
     opt_class, opt_kwargs = load.optimizer(ARGS.optimizer)
@@ -92,14 +88,6 @@ def main(ARGS):
     scheduler = torch.optim.lr_scheduler.MultiStepLR(
         optimizer, milestones=ARGS.lr_drops, gamma=ARGS.lr_drop_rate
     )
-
-    if ARGS.tpu:
-        # For torch_xla == 1.5
-        train_kwargs = {
-            "batch_size": train_loader.batch_size,
-            "dataset_size": len(train_loader.dataset),
-            "num_batches": len(train_loader),
-            } # TODO: pass ordinal and world size here
 
     ## Train ##
     print_fn("Training for {} epochs.".format(ARGS.epochs))
@@ -124,6 +112,9 @@ if __name__ == "__main__":
     parser = flags.train()
     ARGS = parser.parse_args()
     if ARGS.tpu:
+        import torch_xla.core.xla_model as xm
+        import torch_xla.distributed.xla_multiprocessing as xmp
+
         # TODO: check: function might need to take a "rank" argument?
         tpu_cores = 8
 

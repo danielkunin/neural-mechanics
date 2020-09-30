@@ -10,21 +10,16 @@ from models import imagenet_resnet
 from optimizers import custom_optim
 from utils import custom_datasets
 
-# TPU
-import torch_xla.core.xla_model as xm
-
 
 def device(gpu, tpu=False):
     use_cuda = torch.cuda.is_available()
-    if not tpu:
+    if tpu:
+        import torch_xla.core.xla_model as xm
+
+        return xm.xla_device()
+    else:
         use_cuda = torch.cuda.is_available()
         return torch.device(("cuda:" + str(gpu)) if use_cuda else "cpu")
-    else:
-        # For the MP approach:
-        return xm.xla_device()
-        # For the DP approach:
-        # return devices = (xm.get_xla_supported_devices(
-        #   max_devices=FLAGS.num_cores) if FLAGS.num_cores != 0 else [])
 
 
 def dimension(dataset):
@@ -121,13 +116,16 @@ def dataloader(
         dataset = torch.utils.data.Subset(dataset, indices)
 
     sampler = None
-    if tpu and xm.xrt_world_size() > 1:
-        sampler = torch.utils.data.distributed.DistributedSampler(
-            dataset,
-            num_replicas=xm.xrt_world_size(),
-            rank=xm.get_ordinal(),
-            shuffle=shuffle,
-        )
+    if tpu:
+        import torch_xla.core.xla_model as xm
+
+        if xm.xrt_world_size() > 1:
+            sampler = torch.utils.data.distributed.DistributedSampler(
+                dataset,
+                num_replicas=xm.xrt_world_size(),
+                rank=xm.get_ordinal(),
+                shuffle=shuffle,
+            )
     dataloader = torch.utils.data.DataLoader(
         dataset=dataset,
         batch_size=batch_size,

@@ -117,13 +117,13 @@ def train():
         "--train-batch-size",
         type=int,
         default=64,
-        help="input batch size for training (default: 64)",
+        help="input batch size for training (default: 64), per core in TPU setting",
     )
     train_args.add_argument(
         "--test-batch-size",
         type=int,
         default=256,
-        help="input batch size for testing (default: 256)",
+        help="input batch size for testing (default: 256), per core in TPU setting",
     )
     train_args.add_argument(
         "--epochs", type=int, default=0, help="number of epochs to train (default: 0)",
