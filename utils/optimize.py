@@ -81,16 +81,15 @@ def train(
                 per_worker_header = (
                     f"[xla:{xm.get_ordinal()}, "
                     f"rate: {tracker.rate():.2f}, "
-                    f"global_rate: {tracker.global_rate():.2f}] "
+                    f"global_rate: {tracker.global_rate():.2f}]\t"
                 )
             print(
                 f"{per_worker_header}"
-                f"\tTrain Epoch: {epoch} "
+                f"Train Epoch: {epoch} "
                 f"[{step*batch_size}/{dataset_size} "
                 f"({100.0*batch_idx/num_batches:.0f}%)]"
                 f"\tLoss: {train_loss.item():.6f}"
                 f"\tStep: {curr_step}"
-                f"\tData size: {data.size(0)}"
             )
         # TODO: this is just to be able to save at any step (even mid-epoch)
         #       it might make more sense to checkpoint only on epoch: makes
