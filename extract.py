@@ -39,6 +39,7 @@ def main():
                 params[name] = tensor.cpu().numpy()
 
         buffers = {}
+        buffers_apx = {}
         # this assumes the same order of model state dict as optimize state dict
         param_names = [
             name
@@ -53,7 +54,12 @@ def main():
             if "bias" in name and "integral_buffer" in buffer_dict.keys():
                 buffers[name] = buffer_dict["integral_buffer"].cpu().numpy()
 
-        dd.io.save(out_filename, {"params": params, "buffers": buffers})
+            if "weight" in name and "integral_buffer_apx" in buffer_dict.keys():
+                buffers_apx[name] = buffer_dict["integral_buffer_apx"].cpu().numpy()
+            if "bias" in name and "integral_buffer_apx" in buffer_dict.keys():
+                buffers_apx[name] = buffer_dict["integral_buffer_apx"].cpu().numpy()
+
+        dd.io.save(out_filename, {"params": params, "buffers": buffers, "buffers_apx": buffers_apx})
 
 
 if __name__ == "__main__":
