@@ -42,14 +42,14 @@ def statistics(model, feats_dir, steps, lr, wd):
                 feats_dir=feats_dir,
                 model=model,
                 suffix="weight",
-                group="buffers",
+                group="buffers_exact",
             )
             bias_buffers = utils.load_features(
                 steps=[str(step)],
                 feats_dir=feats_dir,
                 model=model,
                 suffix="bias",
-                group="buffers",
+                group="buffers_exact",
             )
 
         W_in = numer / denom * weights[layers[0]][f"step_{steps[0]}"] ** 2
