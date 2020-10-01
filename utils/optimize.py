@@ -59,10 +59,13 @@ def train(
     for batch_idx, (data, target) in enumerate(dataloader):
         if device.type == "xla":
             step = batch_idx * xrt_world_size + xm_ordinal
+            curr_step = epoch * num_batches + step
+            ckpt_step = epoch * num_batches + batch_idx * xrt_world_size
         else:
             data, target = data.to(device), target.to(device)
             step = batch_idx
-        curr_step = epoch * num_batches + step
+            curr_step = epoch * num_batches + step
+            ckpt_step = curr_step
 
         optimizer.zero_grad()
         output = model(data)
@@ -97,13 +100,19 @@ def train(
         # TODO: additionally, could integrate tfutils.DBInterface here
         eval_dict = {"train_loss": train_loss.item()}
         if save and save_path is not None and save_freq is not None:
-            if curr_step % save_freq == 0:
+            # TODO: think about ckpt_step and how to make it be the exact
+            # checkpoint step. Multiprocessing will wait for all threads to 
+            # hit this save instruction before continuing, so the ckpt_step needs to be 
+            # the same for all threads. This means the checkpoint will be created then
+            # one of the threads hits the save_freq, but the model itself will be
+            # at that step +- num_cores
+            if ckpt_step % save_freq == 0:
                 checkpoint(
                     model,
                     optimizer,
                     scheduler,
                     epoch,
-                    curr_step,
+                    ckpt_step,
                     save_path,
                     tpu=(device.type == "xla"),
                 )
