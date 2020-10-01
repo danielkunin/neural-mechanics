@@ -38,7 +38,7 @@ class SGD(Optimizer):
                 p_{t+1} & = p_{t} - \text{lr} * v_{t+1},
             \end{aligned}
 
-        where :math:`p`, :math:`g`, :math:`v` and :math:`\mu` denote the 
+        where :math:`p`, :math:`g`, :math:`v` and :math:`\mu` denote the
         parameters, gradient, velocity, and momentum respectively.
 
         This is in contrast to Sutskever et. al. and
@@ -128,19 +128,14 @@ class SGD(Optimizer):
 
                 # compute integral
                 param_state = self.state[p]
+                g = p.grad
                 if "step" not in param_state:
                     param_state["step"] = 0
-                    param_state["integral_buffer"] = torch.zeros_like(d_p)
-                    param_state["integral_buffer_apx"] = torch.zeros_like(d_p)
+                    param_state["integral_buffer"] = g ** 2
                 else:
-                    alpha_exact = (-1 + np.sqrt(1 - 4 * lr * weight_decay)) / lr
-                    alpha_apx =  -2 * weight_decay
                     param_state["step"] += 1
                     param_state["integral_buffer"].add_(
-                        np.exp(-alpha_exact * lr * param_state["step"]) * d_p ** 2
-                    )
-                    param_state["integral_buffer_apx"].add_(
-                        np.exp(-alpha_apx * lr * param_state["step"]) * d_p ** 2
+                        np.exp(2 * weight_decay * lr * param_state["step"]) * g ** 2
                     )
 
         return loss
