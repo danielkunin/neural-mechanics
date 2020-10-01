@@ -31,10 +31,6 @@ def statistics(model, feats_dir, steps, lr, wd):
     for i in range(len(steps)):
         step = steps[i]
         t = lr * step
-        alpha_p = (-1 + np.sqrt(1 - 4 * lr * wd)) / lr
-        alpha_m = (-1 - np.sqrt(1 - 4 * lr * wd)) / lr
-        numer = alpha_p * np.exp(alpha_m * t) - alpha_m * np.exp(alpha_p * t)
-        denom = alpha_p - alpha_m
 
         if i > 0:
             weight_buffers = utils.load_features(
@@ -52,21 +48,21 @@ def statistics(model, feats_dir, steps, lr, wd):
                 group="buffers",
             )
 
-        W_in = numer / denom * weights[layers[0]][f"step_{steps[0]}"] ** 2
-        b_in = numer / denom * biases[layers[0]][f"step_{steps[0]}"] ** 2
+        W_in = np.exp(-2 * wd * t) * weights[layers[0]][f"step_{steps[0]}"] ** 2
+        b_in = np.exp(-2 * wd * t) * biases[layers[0]][f"step_{steps[0]}"] ** 2
         if i > 0:
             g_W = weight_buffers[layers[0]][f"step_{step}"]
             g_b = bias_buffers[layers[0]][f"step_{step}"]
-            W_in += 2 / denom * lr * np.exp(alpha_p * t) * g_W
-            b_in += 2 / denom * lr * np.exp(alpha_p * t) * g_b
+            W_in += lr * np.exp(-2 * wd * t) * g_W
+            b_in += lr * np.exp(-2 * wd * t) * g_b
         for layer in layers[1:]:
-            W_out = numer / denom * weights[layer][f"step_{steps[0]}"] ** 2
-            b_out = numer / denom * biases[layer][f"step_{steps[0]}"] ** 2
+            W_out = np.exp(-2 * wd * t) * weights[layer][f"step_{steps[0]}"] ** 2
+            b_out = np.exp(-2 * wd * t) * biases[layer][f"step_{steps[0]}"] ** 2
             if i > 0:
                 g_W = weight_buffers[layer][f"step_{step}"]
                 g_b = bias_buffers[layer][f"step_{step}"]
-                W_out += 2 / denom * lr * np.exp(alpha_p * t) * g_W
-                b_out += 2 / denom * lr * np.exp(alpha_p * t) * g_b
+                W_out += lr * np.exp(-2 * wd * t) * g_W
+                b_out += lr * np.exp(-2 * wd * t) * g_b
             theoretical[layer][step] = utils.out_synapses(W_out) - utils.in_synapses(
                 W_in, b_in
             )

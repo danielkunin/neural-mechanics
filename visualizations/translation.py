@@ -33,12 +33,8 @@ def statistics(model, feats_dir, steps, lr, wd):
     for i in range(len(steps)):
         step = steps[i]
         t = lr * step
-        alpha_p = (-1 + np.sqrt(1 - 2 * lr * wd)) / lr
-        alpha_m = (-1 - np.sqrt(1 - 2 * lr * wd)) / lr
-        numer = alpha_p * np.exp(alpha_m * t) - alpha_m * np.exp(alpha_p * t)
-        denom = alpha_p - alpha_m
         for layer in layers:
-            theoretical[layer][step] = numer / denom * utils.out_synapses(Wl_0)
+            theoretical[layer][step] = np.exp(-wd * t) * utils.out_synapses(Wl_0)
 
     empirical = {layer: {} for layer in layers}
     for i in range(len(steps)):
