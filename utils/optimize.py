@@ -23,9 +23,19 @@ def checkpoint(
         "scheduler_state_dict": scheduler.state_dict(),
     }
     save_dict.update(metric_dict)
+    filename = f"{save_path}/ckpt/step{curr_step}.tar"
     save_lib.save(
-        save_dict, f"{save_path}/ckpt/step{curr_step}.tar",
+        save_dict, filename,
     )
+    if filename[0:5] == "gs://":
+        from google.cloud import storage
+
+        gcs = storage.Client()
+        bucket = gcs.get_bucket(filename.split("gs://")[1].split("/")[0])
+        remote_filename = "/".join(filename.split("gs://")[1].split("/")[1:])
+        blob = bucket.blob(remote_filename)
+        blob.upload_from_filename(filename=filename)
+        print_fn("Checkpoint posted to gcs")
 
 
 # TODO: we maybe don't want to have the scheduler inside the train function
@@ -101,8 +111,8 @@ def train(
         eval_dict = {"train_loss": train_loss.item()}
         if save and save_path is not None and save_freq is not None:
             # TODO: think about ckpt_step and how to make it be the exact
-            # checkpoint step. Multiprocessing will wait for all threads to 
-            # hit this save instruction before continuing, so the ckpt_step needs to be 
+            # checkpoint step. Multiprocessing will wait for all threads to
+            # hit this save instruction before continuing, so the ckpt_step needs to be
             # the same for all threads. This means the checkpoint will be created then
             # one of the threads hits the save_freq, but the model itself will be
             # at that step +- num_cores

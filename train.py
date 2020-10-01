@@ -80,12 +80,14 @@ def main(ARGS):
         # LR Rescale since batch size is per core? This is done for
         # large ResNets in practive
         # ARGS.lr *= xm.xrt_world_size()
-        train_kwargs.update({
-            # If these are called to often in the train loop, tpu freezes
-            # Let's pre-compute them once
-            "xrt_world_size": xm.xrt_world_size(),
-            "xm_ordinal": xm.get_ordinal(),
-        })
+        train_kwargs.update(
+            {
+                # If these are called to often in the train loop, tpu freezes
+                # Let's pre-compute them once
+                "xrt_world_size": xm.xrt_world_size(),
+                "xm_ordinal": xm.get_ordinal(),
+            }
+        )
 
     loss = nn.CrossEntropyLoss()
     opt_class, opt_kwargs = load.optimizer(ARGS.optimizer)
