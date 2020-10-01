@@ -66,9 +66,9 @@ def train(
     for batch_idx, (data, target) in enumerate(dataloader):
         if device.type == "xla":
             # This would be if you wanted to compute steps based on minibatches
-            #step = batch_idx * xrt_world_size + xm_ordinal
-            #curr_step = epoch * num_batches + step
-            #ckpt_step = epoch * num_batches + batch_idx * xrt_world_size
+            # step = batch_idx * xrt_world_size + xm_ordinal
+            # curr_step = epoch * num_batches + step
+            # ckpt_step = epoch * num_batches + batch_idx * xrt_world_size
             # This is to match the batch computed steps
             step = batch_idx
             curr_step = epoch * num_batches + step
