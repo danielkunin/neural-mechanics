@@ -27,10 +27,12 @@ def checkpoint(
     save_lib.save(
         save_dict, filename,
     )
-    if filename[0:5] == "gs://":
-        from gcloud import post_file_to_bucket
+    if tpu:
+        xm.rendezvous("after_ckpt")
+        if xm.get_ordinal() == 0 and filename[0:5] == "gs://":
+            from utils.gcloud import post_file_to_bucket
 
-        post_file_to_bucket(filename)
+            post_file_to_bucket(filename)
 
 
 # TODO: we maybe don't want to have the scheduler inside the train function

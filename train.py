@@ -41,10 +41,11 @@ def main(ARGS):
         filename = save_path + "/hyperparameters.json"
         with open(filename, "w") as f:
             json.dump(ARGS.__dict__, f, sort_keys=True, indent=4)
-        if filename[0:5] == "gs://":
-            from utils.gcloud import post_file_to_bucket
+        if ARGS.tpu:
+            if xm.get_ordinal() == 0 and filename[0:5] == "gs://":
+                from utils.gcloud import post_file_to_bucket
 
-            post_file_to_bucket(filename)
+                post_file_to_bucket(filename)
 
     ## Random Seed and Device ##
     torch.manual_seed(ARGS.seed)

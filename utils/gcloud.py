@@ -17,3 +17,4 @@ def post_file_to_bucket(filename):
         print_fn(f"File {file} posted to gcs")
         # TODO: check for success?
         os.remove(file)
+
