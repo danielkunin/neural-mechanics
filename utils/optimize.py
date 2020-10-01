@@ -28,14 +28,9 @@ def checkpoint(
         save_dict, filename,
     )
     if filename[0:5] == "gs://":
-        from google.cloud import storage
+        from gcloud import post_file_to_bucket
 
-        gcs = storage.Client()
-        bucket = gcs.get_bucket(filename.split("gs://")[1].split("/")[0])
-        remote_filename = "/".join(filename.split("gs://")[1].split("/")[1:])
-        blob = bucket.blob(remote_filename)
-        blob.upload_from_filename(filename=filename)
-        print_fn("Checkpoint posted to gcs")
+        post_file_to_bucket(filename)
 
 
 # TODO: we maybe don't want to have the scheduler inside the train function

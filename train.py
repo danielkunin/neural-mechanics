@@ -38,8 +38,13 @@ def main(ARGS):
 
     ## Save Args ##
     if ARGS.save:
-        with open(save_path + "/hyperparameters.json", "w") as f:
+        filename = save_path + "/hyperparameters.json"
+        with open(filename, "w") as f:
             json.dump(ARGS.__dict__, f, sort_keys=True, indent=4)
+        if filename[0:5] == "gs://":
+            from utils.gcloud import post_file_to_bucket
+
+            post_file_to_bucket(filename)
 
     ## Random Seed and Device ##
     torch.manual_seed(ARGS.seed)
