@@ -108,17 +108,21 @@ def dataloader(
         dataset = datasets.ImageFolder(folder, transform=transform)
 
     # Dataloader
-    use_cuda = torch.cuda.is_available()
-    kwargs = {"num_workers": workers, "pin_memory": True} if use_cuda else {}
     shuffle = train is True
     if length is not None:
         indices = torch.randperm(len(dataset))[:length]
         dataset = torch.utils.data.Subset(dataset, indices)
 
     sampler = None
-    if tpu:
+    kwargs = {}
+    if torch.cuda.is_available():
+        kwargs = {"num_workers": workers, "pin_memory": True}
+    elif tpu:
         import torch_xla.core.xla_model as xm
 
+        # TODO: might want to drop last to keep batches the same size and
+        # speed up computation
+        kwargs = {"num_workers": workers}  # , "drop_last": True}
         if xm.xrt_world_size() > 1:
             sampler = torch.utils.data.distributed.DistributedSampler(
                 dataset,

@@ -83,8 +83,8 @@ def main(ARGS):
         "num_batches": len(train_loader),
     }
     if ARGS.tpu:
-        # LR Rescale since batch size is per core? This is done for
-        # large ResNets in practive
+        # Scale learning rate to num cores
+        # TODO: Should we do this?? This comes from pt docs... They seem to only do it for mnist
         # ARGS.lr *= xm.xrt_world_size()
         train_kwargs.update(
             {
@@ -130,10 +130,11 @@ if __name__ == "__main__":
         import torch_xla.core.xla_model as xm
         import torch_xla.distributed.xla_multiprocessing as xmp
 
-        # TODO: check: function might need to take a "rank" argument?
+        # TODO: check: PT docs seem to pase None tor nprocs
         tpu_cores = 8
 
         def _mp_fn(rank, args):
+            # First argument in mp_fn must be rank
             main(args)
 
         xmp.spawn(_mp_fn, args=(ARGS,), nprocs=tpu_cores, start_method="fork")
