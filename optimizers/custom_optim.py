@@ -130,13 +130,13 @@ class SGD(Optimizer):
                 param_state = self.state[p]
                 if "step" not in param_state:
                     param_state["step"] = 0
-                    param_state["integral_buffer_exact"] = torch.zeros_like(d_p)
+                    param_state["integral_buffer"] = torch.zeros_like(d_p)
                     param_state["integral_buffer_apx"] = torch.zeros_like(d_p)
                 else:
                     alpha_exact = (-1 + np.sqrt(1 - 4 * lr * weight_decay)) / lr
                     alpha_apx =  -2 * weight_decay
                     param_state["step"] += 1
-                    param_state["integral_buffer_exact"].add_(
+                    param_state["integral_buffer"].add_(
                         np.exp(-alpha_exact * lr * param_state["step"]) * d_p ** 2
                     )
                     param_state["integral_buffer_apx"].add_(
