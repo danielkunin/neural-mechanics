@@ -24,7 +24,7 @@ def main():
             quit()
 
     for in_filename, step in tqdm(
-        sorted(zip(step_names, step_list), key=lambda x: x[1])
+        sorted(list(zip(step_names, step_list)), key=lambda x: x[1])
     ):
         out_filename = f"{save_path}/step{step}.h5"
 
