@@ -82,7 +82,7 @@ def train(
         optimizer.zero_grad()
         output = model(data)
         train_loss = loss(output, target)
-        #total += train_loss.item() * data.size(0)
+        # total += train_loss.item() * data.size(0)
         train_loss.backward()
         if device.type == "xla":
             xm.optimizer_step(optimizer)
@@ -103,14 +103,14 @@ def train(
                 f"Train Epoch: {epoch} "
                 f"[{step*batch_size}/{dataset_size} "
                 f"({100.0*batch_idx/num_batches:.0f}%)]"
-                #f"\tLoss: {train_loss.item():.6f}"
+                # f"\tLoss: {train_loss.item():.6f}"
                 f"\tStep: {curr_step}"
             )
         # TODO: this is just to be able to save at any step (even mid-epoch)
         #       it might make more sense to checkpoint only on epoch: makes
         #       for a cleaner codebase and can include test metrics
         # TODO: additionally, could integrate tfutils.DBInterface here
-        eval_dict = {}#"train_loss": train_loss.item()}
+        eval_dict = {}  # "train_loss": train_loss.item()}
         if save and save_path is not None and save_freq is not None:
             # TODO: think about ckpt_step and how to make it be the exact
             # checkpoint step. Multiprocessing will wait for all threads to

@@ -58,7 +58,7 @@ def statistics(model, feats_dir, steps, lr, wd):
                 g_Wl_t = weight_buffers[layer][f"step_{step}"]
                 g_bl_t = bias_buffers[layer][f"step_{step}"]
                 theoretical[layer][step] += (
-                    lr * np.exp(-2 * wd * t) * utils.in_synapses(g_Wl_t, g_bl_t)
+                    (lr ** 2) * np.exp(-2 * wd * t) * utils.in_synapses(g_Wl_t, g_bl_t)
                 )
 
     empirical = {layer: {} for layer in layers}

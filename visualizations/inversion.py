@@ -53,16 +53,16 @@ def statistics(model, feats_dir, steps, lr, wd):
         if i > 0:
             g_W = weight_buffers[layers[0]][f"step_{step}"]
             g_b = bias_buffers[layers[0]][f"step_{step}"]
-            W_in += lr * np.exp(-2 * wd * t) * g_W
-            b_in += lr * np.exp(-2 * wd * t) * g_b
+            W_in += (lr ** 2) * np.exp(-2 * wd * t) * g_W
+            b_in += (lr ** 2) * np.exp(-2 * wd * t) * g_b
         for layer in layers[1:]:
             W_out = np.exp(-2 * wd * t) * weights[layer][f"step_{steps[0]}"] ** 2
             b_out = np.exp(-2 * wd * t) * biases[layer][f"step_{steps[0]}"] ** 2
             if i > 0:
                 g_W = weight_buffers[layer][f"step_{step}"]
                 g_b = bias_buffers[layer][f"step_{step}"]
-                W_out += lr * np.exp(-2 * wd * t) * g_W
-                b_out += lr * np.exp(-2 * wd * t) * g_b
+                W_out += (lr ** 2) * np.exp(-2 * wd * t) * g_W
+                b_out += (lr ** 2) * np.exp(-2 * wd * t) * g_b
             theoretical[layer][step] = utils.out_synapses(W_out) - utils.in_synapses(
                 W_in, b_in
             )
