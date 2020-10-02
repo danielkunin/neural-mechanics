@@ -23,7 +23,9 @@ def main():
             )
             quit()
 
-    for in_filename, step in tqdm(zip(step_names, step_list)):
+    for in_filename, step in tqdm(
+        sorted(zip(step_names, step_list), key=lambda x: x[1])
+    ):
         out_filename = f"{save_path}/step{step}.h5"
 
         if os.path.isfile(out_filename) and not ARGS.overwrite:
