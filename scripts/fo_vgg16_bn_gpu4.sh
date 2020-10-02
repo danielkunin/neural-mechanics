@@ -13,3 +13,10 @@ for lr in 0.1; do
         python extract.py --save-dir=/mnt/fs6/jvrsgsty/neural-mechanics --experiment=vgg16-bn --expid=lr_${lr}_wd_${wd} --overwrite --gpu=4
     done
 done
+
+# plot
+for lr in 0.1; do
+    for wd in 0.0 0.01 0.001 0.0001; do
+        python visualizations/scale.py --save-dir=/mnt/fs6/jvrsgsty/neural-mechanics --experiment=vgg16-bn --expid=lr_${lr}_wd_${wd} --overwrite
+    done
+done
