@@ -23,7 +23,9 @@ def main():
             )
             quit()
 
-    for in_filename, step in tqdm(zip(step_names, step_list)):
+    for in_filename, step in tqdm(
+        sorted(list(zip(step_names, step_list)), key=lambda x: x[1])
+    ):
         out_filename = f"{save_path}/step{step}.h5"
 
         if os.path.isfile(out_filename) and not ARGS.overwrite:
@@ -39,7 +41,6 @@ def main():
                 params[name] = tensor.cpu().numpy()
 
         buffers = {}
-        buffers_apx = {}
         # this assumes the same order of model state dict as optimize state dict
         param_names = [
             name
@@ -53,16 +54,7 @@ def main():
                 buffers[name] = buffer_dict["integral_buffer"].cpu().numpy()
             if "bias" in name and "integral_buffer" in buffer_dict.keys():
                 buffers[name] = buffer_dict["integral_buffer"].cpu().numpy()
-
-            if "weight" in name and "integral_buffer_apx" in buffer_dict.keys():
-                buffers_apx[name] = buffer_dict["integral_buffer_apx"].cpu().numpy()
-            if "bias" in name and "integral_buffer_apx" in buffer_dict.keys():
-                buffers_apx[name] = buffer_dict["integral_buffer_apx"].cpu().numpy()
-
-        dd.io.save(
-            out_filename,
-            {"params": params, "buffers": buffers, "buffers_apx": buffers_apx},
-        )
+        dd.io.save(out_filename, {"params": params, "buffers": buffers})
 
 
 if __name__ == "__main__":
