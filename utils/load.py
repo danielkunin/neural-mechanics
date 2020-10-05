@@ -206,6 +206,7 @@ def model(model_architecture, model_class):
 def optimizer(optimizer):
     optimizers = {
         "custom_sgd": (custom_optim.SGD, {"momentum": 0.0, "nesterov": False}),
+        "custom_momentum": (custom_optim.SGD, {"momentum": 0.9, "nesterov": True}),
         "sgd": (optim.SGD, {"momentum": 0.0, "nesterov": False}),
         "momentum": (optim.SGD, {"momentum": 0.9, "nesterov": True}),
         "adam": (optim.Adam, {}),
