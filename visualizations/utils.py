@@ -273,7 +273,7 @@ def default_parser():
         "--image-suffix",
         type=str,
         default="",
-        help="extra image suffix",
+        help="extra image and cache suffix",
         required=False,
     )
     parser.add_argument(
