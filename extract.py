@@ -59,7 +59,10 @@ def main():
             if "bias" in name and "integral_buffer_apx" in buffer_dict.keys():
                 buffers_apx[name] = buffer_dict["integral_buffer_apx"].cpu().numpy()
 
-        dd.io.save(out_filename, {"params": params, "buffers": buffers, "buffers_apx": buffers_apx})
+        dd.io.save(
+            out_filename,
+            {"params": params, "buffers": buffers, "buffers_apx": buffers_apx},
+        )
 
 
 if __name__ == "__main__":

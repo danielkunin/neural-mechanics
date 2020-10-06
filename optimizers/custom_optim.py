@@ -134,7 +134,7 @@ class SGD(Optimizer):
                     param_state["integral_buffer_apx"] = torch.zeros_like(d_p)
                 else:
                     alpha_exact = (-1 + np.sqrt(1 - 4 * lr * weight_decay)) / lr
-                    alpha_apx =  -2 * weight_decay
+                    alpha_apx = -2 * weight_decay
                     param_state["step"] += 1
                     param_state["integral_buffer"].add_(
                         np.exp(-alpha_exact * lr * param_state["step"]) * d_p ** 2
