@@ -144,9 +144,11 @@ def eval(model, loss, dataloader, device, verbose, **kwargs):
             f"Evaluation: Average loss: {average_loss:.4f}, "
             f"Top 1 Accuracy: {correct1}/{total_samples} ({accuracy1:.2f}%)"
         )
-    # TODO: For torch-xla == 1.6, might be good to mesh_reduce the metrics?
-    # if device.type == "xla":
-    #     accuracy = xm.mesh_reduce('test_accuracy', accuracy, np.mean)
+
+    if device.type == "xla":
+        average_loss = xm.mesh_reduce("test_average_loss", average_loss, np.mean)
+        accuracy1 = xm.mesh_reduce("test_accuracy1", accuracy1, np.mean)
+        accuracy5 = xm.mesh_reduce("test_accuracy5", accuracy5, np.mean)
     return average_loss, accuracy1, accuracy5
 
 
@@ -168,21 +170,10 @@ def train_eval_loop(
     if device.type == "xla":
         import torch_xla.distributed.parallel_loader as pl
 
-        def loader_wrap(loader):
-            # For torch-xla == 1.5, it is necessary to call at every epoch,
-            # cause otherwise the iterator does not reinitialize
-            # TODO: for torch-xla == 1.6 introduces pl.MpDeviceLoader(test_loader, device)
-            para_loader = pl.ParallelLoader(loader, [device])
-            return para_loader.per_device_loader(device)
+        train_loader = pl.MpDeviceLoader(train_loader, device)
+        test_loader = pl.MpDeviceLoader(train_loader, device)
 
-    else:
-
-        def loader_wrap(loader):
-            return loader
-
-    test_loss, accuracy1, accuracy5 = eval(
-        model, loss, loader_wrap(test_loader), device, verbose
-    )
+    test_loss, accuracy1, accuracy5 = eval(model, loss, test_loader, device, verbose)
     metric_dict = {
         "train_loss": 0,
         "test_loss": test_loss,
@@ -206,7 +197,7 @@ def train_eval_loop(
             loss,
             optimizer,
             scheduler,
-            loader_wrap(train_loader),
+            train_loader,
             device,
             epoch,
             verbose,
@@ -216,7 +207,7 @@ def train_eval_loop(
             **kwargs,
         )
         test_loss, accuracy1, accuracy5 = eval(
-            model, loss, loader_wrap(test_loader), device, verbose
+            model, loss, test_loader, device, verbose
         )
         metric_dict = {
             "train_loss": train_loss,
