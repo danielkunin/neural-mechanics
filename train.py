@@ -49,7 +49,10 @@ def main(ARGS):
 
     ## Random Seed and Device ##
     torch.manual_seed(ARGS.seed)
-    device = load.device(ARGS.gpu, tpu=ARGS.tpu)
+    device_name = f"cuda:{ARGS.gpu}"
+    if ARGS.tpu:
+        device_name = f"tpu:{ARGS.tpu}"
+    device = load.device(device_name)
 
     ## Data ##
     print_fn("Loading {} dataset.".format(ARGS.dataset))
@@ -83,16 +86,8 @@ def main(ARGS):
         "num_batches": len(train_loader),
     }
     if ARGS.tpu:
-        # Scale learning rate to num cores
-        # TODO: Should we do this?? This comes from pt docs... They seem to only do it for mnist
-        # ARGS.lr *= xm.xrt_world_size()
         train_kwargs.update(
-            {
-                # If these are called to often in the train loop, tpu freezes
-                # Let's pre-compute them once
-                "xrt_world_size": xm.xrt_world_size(),
-                "xm_ordinal": xm.get_ordinal(),
-            }
+            {"xrt_world_size": xm.xrt_world_size(), "xm_ordinal": xm.get_ordinal(),}
         )
 
     loss = nn.CrossEntropyLoss()
@@ -134,7 +129,6 @@ if __name__ == "__main__":
         tpu_cores = 8
 
         def _mp_fn(rank, args):
-            # First argument in mp_fn must be rank
             main(args)
 
         xmp.spawn(_mp_fn, args=(ARGS,), nprocs=tpu_cores, start_method="fork")

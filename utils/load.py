@@ -11,15 +11,21 @@ from optimizers import custom_optim
 from utils import custom_datasets
 
 
-def device(gpu, tpu=False):
+def device(device_str):
     use_cuda = torch.cuda.is_available()
-    if tpu:
+    if "tpu" in device_str:
         import torch_xla.core.xla_model as xm
+        from gcloud import lookup_tpu_ip_by_name, configure_env_for_tpu
+
+        tpu_ip = lookup_tpu_ip_by_name(device_str.split(":")[1])
+        configure_env_for_tpu(tpu_ip)
 
         return xm.xla_device()
-    else:
+    elif "cuda" in device_str or "cpu" in device_str:
         use_cuda = torch.cuda.is_available()
-        return torch.device(("cuda:" + str(gpu)) if use_cuda else "cpu")
+        return torch.device(device_str if use_cuda else "cpu")
+    else:
+        raise ValueError(f"Unknown device requested: {device_str}")
 
 
 def dimension(dataset):

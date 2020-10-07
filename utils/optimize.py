@@ -28,7 +28,6 @@ def checkpoint(
         save_dict, filename,
     )
     if tpu:
-        xm.rendezvous("after_ckpt")
         if xm.get_ordinal() == 0 and filename[0:5] == "gs://":
             from utils.gcloud import post_file_to_bucket
 
@@ -64,20 +63,9 @@ def train(
     model.train()
     total = 0
     for batch_idx, (data, target) in enumerate(dataloader):
-        if device.type == "xla":
-            # This would be if you wanted to compute steps based on minibatches
-            # step = batch_idx * xrt_world_size + xm_ordinal
-            # curr_step = epoch * num_batches + step
-            # ckpt_step = epoch * num_batches + batch_idx * xrt_world_size
-            # This is to match the batch computed steps
-            step = batch_idx
-            curr_step = epoch * num_batches + step
-            ckpt_step = curr_step
-        else:
+        if device.type != "xla":
             data, target = data.to(device), target.to(device)
-            step = batch_idx
-            curr_step = epoch * num_batches + step
-            ckpt_step = curr_step
+        curr_step = epoch * num_batches + batch_idx
 
         optimizer.zero_grad()
         output = model(data)
@@ -103,28 +91,21 @@ def train(
                 f"Train Epoch: {epoch} "
                 f"[{step*batch_size}/{dataset_size} "
                 f"({100.0*batch_idx/num_batches:.0f}%)]"
-                # f"\tLoss: {train_loss.item():.6f}"
+                f"\tLoss: {train_loss.item():.6f}"
                 f"\tStep: {curr_step}"
             )
         # TODO: this is just to be able to save at any step (even mid-epoch)
         #       it might make more sense to checkpoint only on epoch: makes
         #       for a cleaner codebase and can include test metrics
         # TODO: additionally, could integrate tfutils.DBInterface here
-        eval_dict = {}  # "train_loss": train_loss.item()}
         if save and save_path is not None and save_freq is not None:
-            # TODO: think about ckpt_step and how to make it be the exact
-            # checkpoint step. Multiprocessing will wait for all threads to
-            # hit this save instruction before continuing, so the ckpt_step needs to be
-            # the same for all threads. This means the checkpoint will be created then
-            # one of the threads hits the save_freq, but the model itself will be
-            # at that step +- num_cores
-            if ckpt_step % save_freq == 0:
+            if curr_step % save_freq == 0:
                 checkpoint(
                     model,
                     optimizer,
                     scheduler,
                     epoch,
-                    ckpt_step,
+                    curr_step,
                     save_path,
                     tpu=(device.type == "xla"),
                 )
@@ -164,7 +145,7 @@ def eval(model, loss, dataloader, device, verbose, **kwargs):
                 average_loss, correct1, total_samples, accuracy1
             )
         )
-    # TODO: For tpu MP, might need to mesh_reduce the metrics?
+    # TODO: For torch-xla == 1.6, might be good to mesh_reduce the metrics?
     # if device.type == "xla":
     #     accuracy = xm.mesh_reduce('test_accuracy', accuracy, np.mean)
     return average_loss, accuracy1, accuracy5
@@ -191,7 +172,7 @@ def train_eval_loop(
         def loader_wrap(loader):
             # For torch-xla == 1.5, it is necessary to call at every epoch,
             # cause otherwise the iterator does not reinitialize
-            # torch-xla == 1.6 introduces pl.MpDeviceLoader(test_loader, device)
+            # TODO: for torch-xla == 1.6 introduces pl.MpDeviceLoader(test_loader, device)
             para_loader = pl.ParallelLoader(loader, [device])
             return para_loader.per_device_loader(device)
 
