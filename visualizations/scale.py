@@ -101,7 +101,7 @@ def main(args=None, axes=None):
     print(">> Loading weights...")
     cache_path = f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}/cache"
     utils.makedir_quiet(cache_path)
-    cache_file = f"{cache_path}/scale.h5"
+    cache_file = f"{cache_path}/scale{ARGS.image_suffix}.h5"
     if os.path.isfile(cache_file) and not ARGS.overwrite:
         print("   Loading from cache...")
         steps, empirical, theoretical = dd.io.load(cache_file)
