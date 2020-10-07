@@ -1,13 +1,20 @@
 import os
+import subprocess
 import glob
 from google.cloud import storage
 
 
 def lookup_tpu_ip_by_name(tpu_name, tpu_zone="us-central1-b"):
     # TODO: This is not secure and might let attacker execute arbitrary code
-    gcloud_cmd = f"gcloud compute tpus list --zone={tpu_zone} | grep {tpu_name}"
-    out = os.system.exec(gcloud_cmd)
-    ip = out.split()[3].split(":")[0]
+    gcloud_cmd = (
+        f"/usr/bin/gcloud compute tpus list --zone={tpu_zone} | grep {tpu_name}"
+    )
+    try:
+        out = subprocess.check_output(gcloud_cmd, shell=True)
+    except CalledProcessError as e:
+        print("ERROR: gcloud tpu discovery command returned non-zero exist status")
+        raise (e)
+    ip = str(out).split()[3].split(":")[0]
     return ip
 
 

@@ -11,14 +11,17 @@ from optimizers import custom_optim
 from utils import custom_datasets
 
 
+def configure_tpu(tpu_name):
+    from utils.gcloud import lookup_tpu_ip_by_name, configure_env_for_tpu
+
+    tpu_ip = lookup_tpu_ip_by_name(tpu_name)
+    configure_env_for_tpu(tpu_ip)
+
+
 def device(device_str):
     use_cuda = torch.cuda.is_available()
     if "tpu" in device_str:
         import torch_xla.core.xla_model as xm
-        from gcloud import lookup_tpu_ip_by_name, configure_env_for_tpu
-
-        tpu_ip = lookup_tpu_ip_by_name(device_str.split(":")[1])
-        configure_env_for_tpu(tpu_ip)
 
         return xm.xla_device()
     elif "cuda" in device_str or "cpu" in device_str:

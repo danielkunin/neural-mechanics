@@ -89,7 +89,7 @@ def train(
             print(
                 f"{per_worker_header}"
                 f"Train Epoch: {epoch} "
-                f"[{step*batch_size}/{dataset_size} "
+                f"[{batch_idx*batch_size*xrt_world_size}/{dataset_size} "
                 f"({100.0*batch_idx/num_batches:.0f}%)]"
                 f"\tLoss: {train_loss.item():.6f}"
                 f"\tStep: {curr_step}"
@@ -140,7 +140,7 @@ def eval(model, loss, dataloader, device, verbose, **kwargs):
     accuracy1 = 100.0 * correct1 / total_samples
     accuracy5 = 100.0 * correct5 / total_samples
     if verbose:
-        print_fn(
+        print(
             "Evaluation: Average loss: {:.4f}, Top 1 Accuracy: {}/{} ({:.2f}%)".format(
                 average_loss, correct1, total_samples, accuracy1
             )
