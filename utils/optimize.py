@@ -140,10 +140,9 @@ def eval(model, loss, dataloader, device, verbose, **kwargs):
     accuracy1 = 100.0 * correct1 / total_samples
     accuracy5 = 100.0 * correct5 / total_samples
     if verbose:
-        print(
-            "Evaluation: Average loss: {:.4f}, Top 1 Accuracy: {}/{} ({:.2f}%)".format(
-                average_loss, correct1, total_samples, accuracy1
-            )
+        print_fn(
+            f"Evaluation: Average loss: {average_loss:.4f}, "
+            f"Top 1 Accuracy: {correct1}/{total_samples} ({accuracy1:.2f}%)"
         )
     # TODO: For torch-xla == 1.6, might be good to mesh_reduce the metrics?
     # if device.type == "xla":

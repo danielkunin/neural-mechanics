@@ -18,17 +18,15 @@ def configure_tpu(tpu_name):
     configure_env_for_tpu(tpu_ip)
 
 
-def device(device_str):
+def device(gpu, tpu=None):
     use_cuda = torch.cuda.is_available()
-    if "tpu" in device_str:
+    if tpu:
         import torch_xla.core.xla_model as xm
 
         return xm.xla_device()
-    elif "cuda" in device_str or "cpu" in device_str:
-        use_cuda = torch.cuda.is_available()
-        return torch.device(device_str if use_cuda else "cpu")
     else:
-        raise ValueError(f"Unknown device requested: {device_str}")
+        use_cuda = torch.cuda.is_available()
+        return torch.device(f"cuda:{gpu}" if use_cuda else "cpu")
 
 
 def dimension(dataset):

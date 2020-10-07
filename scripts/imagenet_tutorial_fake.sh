@@ -1,6 +1,4 @@
-
 #!/bin/bash
-
 
 export TPU_IP_ADDRESS=10.144.244.18
 export XRT_TPU_CONFIG="tpu_worker;0;$TPU_IP_ADDRESS:8470"
