@@ -22,6 +22,9 @@ def default():
         "--gpu", type=int, default="0", help="number of GPU device to use (default: 0)"
     )
     parser.add_argument(
+        "--tpu", type=str, default=None, help="Name of the TPU device to use",
+    )
+    parser.add_argument(
         "--overwrite", dest="overwrite", action="store_true", default=False
     )
     return parser
@@ -104,20 +107,20 @@ def train():
         "--optimizer",
         type=str,
         default="sgd",
-        choices=["custom_sgd", "sgd", "momentum", "adam", "rms"],
+        choices=["custom_sgd", "custom_momentum", "sgd", "momentum", "adam", "rms"],
         help="optimizer (default: sgd)",
     )
     train_args.add_argument(
         "--train-batch-size",
         type=int,
         default=64,
-        help="input batch size for training (default: 64)",
+        help="input batch size for training (default: 64), per core in TPU setting",
     )
     train_args.add_argument(
         "--test-batch-size",
         type=int,
         default=256,
-        help="input batch size for testing (default: 256)",
+        help="input batch size for testing (default: 256), per core in TPU setting",
     )
     train_args.add_argument(
         "--epochs", type=int, default=0, help="number of epochs to train (default: 0)",

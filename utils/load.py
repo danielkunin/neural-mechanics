@@ -11,9 +11,22 @@ from optimizers import custom_optim
 from utils import custom_datasets
 
 
-def device(gpu):
+def configure_tpu(tpu_name):
+    from utils.gcloud import lookup_tpu_ip_by_name, configure_env_for_tpu
+
+    tpu_ip = lookup_tpu_ip_by_name(tpu_name)
+    configure_env_for_tpu(tpu_ip)
+
+
+def device(gpu, tpu=None):
     use_cuda = torch.cuda.is_available()
-    return torch.device(("cuda:" + str(gpu)) if use_cuda else "cpu")
+    if tpu:
+        import torch_xla.core.xla_model as xm
+
+        return xm.xla_device()
+    else:
+        use_cuda = torch.cuda.is_available()
+        return torch.device(f"cuda:{gpu}" if use_cuda else "cpu")
 
 
 def dimension(dataset):
@@ -40,7 +53,9 @@ def get_transform(size, padding, mean, std, preprocess):
     return transforms.Compose(transform)
 
 
-def dataloader(dataset, batch_size, train, workers, length=None, datadir="Data"):
+def dataloader(
+    dataset, batch_size, train, workers, length=None, datadir="Data", tpu=False
+):
     # Dataset
     if dataset == "mnist":
         mean, std = (0.1307,), (0.3081,)
@@ -100,15 +115,34 @@ def dataloader(dataset, batch_size, train, workers, length=None, datadir="Data")
         dataset = datasets.ImageFolder(folder, transform=transform)
 
     # Dataloader
-    use_cuda = torch.cuda.is_available()
-    kwargs = {"num_workers": workers, "pin_memory": True} if use_cuda else {}
     shuffle = train is True
     if length is not None:
         indices = torch.randperm(len(dataset))[:length]
         dataset = torch.utils.data.Subset(dataset, indices)
 
+    sampler = None
+    kwargs = {}
+    if torch.cuda.is_available():
+        kwargs = {"num_workers": workers, "pin_memory": True}
+    elif tpu:
+        import torch_xla.core.xla_model as xm
+
+        # TODO: might want to drop last to keep batches the same size and
+        # speed up computation
+        kwargs = {"num_workers": workers}  # , "drop_last": True}
+        if xm.xrt_world_size() > 1:
+            sampler = torch.utils.data.distributed.DistributedSampler(
+                dataset,
+                num_replicas=xm.xrt_world_size(),
+                rank=xm.get_ordinal(),
+                shuffle=shuffle,
+            )
     dataloader = torch.utils.data.DataLoader(
-        dataset=dataset, batch_size=batch_size, shuffle=shuffle, **kwargs
+        dataset=dataset,
+        batch_size=batch_size,
+        shuffle=False if sampler else shuffle,
+        sampler=sampler,
+        **kwargs,
     )
 
     return dataloader
@@ -179,6 +213,7 @@ def model(model_architecture, model_class):
 def optimizer(optimizer):
     optimizers = {
         "custom_sgd": (custom_optim.SGD, {"momentum": 0.0, "nesterov": False}),
+        "custom_momentum": (custom_optim.SGD, {"momentum": 0.9, "nesterov": True}),
         "sgd": (optim.SGD, {"momentum": 0.0, "nesterov": False}),
         "momentum": (optim.SGD, {"momentum": 0.9, "nesterov": True}),
         "adam": (optim.Adam, {}),

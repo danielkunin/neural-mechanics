@@ -31,10 +31,6 @@ def statistics(model, feats_dir, steps, lr, wd):
     for i in range(len(steps)):
         step = steps[i]
         t = lr * step
-        alpha_p = (-1 + np.sqrt(1 - 4 * lr * wd)) / lr
-        alpha_m = (-1 - np.sqrt(1 - 4 * lr * wd)) / lr
-        numer = alpha_p * np.exp(alpha_m * t) - alpha_m * np.exp(alpha_p * t)
-        denom = alpha_p - alpha_m
 
         if i > 0:
             weight_buffers = utils.load_features(
@@ -55,18 +51,14 @@ def statistics(model, feats_dir, steps, lr, wd):
         for layer in layers:
             Wl_t = weights[layer][f"step_{steps[0]}"]
             bl_t = biases[layer][f"step_{steps[0]}"]
-            theoretical[layer][step] = (
-                numer / denom * utils.in_synapses(Wl_t ** 2, bl_t ** 2)
+            theoretical[layer][step] = np.exp(-2 * wd * t) * utils.in_synapses(
+                Wl_t ** 2, bl_t ** 2
             )
             if i > 0:
                 g_Wl_t = weight_buffers[layer][f"step_{step}"]
                 g_bl_t = bias_buffers[layer][f"step_{step}"]
                 theoretical[layer][step] += (
-                    2
-                    / denom
-                    * lr
-                    * np.exp(alpha_p * t)
-                    * utils.in_synapses(g_Wl_t, g_bl_t)
+                    (lr ** 2) * np.exp(-2 * wd * t) * utils.in_synapses(g_Wl_t, g_bl_t)
                 )
 
     empirical = {layer: {} for layer in layers}
