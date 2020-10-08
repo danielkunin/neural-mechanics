@@ -6,14 +6,14 @@ from tqdm import tqdm
 def checkpoint(
     model, optimizer, scheduler, epoch, curr_step, save_path, metric_dict={}, tpu=False
 ):
+    save_lib = torch
+    print_fn = print
     if tpu:
         import torch_xla.core.xla_model as xm
 
         save_lib = xm
         print_fn = xm.master_print
-    else:
-        save_lib = torch
-        print_fn = print
+
     print_fn(f"Saving model checkpoint for step {curr_step}")
     save_dict = {
         "epoch": epoch,
@@ -53,15 +53,19 @@ def train(
     batch_size = kwargs.get("batch_size")  # per core batch size
     num_batches = kwargs.get("num_batches")  #  len(dataloader)
     dataset_size = kwargs.get("dataset_size")  # len(dataloader.dataset)
+
+    print_fn = print
     if device.type == "xla":
         import torch_xla.core.xla_model as xm
 
         xrt_world_size = kwargs.get("xrt_world_size")
         xm_ordinal = kwargs.get("xm_ordinal")
         tracker = xm.RateTracker()
+        if verbose <= 1:
+            print_fn = xm.master_print
 
     model.train()
-    total = 0
+    total_loss = 0
     for batch_idx, (data, target) in enumerate(dataloader):
         if device.type != "xla":
             data, target = data.to(device), target.to(device)
@@ -70,7 +74,8 @@ def train(
         optimizer.zero_grad()
         output = model(data)
         train_loss = loss(output, target)
-        # total += train_loss.item() * data.size(0)
+        total_loss += train_loss.item() * data.size(0)
+        total_samples += data.size(0)
         train_loss.backward()
         if device.type == "xla":
             xm.optimizer_step(optimizer)
@@ -79,17 +84,19 @@ def train(
             optimizer.step()
         curr_step += 1
         if verbose & (batch_idx % log_interval == 0):
+            examples_seen = batch_idx * batch_size * xrt_world_size
             per_worker_header = ""
             if device.type == "xla":
                 per_worker_header = (
-                    f"[xla:{xm.get_ordinal()}, "
+                    f"[xla:{xm_ordinal}, "
                     f"rate: {tracker.rate():.2f}, "
                     f"global_rate: {tracker.global_rate():.2f}]\t"
                 )
-            print(
+                examples_seen += xm_ordinal * batch_size
+            print_fn(
                 f"{per_worker_header}"
                 f"Train Epoch: {epoch} "
-                f"[{batch_idx*batch_size*xrt_world_size}/{dataset_size} "
+                f"[{examples_seen}/{dataset_size} "
                 f"({100.0*batch_idx/num_batches:.0f}%)]"
                 f"\tLoss: {train_loss.item():.6f}"
                 f"\tStep: {curr_step}"
@@ -109,16 +116,18 @@ def train(
                     save_path,
                     tpu=(device.type == "xla"),
                 )
-    return total / dataset_size
+    average_loss = 1.0 * total_loss / total_samples
+    if device.type == "xla":
+        average_loss = xm.mesh_reduce("train_average_loss", average_loss, np.mean)
+    return average_loss
 
 
 def eval(model, loss, dataloader, device, verbose, **kwargs):
+    print_fn = print
     if device.type == "xla":
         import torch_xla.core.xla_model as xm
 
         print_fn = xm.master_print
-    else:
-        print_fn = print
 
     model.eval()
     total = 0
@@ -228,3 +237,9 @@ def train_eval_loop(
                 tpu=(device.type == "xla"),
             )
         scheduler.step()
+    print_fn(
+        f"Final performance: "
+        f"\tTrain Loss: {train_loss}"
+        f"\tTest Loss: {test_loss}"
+        f"\tAccuracy: {accuracy1}"
+    )

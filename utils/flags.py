@@ -154,9 +154,11 @@ def train():
         "--seed", type=int, default=1, help="random seed (default: 1)"
     )
     train_args.add_argument(
+        "-v",
         "--verbose",
-        action="store_true",
-        help="print statistics during training and testing",
+        action="count",
+        default=0,
+        help="Print statistics during training and testing. Use -vv for higher verbosity.",
     )
     train_args.add_argument(
         "--save-freq",
