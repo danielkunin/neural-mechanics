@@ -171,7 +171,7 @@ def train_eval_loop(
         import torch_xla.distributed.parallel_loader as pl
 
         train_loader = pl.MpDeviceLoader(train_loader, device)
-        test_loader = pl.MpDeviceLoader(train_loader, device)
+        test_loader = pl.MpDeviceLoader(test_loader, device)
 
     test_loss, accuracy1, accuracy5 = eval(model, loss, test_loader, device, verbose)
     metric_dict = {
