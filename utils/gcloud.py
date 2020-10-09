@@ -20,11 +20,12 @@ def lookup_tpu_ip_by_name(tpu_name, tpu_zone="us-central1-b"):
 
 def configure_env_for_tpu(tpu_ip):
     os.environ["XRT_TPU_CONFIG"] = f"tpu_worker;0;{tpu_ip}:8470"
-    print(f"XRT_TPU_CONFIG env variable set to: {os.environ['XRT_TPU_CONFIG']}")
+    print(f"\tXRT_TPU_CONFIG env variable set to: {os.environ['XRT_TPU_CONFIG']}")
 
 
-def post_file_to_bucket(filename):
-    # Will delete successfully posted files afterwards
+def post_file_to_bucket(filename, verbose=0):
+    # TODO: is it more efficient to make this an object which keeps the storage client
+    #       initialized throughout training?
     assert filename[0:5] == "gs://"
     gcs = storage.Client()
     bucket = gcs.get_bucket(filename.split("gs://")[1].split("/")[0])
@@ -37,6 +38,7 @@ def post_file_to_bucket(filename):
         remote_filename = "/".join(file.split("gs://")[1].split("/")[1:])
         blob = bucket.blob(remote_filename)
         blob.upload_from_filename(filename=file)
-        print(f"File {file} posted to gcs")
+        if verbose:
+            print(f"File {file} posted to gcs")
         # TODO: check for success?
         os.remove(file)

@@ -4,7 +4,15 @@ from tqdm import tqdm
 
 
 def checkpoint(
-    model, optimizer, scheduler, epoch, curr_step, save_path, metric_dict={}, tpu=False
+    model,
+    optimizer,
+    scheduler,
+    epoch,
+    curr_step,
+    save_path,
+    verbose,
+    metric_dict={},
+    tpu=False,
 ):
     save_lib = torch
     print_fn = print
@@ -14,7 +22,8 @@ def checkpoint(
         save_lib = xm
         print_fn = xm.master_print
 
-    print_fn(f"Saving model checkpoint for step {curr_step}")
+    if verbose:
+        print_fn(f"Saving model checkpoint for step {curr_step}")
     save_dict = {
         "epoch": epoch,
         "step": curr_step,
@@ -31,7 +40,7 @@ def checkpoint(
         if xm.get_ordinal() == 0 and filename[0:5] == "gs://":
             from utils.gcloud import post_file_to_bucket
 
-            post_file_to_bucket(filename)
+            post_file_to_bucket(filename, verbose)
 
 
 # TODO: we maybe don't want to have the scheduler inside the train function
@@ -66,6 +75,7 @@ def train(
 
     model.train()
     total_loss = 0
+    total_samples = 0
     for batch_idx, (data, target) in enumerate(dataloader):
         if device.type != "xla":
             data, target = data.to(device), target.to(device)
@@ -83,10 +93,10 @@ def train(
         else:
             optimizer.step()
         curr_step += 1
-        if verbose & (batch_idx % log_interval == 0):
+        if verbose and (batch_idx % log_interval == 0):
             examples_seen = batch_idx * batch_size * xrt_world_size
             per_worker_header = ""
-            if device.type == "xla":
+            if device.type == "xla" and verbose >= 2:
                 per_worker_header = (
                     f"[xla:{xm_ordinal}, "
                     f"rate: {tracker.rate():.2f}, "
@@ -114,6 +124,7 @@ def train(
                     epoch,
                     curr_step,
                     save_path,
+                    verbose,
                     tpu=(device.type == "xla"),
                 )
     average_loss = 1.0 * total_loss / total_samples
@@ -122,7 +133,7 @@ def train(
     return average_loss
 
 
-def eval(model, loss, dataloader, device, verbose, **kwargs):
+def eval(model, loss, dataloader, device, verbose, epoch, **kwargs):
     print_fn = print
     if device.type == "xla":
         import torch_xla.core.xla_model as xm
@@ -148,11 +159,10 @@ def eval(model, loss, dataloader, device, verbose, **kwargs):
     average_loss = 1.0 * total / total_samples
     accuracy1 = 100.0 * correct1 / total_samples
     accuracy5 = 100.0 * correct5 / total_samples
-    if verbose:
-        print_fn(
-            f"Evaluation: Average loss: {average_loss:.4f}, "
-            f"Top 1 Accuracy: {correct1}/{total_samples} ({accuracy1:.2f}%)"
-        )
+    print_fn(
+        f"Epoch {epoch} evaluation: Average loss: {average_loss:.4f}, "
+        f"Top 1 Accuracy: {correct1}/{total_samples} ({accuracy1:.2f}%)"
+    )
 
     if device.type == "xla":
         average_loss = xm.mesh_reduce("test_average_loss", average_loss, np.mean)
@@ -176,13 +186,16 @@ def train_eval_loop(
     save_path=None,
     **kwargs,
 ):
+    print_fn = print
     if device.type == "xla":
         import torch_xla.distributed.parallel_loader as pl
+        import torch_xla.core.xla_model as xm
 
+        print_fn = xm.master_print
         train_loader = pl.MpDeviceLoader(train_loader, device)
         test_loader = pl.MpDeviceLoader(test_loader, device)
 
-    test_loss, accuracy1, accuracy5 = eval(model, loss, test_loader, device, verbose)
+    test_loss, accuracy1, accuracy5 = eval(model, loss, test_loader, device, verbose, 0)
     metric_dict = {
         "train_loss": 0,
         "test_loss": test_loss,
@@ -197,6 +210,7 @@ def train_eval_loop(
             0,
             0,
             save_path,
+            verbose,
             metric_dict,
             tpu=(device.type == "xla"),
         )
@@ -216,7 +230,7 @@ def train_eval_loop(
             **kwargs,
         )
         test_loss, accuracy1, accuracy5 = eval(
-            model, loss, test_loader, device, verbose
+            model, loss, test_loader, device, verbose, epoch + 1
         )
         metric_dict = {
             "train_loss": train_loss,
@@ -233,13 +247,14 @@ def train_eval_loop(
                 epoch,
                 curr_step,
                 save_path,
+                verbose,
                 metric_dict,
                 tpu=(device.type == "xla"),
             )
         scheduler.step()
     print_fn(
         f"Final performance: "
-        f"\tTrain Loss: {train_loss}"
-        f"\tTest Loss: {test_loss}"
-        f"\tAccuracy: {accuracy1}"
+        f"\tTrain Loss: {train_loss:.4f}"
+        f"\tTest Loss: {test_loss:.4f}"
+        f"\tAccuracy: {accuracy1:.2f}%"
     )
