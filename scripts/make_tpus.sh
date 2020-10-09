@@ -1,6 +1,6 @@
 #!/bin/bash
 zone=$3
-version="pytorch-1.5"
+version="pytorch-1.6"
 tpu_type="v3-8"
 for i in `seq $1 $2`; do
     if [ -z $zone ]
