@@ -94,7 +94,7 @@ def train(
             optimizer.step()
         curr_step += 1
         if verbose and (batch_idx % log_interval == 0):
-            examples_seen = batch_idx * batch_size * xrt_world_size
+            examples_seen = batch_idx * batch_size
             per_worker_header = ""
             if device.type == "xla" and verbose >= 2:
                 per_worker_header = (
@@ -102,6 +102,7 @@ def train(
                     f"rate: {tracker.rate():.2f}, "
                     f"global_rate: {tracker.global_rate():.2f}]\t"
                 )
+                examples_seen *= xrt_world_size
                 examples_seen += xm_ordinal * batch_size
             print_fn(
                 f"{per_worker_header}"
