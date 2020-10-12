@@ -8,6 +8,7 @@ from models import tinyimagenet_resnet
 from models import imagenet_vgg
 from models import imagenet_resnet
 from optimizers import custom_optim
+from optimizers import lamb
 from utils import custom_datasets
 
 
@@ -218,5 +219,6 @@ def optimizer(optimizer):
         "momentum": (optim.SGD, {"momentum": 0.9, "nesterov": True}),
         "adam": (optim.Adam, {}),
         "rms": (optim.RMSprop, {}),
+        "lamb": (lamb.Lamb, {}),
     }
     return optimizers[optimizer]
