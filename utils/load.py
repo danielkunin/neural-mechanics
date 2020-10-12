@@ -15,6 +15,7 @@ from utils import custom_datasets
 def configure_tpu(tpu_name):
     from utils.gcloud import lookup_tpu_ip_by_name, configure_env_for_tpu
 
+    print("Configuring ENV variables for TPU training")
     tpu_ip = lookup_tpu_ip_by_name(tpu_name)
     configure_env_for_tpu(tpu_ip)
 
