@@ -212,12 +212,16 @@ def model(model_architecture, model_class):
     return models[model_class][model_architecture]
 
 
-def optimizer(optimizer):
+def optimizer(optimizer, momentum=0.0, dampening=0.0, nesterov=False):
     optimizers = {
-        "custom_sgd": (custom_optim.SGD, {"momentum": 0.0, "nesterov": False}),
-        "custom_momentum": (custom_optim.SGD, {"momentum": 0.9, "nesterov": True}),
-        "sgd": (optim.SGD, {"momentum": 0.0, "nesterov": False}),
-        "momentum": (optim.SGD, {"momentum": 0.9, "nesterov": True}),
+        "custom_sgd": (custom_optim.SGD, {}),
+        "custom_momentum": (custom_optim.SGD, {"momentum": momentum,
+                                               "dampening": dampening, 
+                                               "nesterov": nesterov}),
+        "sgd": (optim.SGD, {}),
+        "momentum": (optim.SGD, {"momentum": momentum,
+                                 "dampening": dampening, 
+                                 "nesterov": nesterov}),
         "adam": (optim.Adam, {}),
         "rms": (optim.RMSprop, {}),
         "lamb": (lamb.Lamb, {}),
