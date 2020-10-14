@@ -7,7 +7,8 @@ from models import tinyimagenet_vgg
 from models import tinyimagenet_resnet
 from models import imagenet_vgg
 from models import imagenet_resnet
-from optimizers import custom_optim
+from optimizers import custom_sgd
+from optimizers import custom_momentum
 from optimizers import lamb
 from utils import custom_datasets
 
@@ -214,10 +215,10 @@ def model(model_architecture, model_class):
 
 def optimizer(optimizer, momentum=0.0, dampening=0.0, nesterov=False):
     optimizers = {
-        "custom_sgd": (custom_optim.SGD, {}),
-        "custom_momentum": (custom_optim.SGD, {"momentum": momentum,
-                                               "dampening": dampening, 
-                                               "nesterov": nesterov}),
+        "custom_sgd": (custom_sgd.SGD, {}),
+        "custom_momentum": (custom_momentum.SGD, {"momentum": momentum,
+                                                  "dampening": dampening, 
+                                                  "nesterov": nesterov}),
         "sgd": (optim.SGD, {}),
         "momentum": (optim.SGD, {"momentum": momentum,
                                  "dampening": dampening, 

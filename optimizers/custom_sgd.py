@@ -81,6 +81,10 @@ class SGD(Optimizer):
             raise ValueError("Nesterov momentum requires a momentum and zero dampening")
         super(SGD, self).__init__(params, defaults)
 
+        def scale(time):
+            return np.exp(2 * weight_decay * time)
+        self.scale = scale
+
     def __setstate__(self, state):
         super(SGD, self).__setstate__(state)
         for group in self.param_groups:
@@ -131,11 +135,12 @@ class SGD(Optimizer):
                 g = p.grad
                 if "step" not in param_state:
                     param_state["step"] = 0
-                    param_state["integral_buffer"] = g ** 2
+                    scale = self.scale(0)
+                    param_state["integral_buffer"] = scale * g ** 2
                 else:
                     param_state["step"] += 1
-                    param_state["integral_buffer"].add_(
-                        np.exp(2 * weight_decay * lr * param_state["step"]) * g ** 2
-                    )
+                    time = lr * param_state["step"]
+                    scale = self.scale(time)
+                    param_state["integral_buffer"].add_(scale * g ** 2)
 
         return loss

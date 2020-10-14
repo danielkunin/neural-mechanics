@@ -10,13 +10,8 @@ import glob
 import json
 
 
-def statistics(model, feats_dir, steps, lr, wd, momentum, dampening, nesterov):
-
-    denom = lr * (1 - dampening) * (1 + momentum)
-    gamma = (1 - momentum) / denom
-    omega = np.sqrt(2 * wd / denom)
-
-    layers = [layer for layer in utils.get_layers(model) if "classifier" in layer]
+def statistics(model, feats_dir, steps, lr, wd):
+    layers = [layer for layer in utils.get_layers(model) if "conv" in layer]
     weights = utils.load_features(
         steps=[str(steps[0])],
         feats_dir=feats_dir,
@@ -31,30 +26,50 @@ def statistics(model, feats_dir, steps, lr, wd, momentum, dampening, nesterov):
         suffix="bias",
         group="params",
     )
-    wl_0 = weights["classifier"][f"step_{steps[0]}"]
-    bl_0 = biases["classifier"][f"step_{steps[0]}"]
-    Wl_0 = np.column_stack((wl_0, bl_0))
-    theoretical = {layer: {} for layer in layers}
+
+    theoretical = {layer: {} for layer in layers[1:]}
     for i in range(len(steps)):
         step = steps[i]
-        t = lr * (1 - dampening) * step
-        for layer in layers:
-            if gamma < omega:
-                cos = np.cos(np.sqrt(omega**2 - gamma**2)*t)
-                sin = np.sin(np.sqrt(omega**2 - gamma**2)*t)
-                scale = np.exp(-gamma * t) * (cos + gamma / np.sqrt(omega**2 - gamma**2) * sin)
-            elif gamma == omega:
-                scale = np.exp(-gamma * t) * (1 + gamma * t)
-            else:
-                alpha_p = -gamma + np.sqrt(gamma**2 - omega**2)
-                alpha_m = -gamma - np.sqrt(gamma**2 - omega**2)
-                numer = alpha_p * np.exp(alpha_m * t) - alpha_m * np.exp(alpha_p * t)
-                denom = alpha_p - alpha_m
-                scale = numer / denom
-            
-            theoretical[layer][step] = scale * utils.out_synapses(Wl_0)
+        t = lr * step
 
-    empirical = {layer: {} for layer in layers}
+        if i > 0:
+            weight_buffers = utils.load_features(
+                steps=[str(step)],
+                feats_dir=feats_dir,
+                model=model,
+                suffix="weight",
+                group="buffers",
+            )
+            bias_buffers = utils.load_features(
+                steps=[str(step)],
+                feats_dir=feats_dir,
+                model=model,
+                suffix="bias",
+                group="buffers",
+            )
+
+        W_in = np.exp(-2 * wd * t) * weights[layers[0]][f"step_{steps[0]}"] ** 2
+        b_in = np.exp(-2 * wd * t) * biases[layers[0]][f"step_{steps[0]}"] ** 2
+        if i > 0:
+            g_W = weight_buffers[layers[0]][f"step_{step}"]
+            g_b = bias_buffers[layers[0]][f"step_{step}"]
+            W_in += (lr ** 2) * np.exp(-2 * wd * t) * g_W
+            b_in += (lr ** 2) * np.exp(-2 * wd * t) * g_b
+        for layer in layers[1:]:
+            W_out = np.exp(-2 * wd * t) * weights[layer][f"step_{steps[0]}"] ** 2
+            b_out = np.exp(-2 * wd * t) * biases[layer][f"step_{steps[0]}"] ** 2
+            if i > 0:
+                g_W = weight_buffers[layer][f"step_{step}"]
+                g_b = bias_buffers[layer][f"step_{step}"]
+                W_out += (lr ** 2) * np.exp(-2 * wd * t) * g_W
+                b_out += (lr ** 2) * np.exp(-2 * wd * t) * g_b
+            theoretical[layer][step] = utils.out_synapses(W_out) - utils.in_synapses(
+                W_in, b_in
+            )
+            W_in = W_out
+            b_in = b_out
+
+    empirical = {layer: {} for layer in layers[1:]}
     for i in range(len(steps)):
         step = steps[i]
         weights = utils.load_features(
@@ -71,11 +86,16 @@ def statistics(model, feats_dir, steps, lr, wd, momentum, dampening, nesterov):
             suffix="bias",
             group="params",
         )
-        for layer in layers:
-            wl_t = weights[layer][f"step_{step}"]
-            bl_t = biases[layer][f"step_{step}"]
-            Wl_t = np.column_stack((wl_t, bl_t))
-            empirical[layer][step] = utils.out_synapses(Wl_t)
+        W_in = weights[layers[0]][f"step_{step}"] ** 2
+        b_in = biases[layers[0]][f"step_{step}"] ** 2
+        for layer in layers[1:]:
+            W_out = weights[layer][f"step_{step}"] ** 2
+            b_out = biases[layer][f"step_{step}"] ** 2
+            empirical[layer][step] = utils.out_synapses(W_out) - utils.in_synapses(
+                W_in, b_in
+            )
+            W_in = W_out
+            b_in = b_out
 
     return (empirical, theoretical)
 
@@ -95,7 +115,7 @@ def main(args=None, axes=None):
     print(">> Loading weights...")
     cache_path = f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}/cache"
     utils.makedir_quiet(cache_path)
-    cache_file = f"{cache_path}/translation{ARGS.image_suffix}.h5"
+    cache_file = f"{cache_path}/inversion{ARGS.image_suffix}.h5"
     if os.path.isfile(cache_file) and not ARGS.overwrite:
         print("   Loading from cache...")
         steps, empirical, theoretical = dd.io.load(cache_file)
@@ -110,9 +130,6 @@ def main(args=None, axes=None):
             steps=steps,
             lr=hyperparameters["lr"],
             wd=hyperparameters["wd"],
-            momentum=hyperparameters["momentum"], 
-            dampening=hyperparameters["dampening"], 
-            nesterov=hyperparameters["nesterov"]
         )
         print(f"   Caching features to {cache_file}")
         dd.io.save(cache_file, (steps, empirical, theoretical))
@@ -124,19 +141,22 @@ def main(args=None, axes=None):
         fig, axes = plt.subplots(figsize=(15, 15))
 
     # plot data
-    layers = list(empirical.keys())
+    if args.layer_list == None:
+        layers = list(empirical.keys())
+    else:
+        layers = [list(empirical.keys())[i] for i in args.layer_list]
     for layer in layers:
         timesteps = list(empirical[layer].keys())
         norm = list(empirical[layer].values())
-        if ARGS.layer_wise:
+        if args.layer_wise:
             norm = [np.sum(i) for i in norm]
         axes.plot(
-            timesteps, norm,
+            timesteps, norm, color=plt.cm.tab20(int(layer.split("conv")[1]) - 1),
         )
     for layer in layers:
         timesteps = list(theoretical[layer].keys())
         norm = list(theoretical[layer].values())
-        if ARGS.layer_wise:
+        if args.layer_wise:
             norm = [np.sum(i) for i in norm]
         axes.plot(
             timesteps, norm, color="k", ls="--",
@@ -160,18 +180,19 @@ def main(args=None, axes=None):
     else:
         plot_path = f"{ARGS.plot_dir}/img"
     utils.makedir_quiet(plot_path)
-    plot_file = f"{plot_path}/translation{ARGS.image_suffix}.pdf"
+    plot_file = f"{plot_path}/inversion{ARGS.image_suffix}.pdf"
     plt.savefig(plot_file)
     print(f">> Saving figure to {plot_file}")
 
 
-# plot-specific args
 def extend_parser(parser):
     parser.add_argument(
-        "--normalize",
-        type=bool,
-        help="whether to normalize by initial condition",
-        default=False,
+        "--layer-list",
+        type=int,
+        help="list of layer indices to plot",
+        nargs="+",
+        default=None,
+        required=False,
     )
     parser.add_argument(
         "--layer-wise",

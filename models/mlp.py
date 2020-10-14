@@ -52,12 +52,12 @@ def fc_bn(
     # Linear feature extractor
     modules = [nn.Flatten()]
     modules.append(nn.Linear(size, N))
-    modules.append(nonlinearity)
     modules.append(nn.BatchNorm1d(N))
+    modules.append(nonlinearity)
     for i in range(L - 2):
         modules.append(nn.Linear(N, N))
-        modules.append(nonlinearity)
         modules.append(nn.BatchNorm1d(N))
+        modules.append(nonlinearity)
 
     # Linear classifier
     modules.append(nn.Linear(N, num_classes))

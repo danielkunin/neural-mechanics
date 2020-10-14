@@ -216,7 +216,7 @@ def get_features(
     return out
 
 
-def load_features(steps, feats_dir, model, suffix, group):
+def load_features(steps, feats_dir, model, suffix, group, verbose=False):
     """
     layers: is the output keys for the layer feats, or computed quantities
     keys: is the actual keys to be read from the h5 file
@@ -233,7 +233,7 @@ def load_features(steps, feats_dir, model, suffix, group):
 
         if os.path.isfile(feats_path):
             feature_dict = get_features(
-                feats_path=feats_path, group=group, keys=names, out_keys=layers
+                feats_path=feats_path, group=group, keys=names, out_keys=layers, verbose=verbose
             )
             for layer in layers:
                 feats[layer][f"step_{step}"] = feature_dict[layer]
