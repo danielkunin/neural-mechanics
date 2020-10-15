@@ -155,7 +155,6 @@ class SGD(Optimizer):
                 p.add_(d_p, alpha=-lr)
 
 
-                # Should we be using d_p or g?
                 param_state = self.state[p]
                 g = p.grad
                 if "step" not in param_state:

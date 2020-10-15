@@ -132,27 +132,27 @@ MODELS = {
 }
 
 
-def in_synapses(W, b=None):
+def in_synapses(W, b=None, dtype=None):
     """
     Computes sum of in synapses to next layer
     """
     if np.ndim(W) == 4:
-        in_sum = np.sum(W, axis=(1, 2, 3))
+        in_sum = np.sum(W, axis=(1, 2, 3), dtype=dtype)
     else:
-        in_sum = np.sum(W, axis=1)
+        in_sum = np.sum(W, axis=1, dtype=dtype)
     if b is not None:
         in_sum += b
     return in_sum
 
 
-def out_synapses(W, b=None):
+def out_synapses(W, b=None, dtype=None):
     """
     Computes sum of out synapses from last layer
     """
     if np.ndim(W) == 4:
-        out_sum = np.sum(W, axis=(0, 2, 3))
+        out_sum = np.sum(W, axis=(0, 2, 3), dtype=dtype)
     else:
-        out_sum = np.sum(W, axis=0)
+        out_sum = np.sum(W, axis=0, dtype=dtype)
     return out_sum
 
 

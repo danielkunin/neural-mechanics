@@ -12,12 +12,17 @@ import json
 
 def statistics(model, feats_dir, steps, lr, wd, momentum, dampening, nesterov):
 
+    lr = np.array(lr, dtype=np.float128)
+    wd = np.array(wd, dtype=np.float128)
+    momentum = np.array(momentum, dtype=np.float128)
+    dampening = np.array(dampening, dtype=np.float128)
+
     denom = lr * (1 - dampening) * (1 + momentum)
     gamma = (1 - momentum) / denom
     omega = np.sqrt(4 * wd / denom)
 
 
-    layers = [layer for layer in utils.get_layers(model) if "fc" in layer]
+    layers = [layer for layer in utils.get_layers(model) if "conv" in layer]
     weights = utils.load_features(
         steps=[str(steps[0])],
         feats_dir=feats_dir,
@@ -83,7 +88,7 @@ def statistics(model, feats_dir, steps, lr, wd, momentum, dampening, nesterov):
                 numer = alpha_p * np.exp(alpha_m * t) - alpha_m * np.exp(alpha_p * t)
                 denom = alpha_p - alpha_m
                 scale = numer / denom
-            theoretical[layer][step] = scale * utils.in_synapses(Wl_t ** 2, bl_t ** 2)
+            theoretical[layer][step] = scale * utils.in_synapses(Wl_t ** 2, bl_t ** 2, dtype=np.float128)
             if i > 0:
                 g_Wl_t_1 = weight_buffers_1[layer][f"step_{step}"]
                 g_bl_t_1 = bias_buffers_1[layer][f"step_{step}"]
@@ -108,9 +113,9 @@ def statistics(model, feats_dir, steps, lr, wd, momentum, dampening, nesterov):
 
                 scale = (lr * (1 - dampening)) * 2
                 if np.all(np.isfinite(g_Wl_t_1)) and np.all(np.isfinite(g_bl_t_1)):
-                    theoretical[layer][step] += (scale * scale_1 * utils.in_synapses(g_Wl_t_1, g_bl_t_1))
+                    theoretical[layer][step] += (scale * scale_1 * utils.in_synapses(g_Wl_t_1, g_bl_t_1, dtype=np.float128))
                 if np.all(np.isfinite(g_Wl_t_2)) and np.all(np.isfinite(g_bl_t_2)):
-                    theoretical[layer][step] += (scale * scale_2 * utils.in_synapses(g_Wl_t_2, g_bl_t_2))
+                    theoretical[layer][step] += (scale * scale_2 * utils.in_synapses(g_Wl_t_2, g_bl_t_2, dtype=np.float128))
 
     empirical = {layer: {} for layer in layers}
     for i in range(len(steps)):
@@ -191,7 +196,7 @@ def main(args=None, axes=None):
         if args.layer_wise:
             norm = [np.sum(i) for i in norm]
         axes.plot(
-            timesteps, norm, color=plt.cm.tab20(int(layer.split("fc")[1]) - 1),
+            timesteps, norm, color=plt.cm.tab20(int(layer.split("conv")[1]) - 1),
         )
     for layer in layers:
         timesteps = list(theoretical[layer].keys())

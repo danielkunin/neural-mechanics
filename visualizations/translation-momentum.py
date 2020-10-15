@@ -12,6 +12,11 @@ import json
 
 def statistics(model, feats_dir, steps, lr, wd, momentum, dampening, nesterov):
 
+    lr = np.array(lr, dtype=np.float128)
+    wd = np.array(wd, dtype=np.float128)
+    momentum = np.array(momentum, dtype=np.float128)
+    dampening = np.array(dampening, dtype=np.float128)
+
     denom = lr * (1 - dampening) * (1 + momentum)
     gamma = (1 - momentum) / denom
     omega = np.sqrt(2 * wd / denom)
@@ -52,7 +57,7 @@ def statistics(model, feats_dir, steps, lr, wd, momentum, dampening, nesterov):
                 denom = alpha_p - alpha_m
                 scale = numer / denom
             
-            theoretical[layer][step] = scale * utils.out_synapses(Wl_0)
+            theoretical[layer][step] = scale * utils.out_synapses(Wl_0, dtype=np.float128)
 
     empirical = {layer: {} for layer in layers}
     for i in range(len(steps)):
