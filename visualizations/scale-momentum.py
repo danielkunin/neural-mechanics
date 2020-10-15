@@ -106,9 +106,11 @@ def statistics(model, feats_dir, steps, lr, wd, momentum, dampening, nesterov):
                     scale_1 = np.exp(alpha_p * t) / (alpha_p - alpha_m)
                     scale_2 = -np.exp(alpha_m * t) / (alpha_p - alpha_m)
 
-                scale = (lr * (1 - dampening))**2 * (1 + momentum) / 2
-                theoretical[layer][step] += (scale * scale_1 * utils.in_synapses(g_Wl_t_1, g_bl_t_1))
-                theoretical[layer][step] += (scale * scale_2 * utils.in_synapses(g_Wl_t_2, g_bl_t_2))
+                scale = (lr * (1 - dampening)) * 2
+                if np.all(np.isfinite(g_Wl_t_1)) and np.all(np.isfinite(g_bl_t_1)):
+                    theoretical[layer][step] += (scale * scale_1 * utils.in_synapses(g_Wl_t_1, g_bl_t_1))
+                if np.all(np.isfinite(g_Wl_t_2)) and np.all(np.isfinite(g_bl_t_2)):
+                    theoretical[layer][step] += (scale * scale_2 * utils.in_synapses(g_Wl_t_2, g_bl_t_2))
 
     empirical = {layer: {} for layer in layers}
     for i in range(len(steps)):
