@@ -33,13 +33,19 @@ def main():
             continue
 
         checkpoint = torch.load(in_filename, map_location=device)
+        # Metrics
+        metrics = {}
+        for m in ["train_loss", "test_loss", "accuracy1", "accuracy5"]:
+            if m in checkpoint.keys():
+                metrics[m] = checkpoint[m]
+        # Weights
         params = {}
         for name, tensor in checkpoint["model_state_dict"].items():
             if "weight" in name:
                 params[name] = tensor.cpu().numpy()
             if "bias" in name:
                 params[name] = tensor.cpu().numpy()
-
+        # Buffers
         buffers = {}
         # this assumes the same order of model state dict as optimize state dict
         param_names = [
@@ -54,7 +60,7 @@ def main():
                 buffers[name + '_1'] = buffer_dict["integral_buffer_1"].cpu().numpy()
             if "integral_buffer_2" in buffer_dict.keys():
                 buffers[name + '_2'] = buffer_dict["integral_buffer_2"].cpu().numpy()
-        dd.io.save(out_filename, {"params": params, "buffers": buffers})
+        dd.io.save(out_filename, {"metrics": metrics, "params": params, "buffers": buffers})
 
 
 if __name__ == "__main__":
