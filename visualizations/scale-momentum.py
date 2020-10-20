@@ -83,11 +83,9 @@ def statistics(model, feats_dir, steps, lr, wd, momentum, dampening, nesterov):
             elif gamma == omega:
                 scale = np.exp(-gamma * t) * (1 + gamma * t)
             else:
-                alpha_p = -gamma + np.sqrt(gamma**2 - omega**2)
-                alpha_m = -gamma - np.sqrt(gamma**2 - omega**2)
-                numer = alpha_p * np.exp(alpha_m * t) - alpha_m * np.exp(alpha_p * t)
-                denom = alpha_p - alpha_m
-                scale = numer / denom
+                cosh = np.cosh(np.sqrt(gamma**2 - omega**2)*t)
+                sinh = np.sinh(np.sqrt(gamma**2 - omega**2)*t)
+                scale = np.exp(-gamma * t) * (cosh + gamma / np.sqrt(gamma**2 - omega**2) * sinh)
             theoretical[layer][step] = scale * utils.in_synapses(Wl_t ** 2, bl_t ** 2, dtype=np.float128)
             if i > 0:
                 g_Wl_t_1 = weight_buffers_1[layer][f"step_{step}"]
@@ -106,10 +104,8 @@ def statistics(model, feats_dir, steps, lr, wd, momentum, dampening, nesterov):
 
                 else:
                     sqrt = np.sqrt(gamma**2 - omega**2)
-                    alpha_p = -gamma + sqrt
-                    alpha_m = -gamma - sqrt
-                    scale_1 = np.exp(alpha_p * t) / (alpha_p - alpha_m)
-                    scale_2 = -np.exp(alpha_m * t) / (alpha_p - alpha_m)
+                    scale_1 = np.exp(-gamma * t) * np.sinh(sqrt * t) / sqrt
+                    scale_2 = -np.exp(-gamma * t) * np.cosh(sqrt * t) / sqrt
 
                 scale = (lr * (1 - dampening)) * 2
                 if np.all(np.isfinite(g_Wl_t_1)) and np.all(np.isfinite(g_bl_t_1)):

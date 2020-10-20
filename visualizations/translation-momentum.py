@@ -51,11 +51,9 @@ def statistics(model, feats_dir, steps, lr, wd, momentum, dampening, nesterov):
             elif gamma == omega:
                 scale = np.exp(-gamma * t) * (1 + gamma * t)
             else:
-                alpha_p = -gamma + np.sqrt(gamma**2 - omega**2)
-                alpha_m = -gamma - np.sqrt(gamma**2 - omega**2)
-                numer = alpha_p * np.exp(alpha_m * t) - alpha_m * np.exp(alpha_p * t)
-                denom = alpha_p - alpha_m
-                scale = numer / denom
+                cosh = np.cosh(np.sqrt(gamma**2 - omega**2)*t)
+                sinh = np.sinh(np.sqrt(gamma**2 - omega**2)*t)
+                scale = np.exp(-gamma * t) * (cosh + gamma / np.sqrt(gamma**2 - omega**2) * sinh)
             
             theoretical[layer][step] = scale * utils.out_synapses(Wl_0, dtype=np.float128)
 

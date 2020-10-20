@@ -22,7 +22,7 @@ def statistics(model, feats_dir, steps, lr, wd, momentum, dampening, nesterov):
     omega = np.sqrt(4 * wd / denom)
 
 
-    layers = [layer for layer in utils.get_layers(model) if "conv" in layer]
+    layers = [layer for layer in utils.get_layers(model) if "fc" in layer]
     weights = utils.load_features(
         steps=[str(steps[0])],
         feats_dir=feats_dir,
@@ -93,11 +93,9 @@ def statistics(model, feats_dir, steps, lr, wd, momentum, dampening, nesterov):
             elif gamma == omega:
                 scale = np.exp(-gamma * t) * (1 + gamma * t)
             else:
-                alpha_p = -gamma + np.sqrt(gamma**2 - omega**2)
-                alpha_m = -gamma - np.sqrt(gamma**2 - omega**2)
-                numer = alpha_p * np.exp(alpha_m * t) - alpha_m * np.exp(alpha_p * t)
-                denom = alpha_p - alpha_m
-                scale = numer / denom
+                cosh = np.cosh(np.sqrt(gamma**2 - omega**2)*t)
+                sinh = np.sinh(np.sqrt(gamma**2 - omega**2)*t)
+                scale = np.exp(-gamma * t) * (cosh + gamma / np.sqrt(gamma**2 - omega**2) * sinh)
 
             theoretical[layer][step] = scale * (utils.out_synapses(W_out, dtype=np.float128) - utils.in_synapses(
                 W_in, b_in, dtype=np.float128
@@ -125,10 +123,8 @@ def statistics(model, feats_dir, steps, lr, wd, momentum, dampening, nesterov):
 
                 else:
                     sqrt = np.sqrt(gamma**2 - omega**2)
-                    alpha_p = -gamma + sqrt
-                    alpha_m = -gamma - sqrt
-                    scale_1 = np.exp(alpha_p * t) / (alpha_p - alpha_m)
-                    scale_2 = -np.exp(alpha_m * t) / (alpha_p - alpha_m)
+                    scale_1 = np.exp(-gamma * t) * np.sinh(sqrt * t) / sqrt
+                    scale_2 = -np.exp(-gamma * t) * np.cosh(sqrt * t) / sqrt
 
                 scale = (lr * (1 - dampening)) * 2
 
@@ -231,7 +227,7 @@ def main(args=None, axes=None):
         if args.layer_wise:
             norm = [np.sum(i) for i in norm]
         axes.plot(
-            timesteps, norm, color=plt.cm.tab20(int(layer.split("conv")[1]) - 1),
+            timesteps, norm, color=plt.cm.tab20(int(layer.split("fc")[1]) - 1),
         )
     for layer in layers:
         timesteps = list(theoretical[layer].keys())

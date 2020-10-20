@@ -99,11 +99,9 @@ class SGD(Optimizer):
 
         else:
             sqrt = np.sqrt(self.gamma**2 - self.omega**2)
-            alpha_p = -self.gamma + sqrt
-            alpha_m = -self.gamma - sqrt
             def scale(time):
-                scale_1 = np.exp(-alpha_p * time)
-                scale_2 = np.exp(-alpha_m * time)
+                scale_1 = np.exp(self.gamma * time) * np.cosh(sqrt * time)
+                scale_2 = np.exp(self.gamma * time) * np.sinh(sqrt * time)
                 return (scale_1, scale_2)
         self.scale = scale
 
