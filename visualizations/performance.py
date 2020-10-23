@@ -8,20 +8,18 @@ import deepdish as dd
 import utils
 import glob
 import json
+from tqdm import tqdm
 
 
 def statistics(model, feats_dir, steps):
     statistics = {}
-    for i in range(len(steps)):
+    for i in tqdm(range(len(steps))):
         step = steps[i]
         feats_path = f"{feats_dir}/step{step}.h5"
         if os.path.isfile(feats_path):
-            feature_dict = utils.get_features(
-                feats_path=feats_path,
-                group="metrics",
-                keys=["accuracy1", "accuracy5", "train_loss", "test_loss"],
-            )
-            statistics[step] = feature_dict
+            feature_dict = dd.io.load(feats_path)
+            if "metrics" in feature_dict.keys():
+                statistics[step] = feature_dict["metrics"]
     return statistics
 
 
@@ -43,7 +41,7 @@ def main(args=None, axes=None):
     cache_file = f"{cache_path}/performance{ARGS.image_suffix}.h5"
     if os.path.isfile(cache_file) and not ARGS.overwrite:
         print("   Loading from cache...")
-        performance = dd.io.load(cache_file)
+        steps, performance = dd.io.load(cache_file)
     else:
         step_names = glob.glob(
             f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}/feats/*.h5"
@@ -65,22 +63,26 @@ def main(args=None, axes=None):
 
     # plot data
     color = "k"
+    plot_steps = []
+    for step in steps:
+        if "train_loss" in performance[step].keys():
+            plot_steps.append(step)
     axes.plot(
-        steps, performance["train_loss"], color=color,
+        plot_steps, [performance[s]["train_loss"] for s in plot_steps], color=color,
     )
     axes.plot(
-        steps, performance["test_loss"], color=color, alpha=0.5,
+        plot_steps, [performance[s]["test_loss"] for s in plot_steps], color=color, alpha=0.5,
     )
-    axes2.tick_params(axis="y", labelcolor=color)
+    axes.tick_params(axis="y", labelcolor=color)
     axes.set_ylabel(f"loss")
 
     axes2 = axes.twinx()
     color = "tab:blue"
     axes2.plot(
-        steps, performance["accuracy1"], color=color,
+        plot_steps, [performance[s]["accuracy1"] for s in plot_steps], color=color,
     )
     axes2.plot(
-        steps, performance["accuracy5"], color=color, alpha=0.5,
+        plot_steps, [performance[s]["accuracy5"] for s in plot_steps], color=color, alpha=0.5,
     )
     axes2.tick_params(axis="y", labelcolor=color)
     axes2.set_ylabel(f"accuracy")
