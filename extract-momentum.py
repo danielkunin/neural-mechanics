@@ -1,6 +1,7 @@
 import glob
 import os
 import deepdish as dd
+import numpy as np
 import torch
 from tqdm import tqdm
 from utils import load
@@ -37,7 +38,7 @@ def main():
         metrics = {}
         for m in ["train_loss", "test_loss", "accuracy1", "accuracy5"]:
             if m in checkpoint.keys():
-                metrics[m] = checkpoint[m]
+                metrics[m] = np.array([checkpoint[m]])
         # Weights
         params = {}
         for name, tensor in checkpoint["model_state_dict"].items():
