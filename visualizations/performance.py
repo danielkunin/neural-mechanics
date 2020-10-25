@@ -23,7 +23,7 @@ def statistics(model, feats_dir, steps):
     return statistics
 
 
-def main(args=None, axes=None):
+def main(args=None, axes=None, verbose=True):
 
     if args is not None:
         ARGS = args
@@ -35,12 +35,14 @@ def main(args=None, axes=None):
         hyperparameters = json.load(f)
 
     # load cache or run statistics
-    print(">> Loading weights...")
+    if verbose:
+        print(">> Loading weights...")
     cache_path = f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}/cache"
     utils.makedir_quiet(cache_path)
     cache_file = f"{cache_path}/performance{ARGS.image_suffix}.h5"
     if os.path.isfile(cache_file) and not ARGS.overwrite:
-        print("   Loading from cache...")
+        if verbose:
+            print("   Loading from cache...")
         steps, performance = dd.io.load(cache_file)
     else:
         step_names = glob.glob(
@@ -56,7 +58,8 @@ def main(args=None, axes=None):
         dd.io.save(cache_file, (steps, performance))
 
     # create plot
-    print(">> Plotting...")
+    if verbose:
+        print(">> Plotting...")
     plt.rcParams["font.size"] = 18
     if axes is None:
         fig, axes = plt.subplots(figsize=(15, 15))
@@ -102,7 +105,8 @@ def main(args=None, axes=None):
     utils.makedir_quiet(plot_path)
     plot_file = f"{plot_path}/performance{ARGS.image_suffix}.pdf"
     plt.savefig(plot_file)
-    print(f">> Saving figure to {plot_file}")
+    if verbose:
+        print(f">> Saving figure to {plot_file}")
 
 
 # plot-specific args
