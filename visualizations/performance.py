@@ -17,9 +17,12 @@ def statistics(model, feats_dir, steps):
         step = steps[i]
         feats_path = f"{feats_dir}/step{step}.h5"
         if os.path.isfile(feats_path):
-            feature_dict = dd.io.load(feats_path)
-            if "metrics" in feature_dict.keys():
-                statistics[step] = feature_dict["metrics"]
+            feature_dict = utils.get_features(
+                feats_path=feats_path,
+                group="metrics",
+                keys=["accuracy1", "accuracy5", "train_loss", "test_loss"],
+            )
+            statistics[step] = feature_dict
     return statistics
 
 
