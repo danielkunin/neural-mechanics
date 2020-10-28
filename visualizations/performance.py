@@ -77,7 +77,10 @@ def main(args=None, axes=None, verbose=True):
         plot_steps, [performance[s]["train_loss"] for s in plot_steps], color=color,
     )
     axes.plot(
-        plot_steps, [performance[s]["test_loss"] for s in plot_steps], color=color, alpha=0.5,
+        plot_steps,
+        [performance[s]["test_loss"] for s in plot_steps],
+        color=color,
+        alpha=0.5,
     )
     axes.tick_params(axis="y", labelcolor=color)
     axes.set_ylabel(f"loss")
@@ -88,7 +91,10 @@ def main(args=None, axes=None, verbose=True):
         plot_steps, [performance[s]["accuracy1"] for s in plot_steps], color=color,
     )
     axes2.plot(
-        plot_steps, [performance[s]["accuracy5"] for s in plot_steps], color=color, alpha=0.5,
+        plot_steps,
+        [performance[s]["accuracy5"] for s in plot_steps],
+        color=color,
+        alpha=0.5,
     )
     axes2.tick_params(axis="y", labelcolor=color)
     axes2.set_ylabel(f"accuracy")
