@@ -58,10 +58,12 @@ def main():
             param_names, checkpoint["optimizer_state_dict"]["state"].values()
         ):
             if "integral_buffer_1" in buffer_dict.keys():
-                buffers[name + '_1'] = buffer_dict["integral_buffer_1"].cpu().numpy()
+                buffers[name + "_1"] = buffer_dict["integral_buffer_1"].cpu().numpy()
             if "integral_buffer_2" in buffer_dict.keys():
-                buffers[name + '_2'] = buffer_dict["integral_buffer_2"].cpu().numpy()
-        dd.io.save(out_filename, {"metrics": metrics, "params": params, "buffers": buffers})
+                buffers[name + "_2"] = buffer_dict["integral_buffer_2"].cpu().numpy()
+        dd.io.save(
+            out_filename, {"metrics": metrics, "params": params, "buffers": buffers}
+        )
 
 
 if __name__ == "__main__":

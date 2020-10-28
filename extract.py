@@ -61,7 +61,9 @@ def main():
                 buffers[name] = buffer_dict["integral_buffer"].cpu().numpy()
             if "bias" in name and "integral_buffer" in buffer_dict.keys():
                 buffers[name] = buffer_dict["integral_buffer"].cpu().numpy()
-        dd.io.save(out_filename, {"metrics": metrics, "params": params, "buffers": buffers})
+        dd.io.save(
+            out_filename, {"metrics": metrics, "params": params, "buffers": buffers}
+        )
 
 
 if __name__ == "__main__":

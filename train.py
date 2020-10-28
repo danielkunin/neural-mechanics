@@ -88,10 +88,9 @@ def main(ARGS):
         )
 
     loss = nn.CrossEntropyLoss()
-    opt_class, opt_kwargs = load.optimizer(ARGS.optimizer, 
-                                           ARGS.momentum, 
-                                           ARGS.dampening, 
-                                           ARGS.nesterov)
+    opt_class, opt_kwargs = load.optimizer(
+        ARGS.optimizer, ARGS.momentum, ARGS.dampening, ARGS.nesterov
+    )
     optimizer = opt_class(
         model.parameters(), lr=ARGS.lr, weight_decay=ARGS.wd, **opt_kwargs,
     )

@@ -233,7 +233,11 @@ def load_features(steps, feats_dir, model, suffix, group, verbose=False):
 
         if os.path.isfile(feats_path):
             feature_dict = get_features(
-                feats_path=feats_path, group=group, keys=names, out_keys=layers, verbose=verbose
+                feats_path=feats_path,
+                group=group,
+                keys=names,
+                out_keys=layers,
+                verbose=verbose,
             )
             for layer in layers:
                 feats[layer][f"step_{step}"] = feature_dict[layer]

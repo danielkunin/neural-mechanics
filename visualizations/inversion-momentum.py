@@ -21,7 +21,6 @@ def statistics(model, feats_dir, steps, lr, wd, momentum, dampening, nesterov):
     gamma = (1 - momentum) / denom
     omega = np.sqrt(4 * wd / denom)
 
-
     layers = [layer for layer in utils.get_layers(model) if "conv" in layer]
     weights = utils.load_features(
         steps=[str(steps[0])],
@@ -87,24 +86,26 @@ def statistics(model, feats_dir, steps, lr, wd, momentum, dampening, nesterov):
 
             # Homogenous solution
             if gamma < omega:
-                cos = np.cos(np.sqrt(omega**2 - gamma**2)*t)
-                sin = np.sin(np.sqrt(omega**2 - gamma**2)*t)
-                scale = np.exp(-gamma * t) * (cos + gamma / np.sqrt(omega**2 - gamma**2) * sin)
+                cos = np.cos(np.sqrt(omega ** 2 - gamma ** 2) * t)
+                sin = np.sin(np.sqrt(omega ** 2 - gamma ** 2) * t)
+                scale = np.exp(-gamma * t) * (
+                    cos + gamma / np.sqrt(omega ** 2 - gamma ** 2) * sin
+                )
             elif gamma == omega:
                 scale = np.exp(-gamma * t) * (1 + gamma * t)
             else:
-                alpha_p = -gamma + np.sqrt(gamma**2 - omega**2)
-                alpha_m = -gamma - np.sqrt(gamma**2 - omega**2)
+                alpha_p = -gamma + np.sqrt(gamma ** 2 - omega ** 2)
+                alpha_m = -gamma - np.sqrt(gamma ** 2 - omega ** 2)
                 numer = alpha_p * np.exp(alpha_m * t) - alpha_m * np.exp(alpha_p * t)
                 denom = alpha_p - alpha_m
                 scale = numer / denom
 
-            theoretical[layer][step] = scale * (utils.out_synapses(W_out, dtype=np.float128) - utils.in_synapses(
-                W_in, b_in, dtype=np.float128
-            ))
+            theoretical[layer][step] = scale * (
+                utils.out_synapses(W_out, dtype=np.float128)
+                - utils.in_synapses(W_in, b_in, dtype=np.float128)
+            )
             W_in = W_out
             b_in = b_out
-
 
             if i > 0:
                 g_W_out_1 = weight_buffers_1[layer][f"step_{step}"]
@@ -112,10 +113,9 @@ def statistics(model, feats_dir, steps, lr, wd, momentum, dampening, nesterov):
                 g_W_out_2 = weight_buffers_2[layer][f"step_{step}"]
                 g_b_out_2 = bias_buffers_2[layer][f"step_{step}"]
 
-
                 # Inhomogenous solution
                 if gamma < omega:
-                    sqrt = np.sqrt(omega**2 - gamma**2)
+                    sqrt = np.sqrt(omega ** 2 - gamma ** 2)
                     scale_1 = np.exp(-gamma * t) * np.sin(sqrt * t) / sqrt
                     scale_2 = -np.exp(-gamma * t) * np.cos(sqrt * t) / sqrt
 
@@ -124,7 +124,7 @@ def statistics(model, feats_dir, steps, lr, wd, momentum, dampening, nesterov):
                     scale_2 = -np.exp(-gamma * t)
 
                 else:
-                    sqrt = np.sqrt(gamma**2 - omega**2)
+                    sqrt = np.sqrt(gamma ** 2 - omega ** 2)
                     alpha_p = -gamma + sqrt
                     alpha_m = -gamma - sqrt
                     scale_1 = np.exp(alpha_p * t) / (alpha_p - alpha_m)
@@ -132,13 +132,31 @@ def statistics(model, feats_dir, steps, lr, wd, momentum, dampening, nesterov):
 
                 scale = (lr * (1 - dampening)) * 2
 
-                if np.all(np.isfinite(g_W_out_1)) and np.all(np.isfinite(g_W_in_1)) and np.all(np.isfinite(g_b_in_1)):
+                if (
+                    np.all(np.isfinite(g_W_out_1))
+                    and np.all(np.isfinite(g_W_in_1))
+                    and np.all(np.isfinite(g_b_in_1))
+                ):
                     theoretical[layer][step] += (
-                        scale * scale_1 * (utils.out_synapses(g_W_out_1, dtype=np.float128) - utils.in_synapses(g_W_in_1, g_b_in_1, dtype=np.float128))
+                        scale
+                        * scale_1
+                        * (
+                            utils.out_synapses(g_W_out_1, dtype=np.float128)
+                            - utils.in_synapses(g_W_in_1, g_b_in_1, dtype=np.float128)
+                        )
                     )
-                if np.all(np.isfinite(g_W_out_2)) and np.all(np.isfinite(g_W_in_2)) and np.all(np.isfinite(g_b_in_2)):
+                if (
+                    np.all(np.isfinite(g_W_out_2))
+                    and np.all(np.isfinite(g_W_in_2))
+                    and np.all(np.isfinite(g_b_in_2))
+                ):
                     theoretical[layer][step] += (
-                        scale * scale_2 * (utils.out_synapses(g_W_out_2, dtype=np.float128) - utils.in_synapses(g_W_in_2, g_b_in_2, dtype=np.float128))
+                        scale
+                        * scale_2
+                        * (
+                            utils.out_synapses(g_W_out_2, dtype=np.float128)
+                            - utils.in_synapses(g_W_in_2, g_b_in_2, dtype=np.float128)
+                        )
                     )
 
                 g_W_in_1 = g_W_out_1
@@ -207,9 +225,9 @@ def main(args=None, axes=None):
             steps=steps,
             lr=hyperparameters["lr"],
             wd=hyperparameters["wd"],
-            momentum=hyperparameters["momentum"], 
-            dampening=hyperparameters["dampening"], 
-            nesterov=hyperparameters["nesterov"]
+            momentum=hyperparameters["momentum"],
+            dampening=hyperparameters["dampening"],
+            nesterov=hyperparameters["nesterov"],
         )
         print(f"   Caching features to {cache_file}")
         dd.io.save(cache_file, (steps, empirical, theoretical))
