@@ -83,6 +83,7 @@ class SGD(Optimizer):
 
         def scale(time):
             return np.exp(2 * weight_decay * time)
+
         self.scale = scale
 
     def __setstate__(self, state):

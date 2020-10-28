@@ -45,19 +45,23 @@ def statistics(model, feats_dir, steps, lr, wd, momentum, dampening, nesterov):
         t = lr * (1 - dampening) * step
         for layer in layers:
             if gamma < omega:
-                cos = np.cos(np.sqrt(omega**2 - gamma**2)*t)
-                sin = np.sin(np.sqrt(omega**2 - gamma**2)*t)
-                scale = np.exp(-gamma * t) * (cos + gamma / np.sqrt(omega**2 - gamma**2) * sin)
+                cos = np.cos(np.sqrt(omega ** 2 - gamma ** 2) * t)
+                sin = np.sin(np.sqrt(omega ** 2 - gamma ** 2) * t)
+                scale = np.exp(-gamma * t) * (
+                    cos + gamma / np.sqrt(omega ** 2 - gamma ** 2) * sin
+                )
             elif gamma == omega:
                 scale = np.exp(-gamma * t) * (1 + gamma * t)
             else:
-                alpha_p = -gamma + np.sqrt(gamma**2 - omega**2)
-                alpha_m = -gamma - np.sqrt(gamma**2 - omega**2)
+                alpha_p = -gamma + np.sqrt(gamma ** 2 - omega ** 2)
+                alpha_m = -gamma - np.sqrt(gamma ** 2 - omega ** 2)
                 numer = alpha_p * np.exp(alpha_m * t) - alpha_m * np.exp(alpha_p * t)
                 denom = alpha_p - alpha_m
                 scale = numer / denom
-            
-            theoretical[layer][step] = scale * utils.out_synapses(Wl_0, dtype=np.float128)
+
+            theoretical[layer][step] = scale * utils.out_synapses(
+                Wl_0, dtype=np.float128
+            )
 
     empirical = {layer: {} for layer in layers}
     for i in range(len(steps)):
@@ -115,9 +119,9 @@ def main(args=None, axes=None):
             steps=steps,
             lr=hyperparameters["lr"],
             wd=hyperparameters["wd"],
-            momentum=hyperparameters["momentum"], 
-            dampening=hyperparameters["dampening"], 
-            nesterov=hyperparameters["nesterov"]
+            momentum=hyperparameters["momentum"],
+            dampening=hyperparameters["dampening"],
+            nesterov=hyperparameters["nesterov"],
         )
         print(f"   Caching features to {cache_file}")
         dd.io.save(cache_file, (steps, empirical, theoretical))

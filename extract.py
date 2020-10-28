@@ -1,6 +1,7 @@
 import glob
 import os
 import deepdish as dd
+import numpy as np
 import torch
 from tqdm import tqdm
 from utils import load
@@ -37,7 +38,7 @@ def main():
         metrics = {}
         for m in ["train_loss", "test_loss", "accuracy1", "accuracy5"]:
             if m in checkpoint.keys():
-                metrics[m] = checkpoint[m]
+                metrics[m] = np.array([checkpoint[m]])
         # Weights
         params = {}
         for name, tensor in checkpoint["model_state_dict"].items():
@@ -60,7 +61,9 @@ def main():
                 buffers[name] = buffer_dict["integral_buffer"].cpu().numpy()
             if "bias" in name and "integral_buffer" in buffer_dict.keys():
                 buffers[name] = buffer_dict["integral_buffer"].cpu().numpy()
-        dd.io.save(out_filename, {"metrics": metrics, "params": params, "buffers": buffers})
+        dd.io.save(
+            out_filename, {"metrics": metrics, "params": params, "buffers": buffers}
+        )
 
 
 if __name__ == "__main__":

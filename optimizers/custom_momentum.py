@@ -85,28 +85,31 @@ class SGD(Optimizer):
         self.omega = np.sqrt(4 * weight_decay / denom)
 
         if self.gamma < self.omega:
-            sqrt = np.sqrt(self.omega**2 - self.gamma**2)
+            sqrt = np.sqrt(self.omega ** 2 - self.gamma ** 2)
+
             def scale(time):
                 scale_1 = np.exp(self.gamma * time) * np.cos(sqrt * time)
                 scale_2 = np.exp(self.gamma * time) * np.sin(sqrt * time)
                 return (scale_1, scale_2)
 
         elif self.gamma == self.omega:
+
             def scale(time):
                 scale_1 = np.exp(self.gamma * time)
                 scale_2 = np.exp(self.gamma * time) * time
                 return (scale_1, scale_2)
 
         else:
-            sqrt = np.sqrt(self.gamma**2 - self.omega**2)
+            sqrt = np.sqrt(self.gamma ** 2 - self.omega ** 2)
             alpha_p = -self.gamma + sqrt
             alpha_m = -self.gamma - sqrt
+
             def scale(time):
                 scale_1 = np.exp(-alpha_p * time)
                 scale_2 = np.exp(-alpha_m * time)
                 return (scale_1, scale_2)
-        self.scale = scale
 
+        self.scale = scale
 
     def __setstate__(self, state):
         super(SGD, self).__setstate__(state)
@@ -143,7 +146,7 @@ class SGD(Optimizer):
                     param_state = self.state[p]
                     if "momentum_buffer" not in param_state:
                         buf = param_state["momentum_buffer"] = torch.clone(d_p).detach()
-                        buf.mul_(1 - dampening) # Added to scale buffer appropriately
+                        buf.mul_(1 - dampening)  # Added to scale buffer appropriately
                     else:
                         buf = param_state["momentum_buffer"]
                         buf.mul_(momentum).add_(d_p, alpha=1 - dampening)
@@ -153,7 +156,6 @@ class SGD(Optimizer):
                         d_p = buf
 
                 p.add_(d_p, alpha=-lr)
-
 
                 param_state = self.state[p]
                 g = p.grad

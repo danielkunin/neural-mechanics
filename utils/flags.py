@@ -107,7 +107,15 @@ def train():
         "--optimizer",
         type=str,
         default="sgd",
-        choices=["custom_sgd", "custom_momentum", "sgd", "momentum", "adam", "rms", "lamb"],
+        choices=[
+            "custom_sgd",
+            "custom_momentum",
+            "sgd",
+            "momentum",
+            "adam",
+            "rms",
+            "lamb",
+        ],
         help="optimizer (default: sgd)",
     )
     train_args.add_argument(
@@ -148,10 +156,16 @@ def train():
         "--momentum", type=float, default=0.0, help="momentum parameter (default: 0.0)"
     )
     train_args.add_argument(
-        "--dampening", type=float, default=0.0, help="dampening parameter (default: 0.0)"
+        "--dampening",
+        type=float,
+        default=0.0,
+        help="dampening parameter (default: 0.0)",
     )
     train_args.add_argument(
-        "--nesterov", type=bool, default=False, help="nesterov momentum (default: False)"
+        "--nesterov",
+        type=bool,
+        default=False,
+        help="nesterov momentum (default: False)",
     )
     train_args.add_argument(
         "--workers",

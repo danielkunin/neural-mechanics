@@ -1,6 +1,7 @@
 import glob
 import os
 import deepdish as dd
+import numpy as np
 import torch
 from tqdm import tqdm
 from utils import load
@@ -37,7 +38,7 @@ def main():
         metrics = {}
         for m in ["train_loss", "test_loss", "accuracy1", "accuracy5"]:
             if m in checkpoint.keys():
-                metrics[m] = checkpoint[m]
+                metrics[m] = np.array([checkpoint[m]])
         # Weights
         params = {}
         for name, tensor in checkpoint["model_state_dict"].items():
@@ -57,10 +58,12 @@ def main():
             param_names, checkpoint["optimizer_state_dict"]["state"].values()
         ):
             if "integral_buffer_1" in buffer_dict.keys():
-                buffers[name + '_1'] = buffer_dict["integral_buffer_1"].cpu().numpy()
+                buffers[name + "_1"] = buffer_dict["integral_buffer_1"].cpu().numpy()
             if "integral_buffer_2" in buffer_dict.keys():
-                buffers[name + '_2'] = buffer_dict["integral_buffer_2"].cpu().numpy()
-        dd.io.save(out_filename, {"metrics": metrics, "params": params, "buffers": buffers})
+                buffers[name + "_2"] = buffer_dict["integral_buffer_2"].cpu().numpy()
+        dd.io.save(
+            out_filename, {"metrics": metrics, "params": params, "buffers": buffers}
+        )
 
 
 if __name__ == "__main__":
