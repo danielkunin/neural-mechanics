@@ -10,9 +10,33 @@ import glob
 import json
 
 
-def statistics(model, feats_dir, steps, lr, wd):
+def statistics(model, feats_dir, steps, lr, wd, subset=None):
     layers = [layer for layer in utils.get_layers(model)]
     empirical = {layer: {} for layer in layers}
+    step = 0
+    weights = utils.load_features(
+        steps=[str(step)],
+        feats_dir=feats_dir,
+        model=model,
+        suffix="weight",
+        group="params",
+    )
+    biases = utils.load_features(
+        steps=[str(step)],
+        feats_dir=feats_dir,
+        model=model,
+        suffix="bias",
+        group="params",
+    )
+    Wl_t = weights[layer][f"step_{step}"]
+    bl_t = biases[layer][f"step_{step}"]
+    all_weights = np.concatenate((Wl_t.reshape(-1), bl_t.reshape(-1)))
+    if subset is None:
+        random_subset_idx = np.arange(len(all_weights))
+    else:
+        random_subset_idx = np.random.choice(
+            len(all_weights), size=subset, replace=False
+        )
     for i in range(len(steps)):
         step = steps[i]
         weights = utils.load_features(
@@ -32,7 +56,8 @@ def statistics(model, feats_dir, steps, lr, wd):
         for layer in layers:
             Wl_t = weights[layer][f"step_{step}"]
             bl_t = biases[layer][f"step_{step}"]
-            empirical[layer][step] = np.concatenate((Wl_t.reshape(-1), bl_t.reshape(-1)))
+            all_weights = np.concatenate((Wl_t.reshape(-1), bl_t.reshape(-1)))
+            empirical[layer][step] = all_weights[random_subset_idx]
 
     return empirical
 
@@ -67,6 +92,7 @@ def main(args=None, axes=None):
             steps=steps,
             lr=hyperparameters["lr"],
             wd=hyperparameters["wd"],
+            subset=args.subset,
         )
         print(f"   Caching features to {cache_file}")
         dd.io.save(cache_file, (steps, empirical))
@@ -87,8 +113,6 @@ def main(args=None, axes=None):
         norm = list(empirical[layer].values())
         if args.layer_wise:
             norm = [np.sum(i) for i in norm]
-        if args.subset > 0:
-            norm = [i[0:args.subset] for i in norm]
         axes.plot(
             timesteps, norm, color=plt.cm.tab20(idx),
         )
@@ -144,6 +168,8 @@ if __name__ == "__main__":
     parser = utils.default_parser()
     parser = extend_parser(parser)
     ARGS = parser.parse_args()
+
+    np.random.seed(ARGS.seed)
 
     if ARGS.use_tex:
         from matplotlib import rc
