@@ -2,6 +2,7 @@ import matplotlib as mpl
 
 mpl.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import os
 import numpy as np
 import deepdish as dd
@@ -82,16 +83,19 @@ def main(args=None, axes=None):
         layers = list(empirical.keys())
     else:
         layers = [list(empirical.keys())[i] for i in args.layer_list]
+
+    handles = []
     for idx, layer in enumerate(layers):
         timesteps = list(empirical[layer].keys())
         norm = list(empirical[layer].values())
-        if args.layer_wise:
-            norm = [np.sum(i) for i in norm]
+        if args.norm:
+            norm = [i**2 for i in norm]
         if args.subset > 0:
             norm = [i[0:args.subset] for i in norm]
         axes.plot(
             timesteps, norm, color=plt.cm.tab20(idx),
         )
+        handles += [mpatches.Patch(color=plt.cm.tab20(idx), label=layer)]
 
     # axes labels and title
     axes.set_xlabel("timestep")
@@ -101,7 +105,7 @@ def main(args=None, axes=None):
         axes.set_xlabel("timestep")
         axes.set_ylabel(r"$\langle W, \mathbb{1}\rangle$")
         axes.set_title(r"Projection for translational parameters across time")
-    # axes.legend()
+    axes.legend(handles=handles)
 
     # save plot
     if ARGS.plot_dir is None:
@@ -124,9 +128,9 @@ def extend_parser(parser):
         required=False,
     )
     parser.add_argument(
-        "--layer-wise",
+        "--norm",
         type=bool,
-        help="whether to plot per neuron",
+        help="whether to plot squared norm",
         default=False,
         required=False,
     )
