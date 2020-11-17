@@ -39,7 +39,7 @@ def statistics(model, feats_dir, steps, lr, wd, subset=None, seed=0):
                 random_subset_idx = np.arange(len(all_weights))
             else:
                 random_subset_idx = np.random.choice(
-                    len(all_weights), size=subset, replace=False
+                    len(all_weights), size=min(subset, len(all_weights)), replace=False
                 )
             empirical[layer][step] = all_weights[random_subset_idx]
 
@@ -95,29 +95,29 @@ def main(args=None, axes=None):
         layers = [list(empirical.keys())[i] for i in args.layer_list]
 
     handles = []
+    layers = [l for l in layers if "conv" in l]
     for idx, layer in enumerate(layers):
         timesteps = list(empirical[layer].keys())
         norm = list(empirical[layer].values())
         if args.norm:
             norm = [i ** 2 for i in norm]
-        if args.subset > 0:
-            norm = [i[0 : args.subset] for i in norm]
         if args.layer_wise:
             norm = [np.sum(i) for i in norm]
         axes.plot(
             timesteps, norm, color=plt.cm.tab20(idx), label=layer,
+            lw=2, alpha=0.5,
         )
         handles += [mpatches.Patch(color=plt.cm.tab20(idx), label=layer)]
 
     # axes labels and title
-    axes.set_xlabel("timestep")
-    axes.set_ylabel(f"projection")
-    axes.title.set_text(f"Projection for translational parameters across time")
+    #axes.set_xlabel("timestep")
+    #axes.set_ylabel(f"projection")
+    #axes.title.set_text(f"Projection for translational parameters across time")
     if ARGS.use_tex:
         axes.set_xlabel("timestep")
         axes.set_ylabel(r"$\langle W, \mathbb{1}\rangle$")
         axes.set_title(r"Projection for translational parameters across time")
-    axes.legend(handles=handles)
+    #axes.legend(handles=handles)
 
     # save plot
     if ARGS.plot_dir is None:
@@ -158,7 +158,7 @@ def extend_parser(parser):
         type=int,
         help="number of parameters to plot",
         default=None,
-        required=True,
+        required=False,
     )
     parser.add_argument(
         "--seed", type=int, default=1, help="random seed i(default: 1)"
