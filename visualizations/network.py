@@ -115,9 +115,9 @@ def main(args=None, axes=None):
         timesteps = list(empirical[layer].keys())
         norm = list(empirical[layer].values())
         if args.norm:
-            norm = [i**2 for i in norm]
+            norm = [i ** 2 for i in norm]
         if args.subset > 0:
-            norm = [i[0:args.subset] for i in norm]
+            norm = [i[0 : args.subset] for i in norm]
         if args.layer_wise:
             norm = [np.sum(i) for i in norm]
         axes.plot(
