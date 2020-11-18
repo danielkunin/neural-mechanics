@@ -2,7 +2,6 @@ import matplotlib as mpl
 
 mpl.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import os
 import numpy as np
 import deepdish as dd
@@ -11,37 +10,31 @@ import glob
 import json
 
 
-def statistics(model, feats_dir, steps, lr, wd, subset=None, seed=0):
-    layers = [layer for layer in utils.get_layers(model)]
+def statistics(model, feats_dir, steps, lr, wd):
+    layers = [layer for layer in utils.get_layers(model) if "classifier" in layer]
+
     empirical = {layer: {} for layer in layers}
     for i in range(len(steps)):
         step = steps[i]
-        weights = utils.load_features(
+        weight_buffers = utils.load_features(
             steps=[str(step)],
             feats_dir=feats_dir,
             model=model,
             suffix="weight",
-            group="params",
+            group="buffers",
         )
-        biases = utils.load_features(
+        bias_buffers = utils.load_features(
             steps=[str(step)],
             feats_dir=feats_dir,
             model=model,
             suffix="bias",
-            group="params",
+            group="buffers",
         )
-        np.random.seed(seed)
         for layer in layers:
-            Wl_t = weights[layer][f"step_{step}"]
-            bl_t = biases[layer][f"step_{step}"]
-            all_weights = np.concatenate((Wl_t.reshape(-1), bl_t.reshape(-1)))
-            if subset is None:
-                random_subset_idx = np.arange(len(all_weights))
-            else:
-                random_subset_idx = np.random.choice(
-                    len(all_weights), size=min(subset, len(all_weights)), replace=False
-                )
-            empirical[layer][step] = all_weights[random_subset_idx]
+            wl_t = weight_buffers[layer][f"step_{step}"]
+            bl_t = bias_buffers[layer][f"step_{step}"]
+            Wl_t = np.column_stack((wl_t, bl_t))
+            empirical[layer][step] = utils.out_synapses(Wl_t)
 
     return empirical
 
@@ -61,7 +54,7 @@ def main(args=None, axes=None):
     print(">> Loading weights...")
     cache_path = f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}/cache"
     utils.makedir_quiet(cache_path)
-    cache_file = f"{cache_path}/network{ARGS.image_suffix}.h5"
+    cache_file = f"{cache_path}/gradient{ARGS.image_suffix}.h5"
     if os.path.isfile(cache_file) and not ARGS.overwrite:
         print("   Loading from cache...")
         steps, empirical = dd.io.load(cache_file)
@@ -76,8 +69,6 @@ def main(args=None, axes=None):
             steps=steps,
             lr=hyperparameters["lr"],
             wd=hyperparameters["wd"],
-            subset=args.subset,
-            seed=args.seed,
         )
         print(f"   Caching features to {cache_file}")
         dd.io.save(cache_file, (steps, empirical))
@@ -89,34 +80,27 @@ def main(args=None, axes=None):
         fig, axes = plt.subplots(figsize=(15, 15))
 
     # plot data
-    if args.layer_list == None:
-        layers = list(empirical.keys())
-    else:
-        layers = [list(empirical.keys())[i] for i in args.layer_list]
-
-    handles = []
-    layers = [l for l in layers if "conv" in l]
-    for idx, layer in enumerate(layers):
+    layers = list(empirical.keys())
+    for layer in layers:
         timesteps = list(empirical[layer].keys())
         norm = list(empirical[layer].values())
-        if args.norm:
-            norm = [i ** 2 for i in norm]
-        if args.layer_wise:
+        if ARGS.layer_wise:
             norm = [np.sum(i) for i in norm]
         axes.plot(
-            timesteps, norm, color=plt.cm.tab20(idx), label=layer, lw=2, alpha=0.5,
+            timesteps, norm,
         )
-        handles += [mpatches.Patch(color=plt.cm.tab20(idx), label=layer)]
 
     # axes labels and title
-    # axes.set_xlabel("timestep")
-    # axes.set_ylabel(f"projection")
-    # axes.title.set_text(f"Projection for translational parameters across time")
+    axes.set_xlabel("timestep")
+    axes.set_ylabel(f"gradient norm")
+    axes.title.set_text(f"Gradient norms across time")
     if ARGS.use_tex:
         axes.set_xlabel("timestep")
-        axes.set_ylabel(r"$\langle W, \mathbb{1}\rangle$")
-        axes.set_title(r"Projection for translational parameters across time")
-    # axes.legend(handles=handles)
+        axes.set_ylabel(r"$\|g_t\|^2$")
+        axes.set_title(r"Gradient norms across time")
+
+    if ARGS.legend:
+        axes.legend()
 
     # save plot
     if ARGS.plot_dir is None:
@@ -124,42 +108,20 @@ def main(args=None, axes=None):
     else:
         plot_path = f"{ARGS.plot_dir}/img"
     utils.makedir_quiet(plot_path)
-    plot_file = f"{plot_path}/network{ARGS.image_suffix}.pdf"
+    plot_file = f"{plot_path}/gradient{ARGS.image_suffix}.pdf"
     plt.savefig(plot_file)
     print(f">> Saving figure to {plot_file}")
 
 
+# plot-specific args
 def extend_parser(parser):
-    parser.add_argument(
-        "--layer-list",
-        type=int,
-        help="list of layer indices to plot",
-        nargs="+",
-        default=None,
-        required=False,
-    )
     parser.add_argument(
         "--layer-wise",
         type=bool,
-        help="whether to plot layer sum",
+        help="whether to plot per neuron",
         default=False,
         required=False,
     )
-    parser.add_argument(
-        "--norm",
-        type=bool,
-        help="whether to plot squared norm",
-        default=False,
-        required=False,
-    )
-    parser.add_argument(
-        "--subset",
-        type=int,
-        help="number of parameters to plot",
-        default=None,
-        required=False,
-    )
-    parser.add_argument("--seed", type=int, default=1, help="random seed i(default: 1)")
     return parser
 
 
