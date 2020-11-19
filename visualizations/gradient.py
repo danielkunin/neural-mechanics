@@ -14,8 +14,9 @@ def statistics(model, feats_dir, steps, lr, wd):
     layers = [layer for layer in utils.get_layers(model) if "classifier" in layer]
 
     empirical = {layer: {} for layer in layers}
-    for i in range(len(steps)):
-        step = steps[i]
+    for step in steps:
+        if step == 0:
+            continue
         weight_buffers = utils.load_features(
             steps=[str(step)],
             feats_dir=feats_dir,
@@ -34,7 +35,7 @@ def statistics(model, feats_dir, steps, lr, wd):
             wl_t = weight_buffers[layer][f"step_{step}"]
             bl_t = bias_buffers[layer][f"step_{step}"]
             Wl_t = np.column_stack((wl_t, bl_t))
-            empirical[layer][step] = utils.out_synapses(Wl_t)
+            empirical[layer][step] = utils.in_synapses(wl_t, bl_t)
 
     return empirical
 
