@@ -80,14 +80,17 @@ def main(args=None, axes=None):
         fig, axes = plt.subplots(figsize=(15, 15))
 
     # plot data
-    layers = list(empirical.keys())
+    if args.layer_list == None:
+        layers = list(empirical.keys())
+    else:
+        layers = [list(empirical.keys())[i] for i in args.layer_list]
     for layer in layers:
         timesteps = list(empirical[layer].keys())
         norm = list(empirical[layer].values())
-        if ARGS.layer_wise:
+        if args.layer_wise:
             norm = [np.sum(i) for i in norm]
         axes.plot(
-            timesteps, norm,
+            timesteps, norm, color=plt.cm.tab20(int(layer.split("conv")[1]) - 1),
         )
 
     # axes labels and title
@@ -115,6 +118,14 @@ def main(args=None, axes=None):
 
 # plot-specific args
 def extend_parser(parser):
+    parser.add_argument(
+        "--layer-list",
+        type=int,
+        help="list of layer indices to plot",
+        nargs="+",
+        default=None,
+        required=False,
+    )
     parser.add_argument(
         "--layer-wise",
         type=bool,
