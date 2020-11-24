@@ -11,33 +11,9 @@ import glob
 import json
 
 
-def statistics(model, feats_dir, steps, lr, wd, subset=None):
+def statistics(model, feats_dir, steps, lr, wd, subset=None, seed=0):
     layers = [layer for layer in utils.get_layers(model)]
     empirical = {layer: {} for layer in layers}
-    step = 0
-    weights = utils.load_features(
-        steps=[str(step)],
-        feats_dir=feats_dir,
-        model=model,
-        suffix="weight",
-        group="params",
-    )
-    biases = utils.load_features(
-        steps=[str(step)],
-        feats_dir=feats_dir,
-        model=model,
-        suffix="bias",
-        group="params",
-    )
-    Wl_t = weights[layer][f"step_{step}"]
-    bl_t = biases[layer][f"step_{step}"]
-    all_weights = np.concatenate((Wl_t.reshape(-1), bl_t.reshape(-1)))
-    if subset is None:
-        random_subset_idx = np.arange(len(all_weights))
-    else:
-        random_subset_idx = np.random.choice(
-            len(all_weights), size=subset, replace=False
-        )
     for i in range(len(steps)):
         step = steps[i]
         weights = utils.load_features(
@@ -54,10 +30,17 @@ def statistics(model, feats_dir, steps, lr, wd, subset=None):
             suffix="bias",
             group="params",
         )
+        np.random.seed(seed)
         for layer in layers:
             Wl_t = weights[layer][f"step_{step}"]
             bl_t = biases[layer][f"step_{step}"]
             all_weights = np.concatenate((Wl_t.reshape(-1), bl_t.reshape(-1)))
+            if subset is None:
+                random_subset_idx = np.arange(len(all_weights))
+            else:
+                random_subset_idx = np.random.choice(
+                    len(all_weights), size=min(subset, len(all_weights)), replace=False
+                )
             empirical[layer][step] = all_weights[random_subset_idx]
 
     return empirical
@@ -94,6 +77,7 @@ def main(args=None, axes=None):
             lr=hyperparameters["lr"],
             wd=hyperparameters["wd"],
             subset=args.subset,
+            seed=args.seed,
         )
         print(f"   Caching features to {cache_file}")
         dd.io.save(cache_file, (steps, empirical))
@@ -111,29 +95,28 @@ def main(args=None, axes=None):
         layers = [list(empirical.keys())[i] for i in args.layer_list]
 
     handles = []
+    layers = [l for l in layers if "conv" in l]
     for idx, layer in enumerate(layers):
         timesteps = list(empirical[layer].keys())
         norm = list(empirical[layer].values())
         if args.norm:
-            norm = [i**2 for i in norm]
-        if args.subset > 0:
-            norm = [i[0:args.subset] for i in norm]
+            norm = [i ** 2 for i in norm]
         if args.layer_wise:
             norm = [np.sum(i) for i in norm]
         axes.plot(
-            timesteps, norm, color=plt.cm.tab20(idx),
+            timesteps, norm, color=plt.cm.tab20(idx), label=layer, lw=2, alpha=0.5,
         )
         handles += [mpatches.Patch(color=plt.cm.tab20(idx), label=layer)]
 
     # axes labels and title
-    axes.set_xlabel("timestep")
-    axes.set_ylabel(f"projection")
-    axes.title.set_text(f"Projection for translational parameters across time")
+    # axes.set_xlabel("timestep")
+    # axes.set_ylabel(f"projection")
+    # axes.title.set_text(f"Projection for translational parameters across time")
     if ARGS.use_tex:
         axes.set_xlabel("timestep")
         axes.set_ylabel(r"$\langle W, \mathbb{1}\rangle$")
         axes.set_title(r"Projection for translational parameters across time")
-    axes.legend(handles=handles)
+    # axes.legend(handles=handles)
 
     # save plot
     if ARGS.plot_dir is None:
@@ -176,6 +159,7 @@ def extend_parser(parser):
         default=None,
         required=False,
     )
+    parser.add_argument("--seed", type=int, default=1, help="random seed i(default: 1)")
     return parser
 
 
@@ -183,8 +167,6 @@ if __name__ == "__main__":
     parser = utils.default_parser()
     parser = extend_parser(parser)
     ARGS = parser.parse_args()
-
-    np.random.seed(ARGS.seed)
 
     if ARGS.use_tex:
         from matplotlib import rc

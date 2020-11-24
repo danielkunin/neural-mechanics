@@ -109,6 +109,7 @@ def train():
         default="sgd",
         choices=[
             "custom_sgd",
+            "custom_sgd_grad_norm",
             "custom_momentum",
             "sgd",
             "momentum",
