@@ -42,9 +42,7 @@ def main():
         # Weights
         params = {}
         for name, tensor in checkpoint["model_state_dict"].items():
-            if "weight" in name:
-                params[name] = tensor.cpu().numpy()
-            if "bias" in name:
+            if "weight" in name or "bias" in name:
                 params[name] = tensor.cpu().numpy()
         # Buffers
         buffers = {}
@@ -54,13 +52,12 @@ def main():
             for name in checkpoint["model_state_dict"].keys()
             if ("weight" in name or "bias" in name)
         ]
-        for name, buffer_dict in zip(
+        for name, param_state in zip(
             param_names, checkpoint["optimizer_state_dict"]["state"].values()
         ):
-            if "weight" in name and "integral_buffer" in buffer_dict.keys():
-                buffers[name] = buffer_dict["integral_buffer"].cpu().numpy()
-            if "bias" in name and "integral_buffer" in buffer_dict.keys():
-                buffers[name] = buffer_dict["integral_buffer"].cpu().numpy()
+            if ("weight" in name or "bias" in name) and "buffers" in param_state.keys():
+                buffer_dict = param_state["buffers"]
+                buffers[name] = {k: v.cpu().numpy() for k, v in buffer_dict.items()}
         dd.io.save(
             out_filename, {"metrics": metrics, "params": params, "buffers": buffers}
         )
