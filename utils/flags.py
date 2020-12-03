@@ -1,6 +1,10 @@
 import argparse
 
 
+def str_list(x):
+    return x.split(",")
+
+
 def default():
     parser = argparse.ArgumentParser(description="Neural Mechanics")
     parser.add_argument(
@@ -107,17 +111,14 @@ def train():
         "--optimizer",
         type=str,
         default="sgd",
-        choices=[
-            "custom_sgd",
-            "custom_sgd_grad_norm",
-            "custom_momentum",
-            "sgd",
-            "momentum",
-            "adam",
-            "rms",
-            "lamb",
-        ],
+        choices=["custom_sgd", "sgd", "momentum", "adam", "rms", "lamb",],
         help="optimizer (default: sgd)",
+    )
+    train_args.add_argument(
+        "--save-buffers",
+        type=str_list,
+        default=[],
+        help="comma separated list of which buffers to save in custom optimizer (default: [])",
     )
     train_args.add_argument(
         "--train-batch-size",

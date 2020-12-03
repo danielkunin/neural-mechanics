@@ -91,9 +91,10 @@ def main(ARGS):
     opt_class, opt_kwargs = load.optimizer(
         ARGS.optimizer, ARGS.momentum, ARGS.dampening, ARGS.nesterov
     )
-    optimizer = opt_class(
-        model.parameters(), lr=ARGS.lr, weight_decay=ARGS.wd, **opt_kwargs,
+    opt_kwargs.update(
+        {"lr": ARGS.lr, "weight_decay": ARGS.wd, "save_buffers": ARGS.save_buffers,}
     )
+    optimizer = opt_class(model.parameters(), **opt_kwargs)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(
         optimizer, milestones=ARGS.lr_drops, gamma=ARGS.lr_drop_rate
     )
