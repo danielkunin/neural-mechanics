@@ -115,6 +115,27 @@ def performance_plot(axes, steps, performance):
     axes.title.set_text(f"Performance for model over training time")
 
 
+def network_plot(args, axes, empirical):
+    if args.layer_list == None:
+        layers = list(empirical.keys())
+    else:
+        layers = [list(empirical.keys())[i] for i in args.layer_list]
+
+    handles = []
+    layers = [l for l in layers if "conv" in l]
+    for idx, layer in enumerate(layers):
+        timesteps = list(empirical[layer].keys())
+        norm = list(empirical[layer].values())
+        if args.norm:
+            norm = [i ** 2 for i in norm]
+        if args.layer_wise:
+            norm = [np.sum(i) for i in norm]
+        axes.plot(
+            timesteps, norm, color=plt.cm.tab20(idx), label=layer, lw=2, alpha=0.5,
+        )
+        handles += [mpatches.Patch(color=plt.cm.tab20(idx), label=layer)]
+
+
 def main(args=None, axes=None):
     if args is not None:
         ARGS = args
@@ -128,6 +149,8 @@ def main(args=None, axes=None):
 
     if "performance" in metrics.keys():
         performance_plot(axes, steps, metrics["performance"])
+    elif "network" in ARGS.viz:
+        network_plot(ARGS, axes, metrics["empirical"])
     else:
         empirical_plot(ARGS, axes, metrics)
 

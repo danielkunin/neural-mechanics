@@ -681,6 +681,43 @@ def gradient(model, feats_dir, steps, **kwargs):
     return {"empirical": empirical}
 
 
+def network(model, feats_dir, steps, **kwargs):
+    subset = kwargs.get("subset", None)
+    seed = kwargs.get("seed", 0)
+    layers = [layer for layer in utils.get_layers(model)]
+    empirical = {layer: {} for layer in layers}
+    for i in range(len(steps)):
+        step = steps[i]
+        weights = utils.load_features(
+            steps=[str(step)],
+            feats_dir=feats_dir,
+            model=model,
+            suffix="weight",
+            group="params",
+        )
+        biases = utils.load_features(
+            steps=[str(step)],
+            feats_dir=feats_dir,
+            model=model,
+            suffix="bias",
+            group="params",
+        )
+        np.random.seed(seed)
+        for layer in layers:
+            Wl_t = weights[layer][f"step_{step}"]
+            bl_t = biases[layer][f"step_{step}"]
+            all_weights = np.concatenate((Wl_t.reshape(-1), bl_t.reshape(-1)))
+            if subset is None:
+                random_subset_idx = np.arange(len(all_weights))
+            else:
+                random_subset_idx = np.random.choice(
+                    len(all_weights), size=min(subset, len(all_weights)), replace=False
+                )
+            empirical[layer][step] = all_weights[random_subset_idx]
+
+    return {"empirical": empirical}
+
+
 def performance(model, feats_dir, steps, **kwargs):
     metrics = {}
     for i in tqdm(range(len(steps))):

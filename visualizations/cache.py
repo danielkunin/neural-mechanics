@@ -47,7 +47,7 @@ def main(args=None):
             feats_dir=f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}/feats",
             steps=steps,
             **(hyperparameters),
-        )
+        )  # TODO: pass subset and seed for network plot
         print(f"   Caching features to {cache_file}")
         dd.io.save(cache_file, (steps, metrics))
 
