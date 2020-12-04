@@ -197,3 +197,15 @@ def train():
 def extract():
     parser = default()
     return parser
+
+
+def cache():
+    parser = default()
+    parser.add_argument(
+        "--suffix",
+        type=str,
+        default="",
+        help="cache and image file suffix",
+        required=False,
+    )
+    return parser

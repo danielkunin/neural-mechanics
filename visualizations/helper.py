@@ -1,14 +1,7 @@
-import importlib
 import os
-import sys
 import numpy as np
 import pprint
 import h5py
-import glob
-import argparse
-import math
-import socket
-import getpass
 
 # This mapping dict needs to be coded manually for every different model we
 # want to plot for, and is done via manual, interactive checkpoint inspection.
@@ -37,6 +30,7 @@ MODELS = {
         "14": "bn5",
         "16": "classifier",
     },
+    "conv": {"0": "conv1", "2": "conv2", "5": "classifier",},
     "vgg16": {
         "features.0": "conv1",
         "features.2": "conv2",
@@ -244,40 +238,3 @@ def load_features(steps, feats_dir, model, suffix, group, verbose=False):
             for layer in layers:
                 feats[layer][f"step_{step}"] = feature_dict[layer]
     return feats
-
-
-def default_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--experiment",
-        type=str,
-        required=True,
-        help='name used to save results (default: "")',
-    )
-    parser.add_argument(
-        "--expid",
-        type=str,
-        required=True,
-        help='name used to save results (default: "")',
-    )
-    parser.add_argument(
-        "--save-dir",
-        type=str,
-        default="results",
-        help=(
-            "Parent directory to save/load viz cache. "
-            'Will append /<experiment>/<expid> (default: "results")'
-        ),
-    )
-    parser.add_argument(
-        "--overwrite", dest="overwrite", action="store_true", default=False
-    )
-    parser.add_argument(
-        "--suffix",
-        type=str,
-        default="",
-        help="cache and image file suffix",
-        required=False,
-    )
-
-    return parser

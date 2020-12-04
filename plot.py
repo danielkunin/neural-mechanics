@@ -2,10 +2,13 @@ import matplotlib as mpl
 
 mpl.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import numpy as np
-import utils
+from utils import flags
+from visualizations import helper
+from visualizations.metrics import metric_fns
 from cache import main as cache
-from cache import metric_fns
+from cache import extend_parser as cache_parser
 
 
 y_labels = {
@@ -162,7 +165,7 @@ def main(args=None, axes=None):
         plot_path = f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}/img"
     else:
         plot_path = f"{ARGS.plot_dir}/img"
-    utils.makedir_quiet(plot_path)
+    helper.makedir_quiet(plot_path)
     plot_file = f"{plot_path}/{ARGS.viz}{ARGS.suffix}.pdf"
     plt.savefig(plot_file)
     print(f">> Saving figure to {plot_file}")
@@ -202,15 +205,30 @@ def extend_parser(parser):
         default=False,
         required=False,
     )
+
+    # these are only for the network plot
+    parser.add_argument(
+        "--norm",
+        type=bool,
+        help="whether to plot squared norm",
+        default=False,
+        required=False,
+    )
+    parser.add_argument(
+        "--subset",
+        type=int,
+        help="number of parameters to plot",
+        default=None,
+        required=False,
+    )
+    parser.add_argument("--seed", type=int, default=1, help="random seed i(default: 1)")
     return parser
 
 
 if __name__ == "__main__":
-    parser = utils.default_parser()
+    parser = flags.cache()
+    parser = cache_parser(parser)
     parser = extend_parser(parser)
-    parser.add_argument(
-        "viz", type=str, choices=list(metric_fns.keys()), help="visualization to plot",
-    )
     # subparsers here?? Probably not, don't really need diferent options for each viz
 
     ARGS = parser.parse_args()

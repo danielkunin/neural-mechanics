@@ -1,20 +1,10 @@
 import os
 import deepdish as dd
-import utils
 import glob
 import json
-from metrics import *
-
-metric_fns = {
-    "scale": scale,
-    "rescale": rescale,
-    "translation": translation,
-    "scale-momentum": scale_momentum,
-    "rescale-momentum": rescale_momentum,
-    "translation-momentum": translation_momentum,
-    "gradient": gradient,
-    "performance": performance,
-}
+from utils import flags
+from visualizations import helper
+from visualizations.metrics import metric_fns
 
 
 def main(args=None):
@@ -30,7 +20,7 @@ def main(args=None):
     # load cache or run metrics
     print(">> Loading weights...")
     cache_path = f"{ARGS.save_dir}/{ARGS.experiment}/{ARGS.expid}/cache"
-    utils.makedir_quiet(cache_path)
+    helper.makedir_quiet(cache_path)
     cache_file = f"{cache_path}/{ARGS.viz}{ARGS.suffix}.h5"
     if os.path.isfile(cache_file) and not ARGS.overwrite:
         print("   Loading from cache...")
@@ -54,14 +44,19 @@ def main(args=None):
     return steps, metrics
 
 
-if __name__ == "__main__":
-    parser = utils.default_parser()
+def extend_parser(parser):
     parser.add_argument(
         "viz",
         type=str,
         choices=list(metric_fns.keys()),
         help="visualization to generate a cache for",
     )
+    return parser
+
+
+if __name__ == "__main__":
+    parser = flags.cache()
+    parser = extend_parser(parser)
     ARGS = parser.parse_args()
 
     main(ARGS)

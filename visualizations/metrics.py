@@ -1,6 +1,6 @@
 import os
 from tqdm import tqdm
-import utils
+import visualizations.helper as utils
 import numpy as np
 
 
@@ -651,7 +651,7 @@ def translation_momentum(model, feats_dir, steps, **kwargs):
 
 
 def gradient(model, feats_dir, steps, **kwargs):
-    layers = [layer for layer in utils.get_layers(model) if "classifier" in layer]
+    layers = [layer for layer in utils.get_layers(model) if "conv" in layer]
 
     empirical = {layer: {} for layer in layers}
     for i in tqdm(range(len(steps))):
@@ -675,7 +675,6 @@ def gradient(model, feats_dir, steps, **kwargs):
         for layer in layers:
             wl_t = weight_buffers[layer][f"step_{step}"]
             bl_t = bias_buffers[layer][f"step_{step}"]
-            Wl_t = np.column_stack((wl_t, bl_t))
             empirical[layer][step] = utils.in_synapses(wl_t, bl_t)
 
     return {"empirical": empirical}
@@ -731,3 +730,16 @@ def performance(model, feats_dir, steps, **kwargs):
             )
             metrics[step] = feature_dict
     return {"performance": metrics}
+
+
+metric_fns = {
+    "scale": scale,
+    "rescale": rescale,
+    "translation": translation,
+    "scale-momentum": scale_momentum,
+    "rescale-momentum": rescale_momentum,
+    "translation-momentum": translation_momentum,
+    "gradient": gradient,
+    "performance": performance,
+    "network": network,
+}
