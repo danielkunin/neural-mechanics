@@ -80,7 +80,7 @@ def scale(model, feats_dir, steps, **kwargs):
             bl_t = biases[layer][f"step_{step}"]
             empirical[layer][step] = utils.in_synapses(Wl_t ** 2, bl_t ** 2)
 
-    return (empirical, theoretical)
+    return {"empirical": empirical, "theoretical": theoretical}
 
 
 def scale_momentum(model, feats_dir, steps, **kwargs):
@@ -227,7 +227,7 @@ def scale_momentum(model, feats_dir, steps, **kwargs):
             bl_t = biases[layer][f"step_{step}"]
             empirical[layer][step] = utils.in_synapses(Wl_t ** 2, bl_t ** 2)
 
-    return (empirical, theoretical)
+    return {"empirical": empirical, "theoretical": theoretical}
 
 
 def rescale(model, feats_dir, steps, **kwargs):
@@ -320,7 +320,7 @@ def rescale(model, feats_dir, steps, **kwargs):
             W_in = W_out
             b_in = b_out
 
-    return (empirical, theoretical)
+    return {"empirical": empirical, "theoretical": theoretical}
 
 
 def rescale_momentum(model, feats_dir, steps, **kwargs):
@@ -509,7 +509,7 @@ def rescale_momentum(model, feats_dir, steps, **kwargs):
             W_in = W_out
             b_in = b_out
 
-    return (empirical, theoretical)
+    return {"empirical": empirical, "theoretical": theoretical}
 
 
 def translation(model, feats_dir, steps, **kwargs):
@@ -564,7 +564,7 @@ def translation(model, feats_dir, steps, **kwargs):
             Wl_t = np.column_stack((wl_t, bl_t))
             empirical[layer][step] = utils.out_synapses(Wl_t)
 
-    return (empirical, theoretical)
+    return {"empirical": empirical, "theoretical": theoretical}
 
 
 def translation_momentum(model, feats_dir, steps, **kwargs):
@@ -647,7 +647,7 @@ def translation_momentum(model, feats_dir, steps, **kwargs):
             Wl_t = np.column_stack((wl_t, bl_t))
             empirical[layer][step] = utils.out_synapses(Wl_t)
 
-    return (empirical, theoretical)
+    return {"empirical": empirical, "theoretical": theoretical}
 
 
 def gradient(model, feats_dir, steps, **kwargs):
@@ -678,7 +678,7 @@ def gradient(model, feats_dir, steps, **kwargs):
             Wl_t = np.column_stack((wl_t, bl_t))
             empirical[layer][step] = utils.in_synapses(wl_t, bl_t)
 
-    return empirical
+    return {"empirical": empirical}
 
 
 def performance(model, feats_dir, steps, **kwargs):
@@ -693,4 +693,4 @@ def performance(model, feats_dir, steps, **kwargs):
                 keys=["accuracy1", "accuracy5", "train_loss", "test_loss"],
             )
             metrics[step] = feature_dict
-    return metrics
+    return {"performance": metrics}
