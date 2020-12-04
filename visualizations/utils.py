@@ -189,7 +189,7 @@ def get_features(
         keys (str or list of strs): which keys to extract from the group.
         out_keys (list of strs): keys for the output dict
     """
-    assert os.path.isfile(feats_path), "%s is not a file" % (feats_path)
+    assert os.path.isfile(feats_path), f"{feats_path} is not a file"
 
     keys = make_iterable(keys)
 
@@ -211,13 +211,15 @@ def get_features(
         for in_key, out_key in zip(keys, out_keys):
             out[out_key] = open_file[group][in_key][:]
             if verbose:
-                print("Extracted %s:" % out_key, out[out_key].shape)
+                print(f"Extracted {out_key, out[out_key].shape}:")
 
     return out
 
 
 def load_features(steps, feats_dir, model, suffix, group, verbose=False):
-    """
+    """ Loops over steps, fetches features from every checkpoint file
+    and assenbles it into a single dict
+
     layers: is the output keys for the layer feats, or computed quantities
     keys: is the actual keys to be read from the h5 file
     feats: is the output dict

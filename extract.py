@@ -57,7 +57,10 @@ def main():
         ):
             if ("weight" in name or "bias" in name) and "buffers" in param_state.keys():
                 buffer_dict = param_state["buffers"]
-                buffers[name] = {k: v.cpu().numpy() for k, v in buffer_dict.items()}
+                # Cannot nest dictionaries deeper: load function assumes only 2
+                # nested keys: one for the group, one for feat name
+                for k, v in buffer_dict.items():
+                    buffers[f"{name}.{k}"] = v.cpu().numpy()
         dd.io.save(
             out_filename, {"metrics": metrics, "params": params, "buffers": buffers}
         )
