@@ -264,31 +264,20 @@ def default_parser():
         "--save-dir",
         type=str,
         default="results",
-        help='Directory to save checkpoints and features (default: "Results")',
-    )
-    parser.add_argument(
-        "--plot-dir",
-        type=str,
-        default=None,
-        help="Directory to save cache and figures (default: 'results')",
+        help=(
+            "Parent directory to save/load viz cache. "
+            'Will append /<experiment>/<expid> (default: "results")'
+        ),
     )
     parser.add_argument(
         "--overwrite", dest="overwrite", action="store_true", default=False
     )
     parser.add_argument(
-        "--image-suffix",
+        "--suffix",
         type=str,
         default="",
-        help="extra image and cache suffix",
+        help="cache and image file suffix",
         required=False,
     )
-    parser.add_argument(
-        "--use-tex",
-        action="store_true",
-        help="will use tex rendering for matplotlib labels",
-        default=False,
-    )
-    parser.add_argument(
-        "--legend", action="store_true", help="will add legend", default=False
-    )
+
     return parser

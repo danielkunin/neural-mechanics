@@ -20,7 +20,7 @@ def default():
         "--save-dir",
         type=str,
         default="results",
-        help='Directory to save checkpoints and features (default: "Results")',
+        help='Directory to save checkpoints and features (default: "results")',
     )
     parser.add_argument(
         "--gpu", type=int, default="0", help="number of GPU device to use (default: 0)"
