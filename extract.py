@@ -55,7 +55,7 @@ def main():
         for name, param_state in zip(
             param_names, checkpoint["optimizer_state_dict"]["state"].values()
         ):
-            if ("weight" in name or "bias" in name) and "buffers" in param_state.keys():
+            if "buffers" in param_state.keys():
                 buffer_dict = param_state["buffers"]
                 # Cannot nest dictionaries deeper: load function assumes only 2
                 # nested keys: one for the group, one for feat name

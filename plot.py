@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
 from utils import flags
-from visualizations import helper
-from visualizations.metrics import metric_fns
+from metrics import helper
+from metrics.metrics import metric_fns
 from cache import main as cache
 from cache import extend_parser as cache_parser
 

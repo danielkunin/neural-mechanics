@@ -194,6 +194,14 @@ def train():
     return parser
 
 
+def validate_train(parsed_args):
+    for m in parsed_args.save_buffers:
+        assert (
+            m in ["sgd", "mom", "grad"],
+            "--save-buffers must be a comma separated list of these options: sgd,mom,grad",
+        )
+
+
 def extract():
     parser = default()
     return parser
@@ -207,5 +215,11 @@ def cache():
         default="",
         help="cache and image file suffix",
         required=False,
+    )
+    parser.add_argument(
+        "--metrics",
+        type=str_list,
+        default=[],
+        help="comma separated list of which metrics to compute and cache. Caches all if not specified (default: [])",
     )
     return parser

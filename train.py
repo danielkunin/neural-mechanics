@@ -89,11 +89,9 @@ def main(ARGS):
 
     loss = nn.CrossEntropyLoss()
     opt_class, opt_kwargs = load.optimizer(
-        ARGS.optimizer, ARGS.momentum, ARGS.dampening, ARGS.nesterov
+        ARGS.optimizer, ARGS.momentum, ARGS.dampening, ARGS.nesterov, ARGS.save_buffers,
     )
-    opt_kwargs.update(
-        {"lr": ARGS.lr, "weight_decay": ARGS.wd, "save_buffers": ARGS.save_buffers,}
-    )
+    opt_kwargs.update({"lr": ARGS.lr, "weight_decay": ARGS.wd})
     optimizer = opt_class(model.parameters(), **opt_kwargs)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(
         optimizer, milestones=ARGS.lr_drops, gamma=ARGS.lr_drop_rate
@@ -121,6 +119,7 @@ def main(ARGS):
 if __name__ == "__main__":
     parser = flags.train()
     ARGS = parser.parse_args()
+    flags.validate_train(ARGS)
     if ARGS.tpu:
         import torch_xla.core.xla_model as xm
         import torch_xla.distributed.xla_multiprocessing as xmp
