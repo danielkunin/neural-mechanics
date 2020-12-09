@@ -61,6 +61,7 @@ class SGD(Optimizer):
         dampening=0,
         weight_decay=0,
         nesterov=False,
+        save_buffers=[],
     ):
         if lr is not required and lr < 0.0:
             raise ValueError("Invalid learning rate: {}".format(lr))
@@ -76,7 +77,6 @@ class SGD(Optimizer):
             weight_decay=weight_decay,
             nesterov=nesterov,
         )
-        # alpha_p=alpha_p, alpha_m=alpha_m, time=time)
         if nesterov and (momentum <= 0 or dampening != 0):
             raise ValueError("Nesterov momentum requires a momentum and zero dampening")
         super(SGD, self).__init__(params, defaults)
@@ -84,12 +84,62 @@ class SGD(Optimizer):
         def scale(time):
             return np.exp(2 * weight_decay * time)
 
+        denom = lr * (1 - dampening) * (1 + momentum)
+        self.gamma = (1 - momentum) / denom
+        self.omega = np.sqrt(4 * weight_decay / denom)
+
+        if self.gamma < self.omega:
+            sqrt = np.sqrt(self.omega ** 2 - self.gamma ** 2)
+
+            def mom_scale(time):
+                scale_1 = np.exp(self.gamma * time) * np.cos(sqrt * time)
+                scale_2 = np.exp(self.gamma * time) * np.sin(sqrt * time)
+                return (scale_1, scale_2)
+
+        elif self.gamma == self.omega:
+
+            def mom_scale(time):
+                scale_1 = np.exp(self.gamma * time)
+                scale_2 = np.exp(self.gamma * time) * time
+                return (scale_1, scale_2)
+
+        else:
+            sqrt = np.sqrt(self.gamma ** 2 - self.omega ** 2)
+            alpha_p = -self.gamma + sqrt
+            alpha_m = -self.gamma - sqrt
+
+            def mom_scale(time):
+                scale_1 = np.exp(-alpha_p * time)
+                scale_2 = np.exp(-alpha_m * time)
+                return (scale_1, scale_2)
+
         self.scale = scale
+        self.mom_scale = mom_scale
+        self.save_buffers = save_buffers
 
     def __setstate__(self, state):
         super(SGD, self).__setstate__(state)
         for group in self.param_groups:
             group.setdefault("nesterov", False)
+
+    def _sgd_buffers(self, time, g, buffer_dict):
+        scale = self.scale(time)
+        if "integral_buffer" not in buffer_dict.keys():
+            buffer_dict["integral_buffer"] = scale * g ** 2
+        else:
+            buffer_dict["integral_buffer"].add_(scale * g ** 2)
+
+    def _mom_buffers(self, time, g, buffer_dict):
+        scale_1, scale_2 = self.mom_scale(time)
+        if "integral_buffer_1" not in buffer_dict.keys():
+            buffer_dict["integral_buffer_1"] = scale_1 * g ** 2
+            buffer_dict["integral_buffer_2"] = scale_2 * g ** 2
+        else:
+            buffer_dict["integral_buffer_1"].add_(scale_1 * g ** 2)
+            buffer_dict["integral_buffer_2"].add_(scale_2 * g ** 2)
+
+    def _grad_buffers(self, time, g, buffer_dict):
+        buffer_dict["grad_norm_buffer"] = g ** 2
 
     @torch.no_grad()
     def step(self, closure=None):
@@ -121,6 +171,7 @@ class SGD(Optimizer):
                     param_state = self.state[p]
                     if "momentum_buffer" not in param_state:
                         buf = param_state["momentum_buffer"] = torch.clone(d_p).detach()
+                        buf.mul_(1 - dampening)  # Added to scale buffer appropriately
                     else:
                         buf = param_state["momentum_buffer"]
                         buf.mul_(momentum).add_(d_p, alpha=1 - dampening)
@@ -131,17 +182,20 @@ class SGD(Optimizer):
 
                 p.add_(d_p, alpha=-lr)
 
-                # compute integral
                 param_state = self.state[p]
                 g = p.grad
                 if "step" not in param_state:
                     param_state["step"] = 0
-                    scale = self.scale(0)
-                    param_state["integral_buffer"] = scale * g ** 2
+                    param_state["buffers"] = {}
                 else:
                     param_state["step"] += 1
-                    time = lr * param_state["step"]
-                    scale = self.scale(time)
-                    param_state["integral_buffer"].add_(scale * g ** 2)
+                buffer_dict = param_state["buffers"]
+                time = lr * (1 - dampening) * param_state["step"]
+                if "sgd" in self.save_buffers:
+                    self._sgd_buffers(time, d_p, buffer_dict)
+                if "mom" in self.save_buffers:
+                    self._mom_buffers(time, d_p, buffer_dict)
+                if "grad" in self.save_buffers:
+                    self._grad_buffers(time, d_p, buffer_dict)
 
         return loss
