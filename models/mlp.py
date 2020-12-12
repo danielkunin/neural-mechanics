@@ -71,7 +71,13 @@ def fc_bn(
 
 
 def conv(
-    input_shape, num_classes, pretrained=False, L=3, N=32, nonlinearity=nn.ReLU(),
+    input_shape,
+    num_classes,
+    pretrained=False,
+    L=3,
+    N=32,
+    nonlinearity=nn.ReLU(),
+    norm_layer=None,
 ):
     channels, width, height = input_shape
 

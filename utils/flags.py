@@ -1,6 +1,10 @@
 import argparse
 
 
+def str_list(x):
+    return x.split(",")
+
+
 def default():
     parser = argparse.ArgumentParser(description="Neural Mechanics")
     parser.add_argument(
@@ -16,7 +20,7 @@ def default():
         "--save-dir",
         type=str,
         default="results",
-        help='Directory to save checkpoints and features (default: "Results")',
+        help='Directory to save checkpoints and features (default: "results")',
     )
     parser.add_argument(
         "--gpu", type=int, default="0", help="number of GPU device to use (default: 0)"
@@ -107,17 +111,14 @@ def train():
         "--optimizer",
         type=str,
         default="sgd",
-        choices=[
-            "custom_sgd",
-            "custom_sgd_grad_norm",
-            "custom_momentum",
-            "sgd",
-            "momentum",
-            "adam",
-            "rms",
-            "lamb",
-        ],
+        choices=["custom_sgd", "sgd", "momentum", "adam", "rms", "lamb",],
         help="optimizer (default: sgd)",
+    )
+    train_args.add_argument(
+        "--save-buffers",
+        type=str_list,
+        default=[],
+        help="comma separated list of which buffers to save in custom optimizer (default: [])",
     )
     train_args.add_argument(
         "--train-batch-size",
@@ -193,6 +194,32 @@ def train():
     return parser
 
 
+def validate_train(parsed_args):
+    for m in parsed_args.save_buffers:
+        assert (
+            m in ["sgd", "mom", "grad"],
+            "--save-buffers must be a comma separated list of these options: sgd,mom,grad",
+        )
+
+
 def extract():
     parser = default()
+    return parser
+
+
+def cache():
+    parser = default()
+    parser.add_argument(
+        "--suffix",
+        type=str,
+        default="",
+        help="cache and image file suffix",
+        required=False,
+    )
+    parser.add_argument(
+        "--metrics",
+        type=str_list,
+        default=[],
+        help="comma separated list of which metrics to compute and cache. Caches all if not specified (default: [])",
+    )
     return parser

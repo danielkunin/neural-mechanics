@@ -42,9 +42,7 @@ def main():
         # Weights
         params = {}
         for name, tensor in checkpoint["model_state_dict"].items():
-            if "weight" in name:
-                params[name] = tensor.cpu().numpy()
-            if "bias" in name:
+            if "weight" in name or "bias" in name:
                 params[name] = tensor.cpu().numpy()
         # Buffers
         buffers = {}
@@ -54,13 +52,15 @@ def main():
             for name in checkpoint["model_state_dict"].keys()
             if ("weight" in name or "bias" in name)
         ]
-        for name, buffer_dict in zip(
+        for name, param_state in zip(
             param_names, checkpoint["optimizer_state_dict"]["state"].values()
         ):
-            if "weight" in name and "integral_buffer" in buffer_dict.keys():
-                buffers[name] = buffer_dict["integral_buffer"].cpu().numpy()
-            if "bias" in name and "integral_buffer" in buffer_dict.keys():
-                buffers[name] = buffer_dict["integral_buffer"].cpu().numpy()
+            if "buffers" in param_state.keys():
+                buffer_dict = param_state["buffers"]
+                # Cannot nest dictionaries deeper: load function assumes only 2
+                # nested keys: one for the group, one for feat name
+                for k, v in buffer_dict.items():
+                    buffers[f"{name}.{k}"] = v.cpu().numpy()
         dd.io.save(
             out_filename, {"metrics": metrics, "params": params, "buffers": buffers}
         )

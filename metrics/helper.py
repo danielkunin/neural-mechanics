@@ -1,14 +1,7 @@
-import importlib
 import os
-import sys
 import numpy as np
 import pprint
 import h5py
-import glob
-import argparse
-import math
-import socket
-import getpass
 
 # This mapping dict needs to be coded manually for every different model we
 # want to plot for, and is done via manual, interactive checkpoint inspection.
@@ -37,6 +30,7 @@ MODELS = {
         "14": "bn5",
         "16": "classifier",
     },
+    "conv": {"0": "conv1", "2": "conv2", "5": "classifier",},
     "vgg16": {
         "features.0": "conv1",
         "features.2": "conv2",
@@ -189,7 +183,7 @@ def get_features(
         keys (str or list of strs): which keys to extract from the group.
         out_keys (list of strs): keys for the output dict
     """
-    assert os.path.isfile(feats_path), "%s is not a file" % (feats_path)
+    assert os.path.isfile(feats_path), f"{feats_path} is not a file"
 
     keys = make_iterable(keys)
 
@@ -211,13 +205,15 @@ def get_features(
         for in_key, out_key in zip(keys, out_keys):
             out[out_key] = open_file[group][in_key][:]
             if verbose:
-                print("Extracted %s:" % out_key, out[out_key].shape)
+                print(f"Extracted {out_key, out[out_key].shape}:")
 
     return out
 
 
 def load_features(steps, feats_dir, model, suffix, group, verbose=False):
-    """
+    """ Loops over steps, fetches features from every checkpoint file
+    and assenbles it into a single dict
+
     layers: is the output keys for the layer feats, or computed quantities
     keys: is the actual keys to be read from the h5 file
     feats: is the output dict
@@ -242,51 +238,3 @@ def load_features(steps, feats_dir, model, suffix, group, verbose=False):
             for layer in layers:
                 feats[layer][f"step_{step}"] = feature_dict[layer]
     return feats
-
-
-def default_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--experiment",
-        type=str,
-        required=True,
-        help='name used to save results (default: "")',
-    )
-    parser.add_argument(
-        "--expid",
-        type=str,
-        required=True,
-        help='name used to save results (default: "")',
-    )
-    parser.add_argument(
-        "--save-dir",
-        type=str,
-        default="results",
-        help='Directory to save checkpoints and features (default: "Results")',
-    )
-    parser.add_argument(
-        "--plot-dir",
-        type=str,
-        default=None,
-        help="Directory to save cache and figures (default: 'results')",
-    )
-    parser.add_argument(
-        "--overwrite", dest="overwrite", action="store_true", default=False
-    )
-    parser.add_argument(
-        "--image-suffix",
-        type=str,
-        default="",
-        help="extra image and cache suffix",
-        required=False,
-    )
-    parser.add_argument(
-        "--use-tex",
-        action="store_true",
-        help="will use tex rendering for matplotlib labels",
-        default=False,
-    )
-    parser.add_argument(
-        "--legend", action="store_true", help="will add legend", default=False
-    )
-    return parser
