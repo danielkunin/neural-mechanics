@@ -139,6 +139,9 @@ class SGD(Optimizer):
             buffer_dict["integral_buffer_2"].add_(scale_2 * g ** 2)
 
     def _grad_buffers(self, time, g, buffer_dict):
+        buffer_dict["grad_buffer"] = g
+
+    def _grad_norm_buffers(self, time, g, buffer_dict):
         buffer_dict["grad_norm_buffer"] = g ** 2
 
     @torch.no_grad()
@@ -197,5 +200,7 @@ class SGD(Optimizer):
                     self._mom_buffers(time, d_p, buffer_dict)
                 if "grad" in self.save_buffers:
                     self._grad_buffers(time, d_p, buffer_dict)
+                if "grad_norm" in self.save_buffers:
+                    self._grad_norm_buffers(time, d_p, buffer_dict)
 
         return loss
