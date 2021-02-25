@@ -4,13 +4,14 @@ import shutil
 import numpy as np
 import torch
 import torch.nn as nn
-from utils import load
-from utils import optimize
-from utils import flags
+from neural_mechanics.utils import load
+from neural_mechanics.utils import optimize
+from neural_mechanics.utils import flags
 
 
 def main(ARGS):
     if ARGS.tpu:
+        import torch_xla.core.xla_model as xm
         print_fn = xm.master_print
     else:
         print_fn = print
@@ -43,7 +44,7 @@ def main(ARGS):
             json.dump(ARGS.__dict__, f, sort_keys=True, indent=4)
         if ARGS.tpu:
             if xm.get_ordinal() == 0 and filename[0:5] == "gs://":
-                from utils.gcloud import post_file_to_bucket
+                from neural_mechanics.utils.gcloud import post_file_to_bucket
 
                 post_file_to_bucket(filename)
 

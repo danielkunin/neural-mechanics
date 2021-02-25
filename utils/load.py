@@ -2,18 +2,18 @@ import torch
 import numpy as np
 from torchvision import datasets, transforms
 import torch.optim as optim
-from models import mlp
-from models import tinyimagenet_vgg
-from models import tinyimagenet_resnet
-from models import imagenet_vgg
-from models import imagenet_resnet
-from optimizers import custom_sgd
-from optimizers import lamb
-from utils import custom_datasets
+from neural_mechanics.models import mlp
+from neural_mechanics.models import tinyimagenet_vgg
+from neural_mechanics.models import tinyimagenet_resnet
+from neural_mechanics.models import imagenet_vgg
+from neural_mechanics.models import imagenet_resnet
+from neural_mechanics.optimizers import custom_sgd
+from neural_mechanics.optimizers import lamb
+from neural_mechanics.utils import custom_datasets
 
 
 def configure_tpu(tpu_name):
-    from utils.gcloud import lookup_tpu_ip_by_name, configure_env_for_tpu
+    from neural_mechanics.utils.gcloud import lookup_tpu_ip_by_name, configure_env_for_tpu
 
     print("Configuring ENV variables for TPU training")
     tpu_ip = lookup_tpu_ip_by_name(tpu_name)

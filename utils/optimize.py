@@ -38,7 +38,7 @@ def checkpoint(
     )
     if tpu:
         if xm.get_ordinal() == 0 and filename[0:5] == "gs://":
-            from utils.gcloud import post_file_to_bucket
+            from neural_mechanics.utils.gcloud import post_file_to_bucket
 
             post_file_to_bucket(filename, verbose)
 
@@ -117,7 +117,7 @@ def train(
         #       for a cleaner codebase and can include test metrics
         # TODO: additionally, could integrate tfutils.DBInterface here
         if save and save_path is not None and save_freq is not None:
-            if curr_step % save_freq == 0:
+            if (curr_step % save_freq == 0) and (epoch >= 100):# or (batch_idx==0):
                 checkpoint(
                     model,
                     optimizer,
