@@ -6,6 +6,7 @@ import numpy as np
 from metrics.scale import scale, scale_momentum
 from metrics.rescale import rescale, rescale_momentum
 from metrics.translation import translation, translation_momentum
+from metrics.phase import phase
 
 
 def gradient(model, feats_dir, steps, **kwargs):
@@ -100,4 +101,5 @@ metric_fns = {
     "gradient": gradient,
     "performance": performance,
     "network": network,
+    "phase": phase,
 }

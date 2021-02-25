@@ -197,8 +197,8 @@ def train():
 def validate_train(parsed_args):
     for m in parsed_args.save_buffers:
         assert (
-            m in ["sgd", "mom", "grad"],
-            "--save-buffers must be a comma separated list of these options: sgd,mom,grad",
+            m in ["sgd", "mom", "grad", "grad_norm"],
+            "--save-buffers must be a comma separated list of these options: sgd,mom,grad,grad_norm",
         )
 
 
