@@ -43,6 +43,50 @@ def checkpoint(
             post_file_to_bucket(filename, verbose)
 
 
+def online_metric_fn(epoch_weights):
+    # Do PCA stuff
+    metric_dict = {}
+    print("got some stuff")
+    print(epoch_weights.shape)
+    from sklearn.decomposition import PCA
+
+    def filter_outliers(projected_data, threshold):
+        norms = np.linalg.norm(projected_data, axis=1)
+        outlier_idx = np.where(norms > threshold)[0]
+        keep_idx = np.where(norms <= threshold)[0]
+        return outlier_idx, keep_idx
+
+
+    def fit_pca(fit_data, project_data=None, whiten=False):
+        if project_data is None:
+            project_data = fit_data
+        pca_mod = PCA(whiten=whiten, n_components=10)
+        pca_mod.fit(fit_data)
+        projected = pca_mod.transform(project_data)
+        return projected, pca_mod
+
+    fit_data = epoch_weights.detach().cpu().numpy()
+    project_data = None
+    projected, pca_mod = fit_pca(fit_data, project_data, whiten)
+    projected_fit_data = pca_mod.transform(fit_data)
+
+    o_idx, k_idx = filter_outliers(projected_fit_data, outlier_thresh)
+    while len(o_idx) > 0:
+        print(o_idx)
+        print(f"Refitting without {len(o_idx)} outliers")
+        fit_data = fit_data[k_idx]
+        projected, pca_mod = fit_pca(fit_data, project_data, whiten)
+        projected_fit_data = pca_mod.transform(fit_data)
+
+        o_idx, k_idx = filter_outliers(projected_fit_data, outlier_thresh)
+
+    # Save the first 10 components
+    metric_dict["components"] = pca.components_
+    metric_dict["component_ev"] = pca_mod.explained_variance_ratio_
+
+    return metric_dict
+
+
 # TODO: we maybe don't want to have the scheduler inside the train function
 def train(
     model,
@@ -76,6 +120,13 @@ def train(
     model.train()
     total_loss = 0
     total_samples = 0
+    train_metrics = {}
+    ############ Online metric function buffer
+    # This is for vgg16-bn model, tinyimagenet
+    layer = 3
+    weight_dim = model.state_dict()[f"features.{layer}.weight"].flatten().shape[0]
+    epoch_weights = torch.empty(0, weight_dim)
+    ############
     for batch_idx, (data, target) in enumerate(dataloader):
         if device.type != "xla":
             data, target = data.to(device), target.to(device)
@@ -128,10 +179,20 @@ def train(
                     verbose,
                     tpu=(device.type == "xla"),
                 )
+        ############ Online metric function buffer update
+        # Ignoring biases for now
+        weights = model.state_dict()[f"features.{layer}.weight"].flatten()
+        epoch_weights = torch.cat((epoch_weights, weights.unsqueeze(0)), dim=0)
+        ############
+
     average_loss = 1.0 * total_loss / total_samples
     if device.type == "xla":
         average_loss = xm.mesh_reduce("train_average_loss", average_loss, np.mean)
-    return average_loss
+    ########### Online metric function
+    if (device.type == "xla" and xm_ordinal == 0) or device.type != "xla":
+        train_metrics.update(online_metric_fn(epoch_weights))
+
+    return average_loss, train_metrics
 
 
 def eval(model, loss, dataloader, device, verbose, epoch, **kwargs):
@@ -216,7 +277,7 @@ def train_eval_loop(
             tpu=(device.type == "xla"),
         )
     for epoch in tqdm(range(epochs)):
-        train_loss = train(
+        train_loss, train_metrics = train(
             model,
             loss,
             optimizer,
@@ -238,6 +299,7 @@ def train_eval_loop(
             "test_loss": test_loss,
             "accuracy1": accuracy1,
             "accuracy5": accuracy5,
+            "train_metrics": train_metrics,
         }
         curr_step = (epoch + 1) * kwargs.get("num_batches")
         if save:
