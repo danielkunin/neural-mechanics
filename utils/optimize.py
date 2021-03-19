@@ -117,7 +117,7 @@ def train(
         #       for a cleaner codebase and can include test metrics
         # TODO: additionally, could integrate tfutils.DBInterface here
         if save and save_path is not None and save_freq is not None:
-            if (curr_step % save_freq == 0) and (epoch >= 100):# or (batch_idx==0):
+            if (curr_step % save_freq == 0) and (epoch == 0 or epoch == 9 or epoch == 99 or epoch == 250):# or (batch_idx==0):
                 checkpoint(
                     model,
                     optimizer,
