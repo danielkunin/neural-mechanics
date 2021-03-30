@@ -83,13 +83,36 @@ def performance(model, feats_dir, steps, **kwargs):
         step = steps[i]
         feats_path = f"{feats_dir}/step{step}.h5"
         if os.path.isfile(feats_path):
+            try:
+                feature_dict = utils.get_features(
+                    feats_path=feats_path,
+                    group="metrics",
+                    keys=["accuracy1", "accuracy5", "train_loss", "test_loss"],
+                )
+                metrics[step] = feature_dict
+            except KeyError:
+                print(f"Did not find performance metrics for {feats_path}")
+    return {"performance": metrics}
+
+
+def pca_traj(model, feats_dir, steps, **kwargs):
+    metrics = {"steps": [], "components":[], "component_ev":[]}
+    steps = np.unique(steps)
+    steps.sort()
+    for i in tqdm(range(len(steps))):
+        step = steps[i]
+        feats_path = f"{feats_dir}/step{step}.h5"
+        if os.path.isfile(feats_path):
             feature_dict = utils.get_features(
                 feats_path=feats_path,
                 group="metrics",
-                keys=["accuracy1", "accuracy5", "train_loss", "test_loss"],
+                keys=["components", "component_ev"],
             )
-            metrics[step] = feature_dict
-    return {"performance": metrics}
+            metrics["components"].append(feature_dict["components"])
+            metrics["component_ev"].append(feature_dict["component_ev"])
+            metrics["steps"].append(step)
+    metrics = {k: np.array(v) for k,v in metrics.items()}
+    return {"pca": metrics}
 
 
 metric_fns = {
@@ -104,4 +127,5 @@ metric_fns = {
     "network": network,
     "phase": phase,
     "weights_grads": weights_grads,
+    "pca": pca_traj,
 }
