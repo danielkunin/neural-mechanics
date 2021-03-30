@@ -50,6 +50,7 @@ def phase(model, feats_dir, steps, **kwargs):
     wd = kwargs.get("wd")
 
     layers = [layer for layer in utils.get_layers(model) if "conv" in layer]
+    #layers = [layer for layer in utils.get_layers(model) if "fc" in layer]
 
     load_kwargs = {
         "model": model,
