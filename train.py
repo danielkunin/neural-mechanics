@@ -75,6 +75,7 @@ def main(ARGS):
     print_fn("Creating {}-{} model.".format(ARGS.model_class, ARGS.model))
     model = load.model(ARGS.model, ARGS.model_class)(
         input_shape=input_shape, num_classes=num_classes, pretrained=ARGS.pretrained,
+        model_dir=ARGS.model_dir,
     ).to(device)
 
     train_kwargs = {

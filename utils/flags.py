@@ -108,6 +108,14 @@ def train():
         help="load pretrained weights (default: False)",
     )
     train_args.add_argument(
+        "--model-dir",
+        type=str,
+        default="pretrained_models",
+        help="Directory for pretrained models. "
+             "Save pretrained models to use here. "
+             "Downloaded models will be stored here.",
+    )
+    train_args.add_argument(
         "--optimizer",
         type=str,
         default="sgd",
