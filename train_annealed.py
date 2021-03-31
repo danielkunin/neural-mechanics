@@ -96,11 +96,13 @@ def main(ARGS):
     # Construct the annealing schedule
     schedule = anneal_schedule(ARGS.anneal_steps, vars(ARGS))
     # Run one epoch of training at every step in the schedule
+    epoch_offset = 0
     for k,sch_args in enumerate(schedule):
         # Set the schedule args
         ARGS.__dict__.update(sch_args)
         print_fn("Running with args: {}".format(ARGS))
-
+        epoch_offset += 2**k # To prevent step number from being overwritten, given the current batch size schedule
+        
         ## Data ##
         print_fn("Loading {} dataset.".format(ARGS.dataset))
         train_loader = load.dataloader(
@@ -156,7 +158,7 @@ def main(ARGS):
             ARGS.save,
             save_freq=ARGS.save_freq,
             save_path=save_path,
-            epoch_offset=k,
+            epoch_offset=epoch_offset,
             **train_kwargs,
         )
 
