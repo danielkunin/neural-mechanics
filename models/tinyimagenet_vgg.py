@@ -130,6 +130,7 @@ def _vgg(arch, features, num_classes, pretrained, model_dir="pretrained_models")
     if pretrained:
         pretrained_path = "{}/{}-cifar{}.pt".format(model_dir, arch, num_classes)
         pretrained_dict = torch.load(pretrained_path)
+        pretrained_dict = pretrained_dict["model_state_dict"] # necessary because of our ckpt format
         model_dict = model.state_dict()
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
