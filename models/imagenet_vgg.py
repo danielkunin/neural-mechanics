@@ -138,7 +138,7 @@ def _vgg(arch, cfg, batch_norm, pretrained, progress, **kwargs):
         kwargs["init_weights"] = False
     model = VGG(make_layers(cfgs[cfg], batch_norm=batch_norm), **kwargs)
     if pretrained:
-        pretrained_dict = load_state_dict_from_url(model_urls[arch], progress=progress)
+        pretrained_dict = load_state_dict_from_url(model_urls[arch], model_dir="/home/jvrsgsty/models", progress=progress)
         model_dict = model.state_dict()
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
