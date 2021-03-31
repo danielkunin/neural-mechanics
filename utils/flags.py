@@ -144,6 +144,10 @@ def train():
         "--epochs", type=int, default=0, help="number of epochs to train (default: 0)",
     )
     train_args.add_argument(
+        "--anneal-steps", type=int, default=1,
+        help="number times to anneal hyperparameters(default: 1)",
+    )
+    train_args.add_argument(
         "--lr", type=float, default=0.001, help="learning rate (default: 0.001)"
     )
     train_args.add_argument(
