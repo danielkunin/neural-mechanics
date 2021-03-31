@@ -89,6 +89,7 @@ def performance(model, feats_dir, steps, **kwargs):
                 keys=["accuracy1", "accuracy5", "train_loss", "test_loss"],
             )
             metrics[step] = feature_dict
+        metrics["steps"] = steps
     return {"performance": metrics}
 
 
