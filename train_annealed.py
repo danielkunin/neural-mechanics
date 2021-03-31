@@ -96,7 +96,7 @@ def main(ARGS):
     # Construct the annealing schedule
     schedule = anneal_schedule(ARGS.anneal_steps, vars(ARGS))
     # Run one epoch of training at every step in the schedule
-    epoch_offset = 0
+    epoch_offset = -1
     for k,sch_args in enumerate(schedule):
         # Set the schedule args
         ARGS.__dict__.update(sch_args)
