@@ -12,7 +12,7 @@ from utils import flags
 def anneal_schedule(anneal_steps, args):
     # Constructs a hyperparam anneal schedule based on
     # doubling batch size at every step but keeping two quantities of interest fixed
-    sch_keys = ["train_batch_size", "lr", "momentum"]
+    sch_keys = ["train_batch_size", "lr", "momentum", "save_freq"]
     for k in sch_keys:
         assert k in args.keys()
 
@@ -20,6 +20,7 @@ def anneal_schedule(anneal_steps, args):
     for i in range(1, anneal_steps):
         these_args = schedule[i-1].copy()
         these_args["train_batch_size"] *= 2
+        these_args["save_freq"] = int(these_args["save_freq"]/2)
         beta = these_args["momentum"]
         beta_hat = np.sqrt((1 + beta**2)/2)
         eta_hat = 2*these_args["lr"]*(1-beta_hat)/(1-beta)
