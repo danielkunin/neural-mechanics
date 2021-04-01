@@ -41,6 +41,7 @@ def fc(
     if pretrained:
         pretrained_path = f"{model_dir}/fc_mnist{num_classes}.pt"
         pretrained_dict = torch.load(pretrained_path)
+        pretrained_dict = pretrained_dict["model_state_dict"] # necessary because of our ckpt format
         model_dict = model.state_dict()
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
