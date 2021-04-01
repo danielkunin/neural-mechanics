@@ -59,11 +59,11 @@ def main():
             assert len(all_param_names) == len(checkpoint["optimizer_state_dict"]["state"].keys())
             # Get the int keys for the names extracted above
             optimizer_keys = [
-                i
+                (i, name)
                 for i,name in enumerate(all_param_names)
                 if name in extracted_names
             ]
-            for opt_key in optimizer_keys:
+            for opt_key,name in optimizer_keys:
                 param_state = checkpoint["optimizer_state_dict"]["state"][opt_key]
                 if "buffers" in param_state.keys():
                     buffer_dict = param_state["buffers"]
