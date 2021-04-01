@@ -101,8 +101,8 @@ def main(ARGS):
         # Set the schedule args
         ARGS.__dict__.update(sch_args)
         print_fn("Running with args: {}".format(ARGS))
-        epoch_offset += 2**k # To prevent step number from being overwritten, given the current batch size schedule
-        
+        epoch_offset += ARGS.epochs*(2**k) # To prevent step number from being overwritten, given the current batch size schedule
+
         ## Data ##
         print_fn("Loading {} dataset.".format(ARGS.dataset))
         train_loader = load.dataloader(
