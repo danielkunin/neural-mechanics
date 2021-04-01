@@ -20,7 +20,7 @@ def anneal_schedule(anneal_steps, args):
     for i in range(1, anneal_steps):
         these_args = schedule[i-1].copy()
         these_args["train_batch_size"] *= 2
-        these_args["save_freq"] = int(these_args["save_freq"]/2)
+        these_args["save_freq"] = max(1, int(these_args["save_freq"]/2))
         beta = these_args["momentum"]
         beta_hat = np.sqrt((1 + beta**2)/2)
         eta_hat = 2*these_args["lr"]*(1-beta_hat)/(1-beta)
@@ -29,7 +29,7 @@ def anneal_schedule(anneal_steps, args):
         schedule.append(these_args)
 
         # Check that we have different values for the keys of interest
-        for k in sch_keys:
+        for k in sch_keys[:-1]:
             assert schedule[i-1][k] != schedule[i][k]
         # Check that the quantities of interest did not change
         invariant1 = schedule[i-1]["lr"]/(2*schedule[i-1]["train_batch_size"]*(1-schedule[i-1]["momentum"]))
