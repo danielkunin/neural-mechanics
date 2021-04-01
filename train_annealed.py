@@ -42,6 +42,41 @@ def anneal_schedule(anneal_steps, args):
     return schedule
 
 
+def anneal_schedule_lr(anneal_steps, args):
+    # Constructs a hyperparam anneal schedule based on
+    # doubling batch size at every step but keeping two quantities of interest fixed
+    sch_keys = ["lr", "momentum"]
+    for k in sch_keys:
+        assert k in args.keys()
+
+    schedule = [{k:v for k,v in args.items() if k in sch_keys}]
+    lr_start = schedule[0]["lr"]
+    lr_end = 1e-8
+    mom_start = schedule[0]["momentum"]
+    mom_end = 0.9999
+
+    etas = np.linspace(lr_start, lr_end, anneal_steps)
+    betas = np.linspace(mom_start, mom_end, anneal_steps)
+    for i in range(1, anneal_steps):
+
+        these_args["momentum"] = betas[i]
+        these_args["lr"] = etas[i]
+        schedule.append(these_args)
+
+        # Check that we have different values for the keys of interest
+        for k in sch_keys:
+            assert schedule[i-1][k] != schedule[i][k]
+        # Check that the quantities of interest did not change
+        invariant1 = schedule[i-1]["lr"]/(2*schedule[i-1]["train_batch_size"]*(1-schedule[i-1]["momentum"]))
+        invariant2 = schedule[i]["lr"]/(2*schedule[i]["train_batch_size"]*(1-schedule[i]["momentum"]))
+        assert np.allclose(invariant1, invariant2, atol=1e-8)
+        invariant1 = 1/(schedule[i-1]["train_batch_size"]*(1-schedule[i-1]["momentum"]**2))
+        invariant2 = 1/(schedule[i]["train_batch_size"]*(1-schedule[i]["momentum"]**2))
+        assert np.allclose(invariant1, invariant2, atol=1e-8)
+
+    return schedule
+
+
 def main(ARGS):
     if ARGS.tpu:
         print_fn = xm.master_print
