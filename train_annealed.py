@@ -160,7 +160,7 @@ def main(ARGS):
         # given the current batch size schedule
         epoch_offset += ARGS.epochs*(2**k)
         # If anneal schedle does not change batch size, do this instead
-        epoch_offset = k
+        epoch_offset = ARGS.epochs*k
         ## Data ##
         print_fn("Loading {} dataset.".format(ARGS.dataset))
         train_loader = load.dataloader(
