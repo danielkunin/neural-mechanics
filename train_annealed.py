@@ -42,7 +42,7 @@ def anneal_schedule(anneal_steps, args):
     return schedule
 
 
-def anneal_schedule_lr(anneal_steps, args):
+def anneal_schedule_linear(anneal_steps, args):
     # Constructs a hyperparam anneal schedule based on
     # doubling batch size at every step but keeping two quantities of interest fixed
     sch_keys = ["lr", "momentum"]
@@ -58,6 +58,7 @@ def anneal_schedule_lr(anneal_steps, args):
     etas = np.linspace(lr_start, lr_end, anneal_steps)
     betas = np.linspace(mom_start, mom_end, anneal_steps)
     for i in range(1, anneal_steps):
+        these_args = schedule[i-1].copy()
 
         these_args["momentum"] = betas[i]
         these_args["lr"] = etas[i]
@@ -66,13 +67,31 @@ def anneal_schedule_lr(anneal_steps, args):
         # Check that we have different values for the keys of interest
         for k in sch_keys:
             assert schedule[i-1][k] != schedule[i][k]
-        # Check that the quantities of interest did not change
-        invariant1 = schedule[i-1]["lr"]/(2*schedule[i-1]["train_batch_size"]*(1-schedule[i-1]["momentum"]))
-        invariant2 = schedule[i]["lr"]/(2*schedule[i]["train_batch_size"]*(1-schedule[i]["momentum"]))
-        assert np.allclose(invariant1, invariant2, atol=1e-8)
-        invariant1 = 1/(schedule[i-1]["train_batch_size"]*(1-schedule[i-1]["momentum"]**2))
-        invariant2 = 1/(schedule[i]["train_batch_size"]*(1-schedule[i]["momentum"]**2))
-        assert np.allclose(invariant1, invariant2, atol=1e-8)
+
+    return schedule
+
+
+def anneal_schedule_lr_mom(anneal_steps, args):
+    # Constructs a hyperparam anneal schedule based on
+    # doubling batch size at every step but keeping two quantities of interest fixed
+    sch_keys = ["lr", "momentum"]
+    for k in sch_keys:
+        assert k in args.keys()
+
+    schedule = [{k:v for k,v in args.items() if k in sch_keys}]
+
+    for i in range(1, anneal_steps):
+        these_args = schedule[i-1].copy()
+
+        # keep eta/(1-beta) constant
+        these_args["lr"] = these_args["lr"]/2
+        these_args["momentum"] = (1+these_args["momentum"])/2
+
+        schedule.append(these_args)
+
+        # Check that we have different values for the keys of interest
+        for k in sch_keys:
+            assert schedule[i-1][k] != schedule[i][k]
 
     return schedule
 
@@ -129,15 +148,19 @@ def main(ARGS):
     ).to(device)
 
     # Construct the annealing schedule
-    schedule = anneal_schedule(ARGS.anneal_steps, vars(ARGS))
+    schedule = anneal_schedule_lr_mom(ARGS.anneal_steps, vars(ARGS))
     # Run one epoch of training at every step in the schedule
     epoch_offset = -1
     for k,sch_args in enumerate(schedule):
         # Set the schedule args
         ARGS.__dict__.update(sch_args)
         print_fn("Running with args: {}".format(ARGS))
-        epoch_offset += ARGS.epochs*(2**k) # To prevent step number from being overwritten, given the current batch size schedule
-
+        # When anneal schedule changes batch size,
+        # To prevent step number from being overwritten,
+        # given the current batch size schedule
+        epoch_offset += ARGS.epochs*(2**k)
+        # If anneal schedle does not change batch size, do this instead
+        epoch_offset = k
         ## Data ##
         print_fn("Loading {} dataset.".format(ARGS.dataset))
         train_loader = load.dataloader(
