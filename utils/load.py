@@ -9,7 +9,7 @@ from models import imagenet_vgg
 from models import imagenet_resnet
 from optimizers import custom_sgd
 from optimizers import lamb
-from utils import custom_datasets
+from utils import custom_datasets, synthetic_regression as reg
 
 
 def configure_tpu(tpu_name):
@@ -42,6 +42,8 @@ def dimension(dataset):
         input_shape, num_classes = (3, 64, 64), 200
     if dataset == "imagenet":
         input_shape, num_classes = (3, 224, 224), 1000
+    if dataset == "regression":
+        input_shape, num_classes = (1000), 1
     return input_shape, num_classes
 
 
@@ -115,6 +117,10 @@ def dataloader(
             )
         folder = f"{datadir}/imagenet_raw/{'train' if train else 'val'}"
         dataset = datasets.ImageFolder(folder, transform=transform)
+    if dataset == "regression":
+        d = 1000
+        n = 100000
+        dataset = reg.SyntheticRegression(n, d, train=train, sigma=1.0)
 
     # Dataloader
     shuffle = train is True

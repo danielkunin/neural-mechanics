@@ -148,7 +148,7 @@ def main(ARGS):
     ).to(device)
 
     # Construct the annealing schedule
-    schedule = anneal_schedule_lr_mom(ARGS.anneal_steps, vars(ARGS))
+    schedule = anneal_schedule(ARGS.anneal_steps, vars(ARGS))
     # Run one epoch of training at every step in the schedule
     epoch_offset = -1
     for k,sch_args in enumerate(schedule):
