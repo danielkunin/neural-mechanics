@@ -152,10 +152,10 @@ def eval(model, loss, dataloader, device, verbose, epoch, **kwargs):
             data, target = data.to(device), target.to(device)
             output = model(data)
             total += loss(output, target).item() * data.size(0)
-            _, pred = output.topk(5, dim=1)
-            correct = pred.eq(target.view(-1, 1).expand_as(pred))
-            correct1 += correct[:, :1].sum().item()
-            correct5 += correct[:, :5].sum().item()
+            #_, pred = output.topk(5, dim=1)
+            #correct = pred.eq(target.view(-1, 1).expand_as(pred))
+            #correct1 += correct[:, :1].sum().item()
+            #correct5 += correct[:, :5].sum().item()
             total_samples += data.size()[0]
     average_loss = 1.0 * total / total_samples
     accuracy1 = 100.0 * correct1 / total_samples

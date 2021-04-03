@@ -88,7 +88,7 @@ def main(ARGS):
             {"xrt_world_size": xm.xrt_world_size(), "xm_ordinal": xm.get_ordinal(),}
         )
 
-    loss = nn.CrossEntropyLoss()
+    loss = load.loss(ARGS.loss)
     opt_class, opt_kwargs = load.optimizer(
         ARGS.optimizer, ARGS.momentum, ARGS.dampening, ARGS.nesterov, ARGS.save_buffers,
     )

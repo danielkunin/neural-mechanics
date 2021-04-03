@@ -31,6 +31,14 @@ def device(gpu, tpu=None):
         return torch.device(f"cuda:{gpu}" if use_cuda else "cpu")
 
 
+def loss(name):
+    losses = {
+        "mse": torch.nn.MSELoss(),
+        "ce": torch.nn.CrossEntropyLoss()
+    }
+    return losses[name]
+
+
 def dimension(dataset):
     if dataset == "mnist":
         input_shape, num_classes = (1, 28, 28), 10
@@ -43,7 +51,7 @@ def dimension(dataset):
     if dataset == "imagenet":
         input_shape, num_classes = (3, 224, 224), 1000
     if dataset == "regression":
-        input_shape, num_classes = (1000), 1
+        input_shape, num_classes = (100), 1
     return input_shape, num_classes
 
 
@@ -118,8 +126,8 @@ def dataloader(
         folder = f"{datadir}/imagenet_raw/{'train' if train else 'val'}"
         dataset = datasets.ImageFolder(folder, transform=transform)
     if dataset == "regression":
-        d = 1000
-        n = 100000
+        d = 100
+        n = 10000
         dataset = reg.SyntheticRegression(n, d, train=train, sigma=1.0)
 
     # Dataloader

@@ -31,20 +31,23 @@ def multivariate_dataset(n, d, condition, w, b, sigma=1.0):
 
 class SyntheticRegression(Dataset):
     def __init__(self, n, d, condition=10, train=True, sigma=1.0):
-        w = np.random.normal(0,1,d)
+        rng = np.random.default_rng(seed=42)
+        w = rng.normal(0,1,d)
         b = 0.5
         train_frac = 0.7
         X, Y = multivariate_dataset(n, d, condition, w, b, sigma)
+        X = np.array(X, dtype=np.float32)
+        Y = np.array(Y, dtype=np.float32)
         if train:
-            X = X[:train_frac*n]
-            Y = Y[:train_frac*n]
+            X = X[:int(train_frac*n)]
+            Y = Y[:int(train_frac*n)]
         else:
-            X = X[train_frac*n:]
-            Y = Y[train_frac*n:]
+            X = X[int(train_frac*n):]
+            Y = Y[int(train_frac*n):]
 
         if not torch.is_tensor(X):
             self.X = torch.from_numpy(X)
-        if not torch.is_tensor(y):
+        if not torch.is_tensor(Y):
             self.Y = torch.from_numpy(Y)
 
     def __len__(self):

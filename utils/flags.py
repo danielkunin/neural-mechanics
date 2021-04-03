@@ -116,6 +116,13 @@ def train():
              "Downloaded models will be stored here.",
     )
     train_args.add_argument(
+        "--loss",
+        type=str,
+        default="ce",
+        choices=["mse", "ce",],
+        help="loss funcion (default: ce)",
+    )
+    train_args.add_argument(
         "--optimizer",
         type=str,
         default="sgd",
