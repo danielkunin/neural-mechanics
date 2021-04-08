@@ -148,3 +148,5 @@ results/
 
 # figures
 notebooks/*.pdf
+notebooks/*.png
+notebooks/*.gif
