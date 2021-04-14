@@ -61,6 +61,7 @@ def main(ARGS):
         workers=ARGS.workers,
         datadir=ARGS.data_dir,
         tpu=ARGS.tpu,
+        seed=ARGS.data_seed,
     )
     test_loader = load.dataloader(
         dataset=ARGS.dataset,

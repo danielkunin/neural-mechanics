@@ -51,6 +51,12 @@ def train():
         help="Directory to store the datasets to be downloaded",
     )
     train_args.add_argument(
+        "--data-seed",
+        type=int,
+        default=0,
+        help="Seed for the data loader",
+    )
+    train_args.add_argument(
         "--model",
         type=str,
         default="logistic",

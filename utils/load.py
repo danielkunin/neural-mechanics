@@ -56,7 +56,7 @@ def get_transform(size, padding, mean, std, preprocess):
 
 
 def dataloader(
-    dataset, batch_size, train, workers, length=None, datadir="Data", tpu=False
+    dataset, batch_size, train, workers, length=None, datadir="Data", tpu=False, seed=0,
 ):
     # Dataset
     if dataset == "mnist":
@@ -138,6 +138,7 @@ def dataloader(
                 num_replicas=xm.xrt_world_size(),
                 rank=xm.get_ordinal(),
                 shuffle=shuffle,
+                seed=seed,
             )
     dataloader = torch.utils.data.DataLoader(
         dataset=dataset,
