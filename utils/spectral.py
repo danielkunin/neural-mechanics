@@ -14,6 +14,7 @@ def Hvp(loss, v, model, device, data_loader):
         grad = torch.autograd.grad(prod, model.parameters())
         Hv += torch.cat([g.reshape(-1) for g in grad if g is not None])
     if device.type == "xla":
+        import torch_xla.core.xla_model as xm
         Hv = xm.mesh_reduce("Hv", Hv, np.sum)
     return Hv
 
