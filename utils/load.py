@@ -32,11 +32,17 @@ def device(gpu, tpu=None):
         return torch.device(f"cuda:{gpu}" if use_cuda else "cpu")
 
 
-def MSELoss(output, target):
+def MSELoss(output, target, reduction='mean'):
     num_classes = output.size(1)
     labels = F.one_hot(target, num_classes=num_classes)
-    loss = torch.mean((output - labels)**2)
-    return loss
+    if reduction is 'mean':
+        return torch.mean((output - labels)**2)
+    elif reduction is 'sum':
+        return torch.sum((output - labels)**2)
+    elif reduction is None:
+        return (output - labels)**2
+    else:
+        raise ValueError(reduction + " is not valid")
 
 
 def loss(name):
