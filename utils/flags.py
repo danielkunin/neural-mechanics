@@ -41,7 +41,7 @@ def train():
         "--dataset",
         type=str,
         default="mnist",
-        choices=["mnist", "cifar10", "cifar100", "tiny-imagenet", "imagenet", "regression"],
+        choices=["mnist", "cifar10", "cifar100", "tiny-imagenet", "imagenet"],
         help="dataset (default: mnist)",
     )
     train_args.add_argument(
