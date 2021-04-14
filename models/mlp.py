@@ -21,7 +21,7 @@ def logistic(
 
 
 def fc(
-    input_shape, num_classes, pretrained=False, L=6, N=100, nonlinearity=nn.ReLU(),
+    input_shape, num_classes, pretrained=False, L=6, N=100, nonlinearity=nn.ReLU(), model_dir="models"
 ):
     size = np.prod(input_shape)
 
@@ -39,13 +39,17 @@ def fc(
 
     # Pretrained model
     if pretrained:
-        print("WARNING: this model does not have pretrained weights.")
+        pretrained_path = f"{model_dir}/fc_mnist{num_classes}.pt"
+        pretrained_dict = torch.load(pretrained_path)
+        model_dict = model.state_dict()
+        model_dict.update(pretrained_dict)
+        model.load_state_dict(model_dict)
 
     return model
 
 
 def fc_bn(
-    input_shape, num_classes, pretrained=False, L=6, N=100, nonlinearity=nn.ReLU(),
+    input_shape, num_classes, pretrained=False, L=6, N=100, nonlinearity=nn.ReLU(), model_dir="models"
 ):
     size = np.prod(input_shape)
 
@@ -65,7 +69,11 @@ def fc_bn(
 
     # Pretrained model
     if pretrained:
-        print("WARNING: this model does not have pretrained weights.")
+        pretrained_path = f"{model_dir}/fc-bn_mnist{num_classes}.pt"
+        pretrained_dict = torch.load(pretrained_path)
+        model_dict = model.state_dict()
+        model_dict.update(pretrained_dict)
+        model.load_state_dict(model_dict)
 
     return model
 
@@ -78,6 +86,7 @@ def conv(
     N=32,
     nonlinearity=nn.ReLU(),
     norm_layer=None,
+    model_dir="models",
 ):
     channels, width, height = input_shape
 
@@ -100,6 +109,10 @@ def conv(
 
     # Pretrained model
     if pretrained:
-        print("WARNING: this model does not have pretrained weights.")
+        pretrained_path = f"{model_dir}/conv_mnist{num_classes}.pt"
+        pretrained_dict = torch.load(pretrained_path)
+        model_dict = model.state_dict()
+        model_dict.update(pretrained_dict)
+        model.load_state_dict(model_dict)
 
     return model

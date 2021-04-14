@@ -1,5 +1,7 @@
 import os
 import deepdish as dd
+import numpy as np
+import h5py
 import glob
 import json
 from utils import flags
@@ -45,7 +47,19 @@ def main(args=None):
                 **(hyperparameters),
             )  # TODO: pass subset and seed for network plot
             print(f"   Caching features to {cache_file}")
-            dd.io.save(cache_file, (steps, metrics))
+            #dd.io.save(cache_file, (steps, metrics))
+            with h5py.File(cache_file, "w") as f:
+                for k, v in metrics.items():
+                    if type(v) == dict:
+                        grp = f.create_group(k)
+                        for kk, vv in v.items():
+                            dset = grp.create_dataset(kk, vv.shape, "f")
+                            dset[:] = vv
+                    elif type(v) == np.ndarray:
+                        dset = f.create_dataset(k, v.shape, "f")
+                        dset[:] = v
+                    else:
+                        raise("Unsupported value in dict")
 
     # NOTE: this will only return the last one, for use with plot.py
     return steps, metrics

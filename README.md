@@ -83,4 +83,15 @@ However we provide:
 - The `notebooks/plots.ipynb` notebook which shows how the caches might be used to quickly iterate and fine-tune plots. This is the notebook used to generate the empirical plots in the original paper.
 
 ## Citation
-If you use this code for your research, please cite...
+If you use this code for your research, please use the following citation:
+
+```
+@inproceedings{
+    kunin2021neural,
+    title={Neural Mechanics: Symmetry and Broken Conservation Laws in Deep Learning Dynamics},
+    author={Daniel Kunin and Javier Sagastuy-Brena and Surya Ganguli and Daniel LK Yamins and Hidenori Tanaka},
+    booktitle={International Conference on Learning Representations},
+    year={2021},
+    url={https://openreview.net/forum?id=q8qLAbQBupm}
+}
+```

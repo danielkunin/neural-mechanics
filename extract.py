@@ -41,26 +41,36 @@ def main():
                 metrics[m] = np.array([checkpoint[m]])
         # Weights
         params = {}
+        extracted_names = []
         for name, tensor in checkpoint["model_state_dict"].items():
             if "weight" in name or "bias" in name:
                 params[name] = tensor.cpu().numpy()
+                extracted_names.append(name)
         # Buffers
         buffers = {}
-        # this assumes the same order of model state dict as optimize state dict
-        param_names = [
-            name
-            for name in checkpoint["model_state_dict"].keys()
-            if ("weight" in name or "bias" in name)
-        ]
-        for name, param_state in zip(
-            param_names, checkpoint["optimizer_state_dict"]["state"].values()
-        ):
-            if "buffers" in param_state.keys():
-                buffer_dict = param_state["buffers"]
-                # Cannot nest dictionaries deeper: load function assumes only 2
-                # nested keys: one for the group, one for feat name
-                for k, v in buffer_dict.items():
-                    buffers[f"{name}.{k}"] = v.cpu().numpy()
+        if len(checkpoint["optimizer_state_dict"]["state"].keys()) > 0:
+            # this assumes the same order of model state dict as optimize state dict
+            # recall optimizer_state_dict.state has int keys, not strings
+            all_param_names = [
+                name
+                for name in checkpoint["model_state_dict"].keys()
+                if ("weight" in name or "bias" in name)
+            ]
+            assert len(all_param_names) == len(checkpoint["optimizer_state_dict"]["state"].keys())
+            # Get the int keys for the names extracted above
+            optimizer_keys = [
+                (i, name)
+                for i,name in enumerate(all_param_names)
+                if name in extracted_names
+            ]
+            for opt_key,name in optimizer_keys:
+                param_state = checkpoint["optimizer_state_dict"]["state"][opt_key]
+                if "buffers" in param_state.keys():
+                    buffer_dict = param_state["buffers"]
+                    # Cannot nest dictionaries deeper: load function assumes only 2
+                    # nested keys: one for the group, one for feat name
+                    for k, v in buffer_dict.items():
+                        buffers[f"{name}.{k}"] = v.cpu().numpy()
         dd.io.save(
             out_filename, {"metrics": metrics, "params": params, "buffers": buffers}
         )
