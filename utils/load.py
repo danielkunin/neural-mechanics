@@ -2,6 +2,7 @@ import torch
 import numpy as np
 from torchvision import datasets, transforms
 import torch.optim as optim
+import torch.nn.functional as F
 from models import mlp
 from models import tinyimagenet_vgg
 from models import tinyimagenet_resnet
@@ -9,7 +10,7 @@ from models import imagenet_vgg
 from models import imagenet_resnet
 from optimizers import custom_sgd
 from optimizers import lamb
-from utils import custom_datasets, synthetic_regression as reg
+from utils import custom_datasets
 
 
 def configure_tpu(tpu_name):
@@ -31,9 +32,16 @@ def device(gpu, tpu=None):
         return torch.device(f"cuda:{gpu}" if use_cuda else "cpu")
 
 
+def MSELoss(output, target):
+    num_classes = output.size(1)
+    labels = F.one_hot(target, num_classes=num_classes)
+    loss = torch.mean((output - labels)**2)
+    return loss
+
+
 def loss(name):
     losses = {
-        "mse": torch.nn.MSELoss(),
+        "mse": MSELoss,
         "ce": torch.nn.CrossEntropyLoss()
     }
     return losses[name]
@@ -50,8 +58,6 @@ def dimension(dataset):
         input_shape, num_classes = (3, 64, 64), 200
     if dataset == "imagenet":
         input_shape, num_classes = (3, 224, 224), 1000
-    if dataset == "regression":
-        input_shape, num_classes = (100), 1
     return input_shape, num_classes
 
 
@@ -125,10 +131,6 @@ def dataloader(
             )
         folder = f"{datadir}/imagenet_raw/{'train' if train else 'val'}"
         dataset = datasets.ImageFolder(folder, transform=transform)
-    if dataset == "regression":
-        d = 100
-        n = 10000
-        dataset = reg.SyntheticRegression(n, d, train=train, sigma=1.0)
 
     # Dataloader
     shuffle = train is True
