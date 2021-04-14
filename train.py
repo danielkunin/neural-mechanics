@@ -2,11 +2,13 @@ import json
 import os
 import shutil
 import numpy as np
+import deepdish as dd
 import torch
 import torch.nn as nn
 from utils import load
 from utils import optimize
 from utils import flags
+from utils import spectral
 
 
 def main(ARGS):
@@ -26,6 +28,7 @@ def main(ARGS):
         try:
             os.makedirs(save_path)
             os.makedirs(f"{save_path}/ckpt")
+            os.makedirs(f"{save_path}/metrics")
         except FileExistsError:
             if not ARGS.overwrite:
                 print_fn(
@@ -35,6 +38,7 @@ def main(ARGS):
             shutil.rmtree(save_path)
             os.makedirs(save_path)
             os.makedirs(f"{save_path}/ckpt")
+            os.makedirs(f"{save_path}/metrics")
 
     ## Save Args ##
     if ARGS.save:
@@ -114,6 +118,20 @@ def main(ARGS):
         save_path=save_path,
         **train_kwargs,
     )
+
+    # Final metrics save
+    spectral_metrics = {}
+    if ARGS.eigenvector:
+        print("Computing Eigenvector")
+        V, Lamb = spectral.subspace(loss, model, device, train_loader, ARGS.eigen_dims, ARGS.power_iters)
+        spectral_metrics["eigenvector"] = V
+        spectral_metrics["eigenvalues"] = Lamb
+
+    if ARGS.hessian:
+        print("Computing Hessian")
+        H = spectral.hessian(loss, model, device, train_loader)
+        spectral_metrics["hessian"] = H
+    dd.io.save(f"{save_path}/metrics/spectral.h5", spectral_metrics)
 
 
 if __name__ == "__main__":

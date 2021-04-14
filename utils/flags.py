@@ -191,6 +191,31 @@ def train():
         default=None,
         help="Frequency (in batches) to save model checkpoints at",
     )
+    # Hessian metrics
+    train_args.add_argument(
+        "--eigenvector",
+        type=bool,
+        default=False,
+        help="Save Hessian eigenvectors (default: False)",
+    )
+    train_args.add_argument(
+        "--eigen-dims",
+        type=int,
+        default=1,
+        help="Number of top eigenvectors and values to compute",
+    )
+    train_args.add_argument(
+        "--power-iters",
+        type=int,
+        default=5,
+        help="Number of iterations for the eigenvector computation",
+    )
+    train_args.add_argument(
+        "--hessian",
+        type=bool,
+        default=False,
+        help="Save full Hessian (default: False)",
+    )
     return parser
 
 
