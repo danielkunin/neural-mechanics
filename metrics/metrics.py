@@ -7,7 +7,7 @@ from metrics.scale import scale, scale_momentum
 from metrics.rescale import rescale, rescale_momentum
 from metrics.translation import translation, translation_momentum
 from metrics.phase import phase
-from metrics.weights_grads import weights_grads
+from metrics.weights_grads import weights_grads, weights_grads_full
 
 
 def gradient(model, feats_dir, steps, **kwargs):
@@ -105,4 +105,5 @@ metric_fns = {
     "network": network,
     "phase": phase,
     "weights_grads": weights_grads,
+    "weights_grads_full": weights_grads_full,
 }

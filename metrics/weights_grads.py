@@ -72,3 +72,35 @@ def weights_grads(model, feats_dir, steps, **kwargs):
         weights_and_grads[layer]["grad"] = np.array(weights_and_grads[layer]["grad"])
 
     return weights_and_grads
+
+def weights_grads_full(model, feats_dir, steps, **kwargs):
+    lr = kwargs.get("lr")
+    wd = kwargs.get("wd")
+
+    layers = [layer for layer in utils.get_layers(model) if "conv" in layer]
+    load_kwargs = {
+        "model": model,
+        "feats_dir": feats_dir,
+    }
+
+    weights_and_grads = {layer: {"weight":[],"grad":[]} for layer in layers}
+    steps = np.unique(steps)
+    steps.sort()
+    for i in tqdm(range(1, len(steps))):
+        step = steps[i]
+        extract_weights_and_grads(step, layers, load_kwargs, weights_and_grads, **kwargs)
+
+    print("Allocating numpy arrays")
+    all_weights = []
+    all_grads = []
+    for layer in layers:
+        all_weights.append(np.array(weights_and_grads[layer]["weight"]))
+        all_grads.append(np.array(weights_and_grads[layer]["grad"]))
+
+    all_weights_and_grads = {
+        "weights": np.array(all_weights),
+        "grads": np.array(all_grads),
+        "steps": steps[1:],
+    }
+
+    return all_weights_and_grads

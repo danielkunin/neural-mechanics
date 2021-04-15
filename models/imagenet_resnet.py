@@ -287,17 +287,17 @@ class ResNet(nn.Module):
         return self._forward_impl(x)
 
 
-def _resnet(arch, block, layer_list, pretrained, progress, **kwargs):
+def _resnet(arch, block, layer_list, pretrained, progress, model_dir="pretrained_models", **kwargs):
     model = ResNet(block, layer_list, **kwargs)
     if pretrained:
-        pretrained_dict = load_state_dict_from_url(model_urls[arch], progress=progress)
+        pretrained_dict = load_state_dict_from_url(model_urls[arch], progress=progress, model_dir=model_dir)
         model_dict = model.state_dict()
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
     return model
 
 
-def resnet18(input_shape, num_classes, pretrained=False, progress=True, **kwargs):
+def resnet18(input_shape, num_classes, pretrained=False, progress=True, model_dir="pretrained_models", **kwargs):
     r"""ResNet-18 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_
 
@@ -305,10 +305,10 @@ def resnet18(input_shape, num_classes, pretrained=False, progress=True, **kwargs
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _resnet("resnet18", BasicBlock, [2, 2, 2, 2], pretrained, progress, **kwargs)
+    return _resnet("resnet18", BasicBlock, [2, 2, 2, 2], pretrained, progress, model_dir, **kwargs)
 
 
-def resnet34(input_shape, num_classes, pretrained=False, progress=True, **kwargs):
+def resnet34(input_shape, num_classes, pretrained=False, progress=True, model_dir="pretrained_models", **kwargs):
     r"""ResNet-34 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_
 
@@ -316,10 +316,10 @@ def resnet34(input_shape, num_classes, pretrained=False, progress=True, **kwargs
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _resnet("resnet34", BasicBlock, [3, 4, 6, 3], pretrained, progress, **kwargs)
+    return _resnet("resnet34", BasicBlock, [3, 4, 6, 3], pretrained, progress, model_dir, **kwargs)
 
 
-def resnet50(input_shape, num_classes, pretrained=False, progress=True, **kwargs):
+def resnet50(input_shape, num_classes, pretrained=False, progress=True, model_dir="pretrained_models", **kwargs):
     r"""ResNet-50 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_
 
@@ -327,10 +327,10 @@ def resnet50(input_shape, num_classes, pretrained=False, progress=True, **kwargs
         pretrained (bool): If True, returns a model pre-trained on ImageNet
         progress (bool): If True, displays a progress bar of the download to stderr
     """
-    return _resnet("resnet50", Bottleneck, [3, 4, 6, 3], pretrained, progress, **kwargs)
+    return _resnet("resnet50", Bottleneck, [3, 4, 6, 3], pretrained, progress, model_dir, **kwargs)
 
 
-def resnet101(input_shape, num_classes, pretrained=False, progress=True, **kwargs):
+def resnet101(input_shape, num_classes, pretrained=False, progress=True, model_dir="pretrained_models", **kwargs):
     r"""ResNet-101 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_
 
@@ -339,11 +339,11 @@ def resnet101(input_shape, num_classes, pretrained=False, progress=True, **kwarg
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     return _resnet(
-        "resnet101", Bottleneck, [3, 4, 23, 3], pretrained, progress, **kwargs
+        "resnet101", Bottleneck, [3, 4, 23, 3], pretrained, progress, model_dir, **kwargs
     )
 
 
-def resnet152(input_shape, num_classes, pretrained=False, progress=True, **kwargs):
+def resnet152(input_shape, num_classes, pretrained=False, progress=True, model_dir="pretrained_models", **kwargs):
     r"""ResNet-152 model from
     `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_
 
@@ -352,12 +352,12 @@ def resnet152(input_shape, num_classes, pretrained=False, progress=True, **kwarg
         progress (bool): If True, displays a progress bar of the download to stderr
     """
     return _resnet(
-        "resnet152", Bottleneck, [3, 8, 36, 3], pretrained, progress, **kwargs
+        "resnet152", Bottleneck, [3, 8, 36, 3], pretrained, progress, model_dir, **kwargs
     )
 
 
 def wide_resnet50_2(
-    input_shape, num_classes, pretrained=False, progress=True, **kwargs
+    input_shape, num_classes, pretrained=False, progress=True, model_dir="pretrained_models", **kwargs
 ):
     r"""Wide ResNet-50-2 model from
     `"Wide Residual Networks" <https://arxiv.org/pdf/1605.07146.pdf>`_
@@ -373,12 +373,12 @@ def wide_resnet50_2(
     """
     kwargs["width_per_group"] = 64 * 2
     return _resnet(
-        "wide_resnet50_2", Bottleneck, [3, 4, 6, 3], pretrained, progress, **kwargs
+        "wide_resnet50_2", Bottleneck, [3, 4, 6, 3], pretrained, progress, model_dir, **kwargs
     )
 
 
 def wide_resnet101_2(
-    input_shape, num_classes, pretrained=False, progress=True, **kwargs
+    input_shape, num_classes, pretrained=False, progress=True, model_dir="pretrained_models", **kwargs
 ):
     r"""Wide ResNet-101-2 model from
     `"Wide Residual Networks" <https://arxiv.org/pdf/1605.07146.pdf>`_
@@ -394,5 +394,5 @@ def wide_resnet101_2(
     """
     kwargs["width_per_group"] = 64 * 2
     return _resnet(
-        "wide_resnet101_2", Bottleneck, [3, 4, 23, 3], pretrained, progress, **kwargs
+        "wide_resnet101_2", Bottleneck, [3, 4, 23, 3], pretrained, progress, model_dir, **kwargs
     )

@@ -185,6 +185,7 @@ def train_eval_loop(
     save,
     save_freq=None,
     save_path=None,
+    epoch_offset=0,
     **kwargs,
 ):
     print_fn = print
@@ -215,7 +216,7 @@ def train_eval_loop(
             metric_dict,
             tpu=(device.type == "xla"),
         )
-    for epoch in tqdm(range(epochs)):
+    for epoch in tqdm(range(epoch_offset, epoch_offset + epochs)):
         train_loss = train(
             model,
             loss,

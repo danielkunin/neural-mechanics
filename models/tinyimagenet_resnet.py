@@ -221,18 +221,19 @@ class ResNet(nn.Module):
         return output
 
 
-def _resnet(arch, block, num_block, base_width, num_classes, pretrained, batch_norm):
+def _resnet(arch, block, num_block, base_width, num_classes, pretrained, batch_norm, model_dir="pretrained_models"):
     model = ResNet(block, num_block, base_width, num_classes, batch_norm)
     if pretrained:
-        pretrained_path = "Models/pretrained/{}-cifar{}.pt".format(arch, num_classes)
+        pretrained_path = "{}/{}-cifar{}.pt".format(model_dir, arch, num_classes)
         pretrained_dict = torch.load(pretrained_path)
+        pretrained_dict = pretrained_dict["model_state_dict"] # necessary because of our ckpt format
         model_dict = model.state_dict()
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
     return model
 
 
-def resnet18(input_shape, num_classes, pretrained=False):
+def resnet18(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     """ return a ResNet 18 object
     """
     return _resnet(
@@ -243,10 +244,11 @@ def resnet18(input_shape, num_classes, pretrained=False):
         num_classes,
         pretrained,
         batch_norm=True,
+        model_dir=model_dir,
     )
 
 
-def resnet34(input_shape, num_classes, pretrained=False):
+def resnet34(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     """ return a ResNet 34 object
     """
     return _resnet(
@@ -257,10 +259,11 @@ def resnet34(input_shape, num_classes, pretrained=False):
         num_classes,
         pretrained,
         batch_norm=True,
+        model_dir=model_dir,
     )
 
 
-def resnet50(input_shape, num_classes, pretrained=False):
+def resnet50(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     """ return a ResNet 50 object
     """
     return _resnet(
@@ -271,10 +274,11 @@ def resnet50(input_shape, num_classes, pretrained=False):
         num_classes,
         pretrained,
         batch_norm=True,
+        model_dir=model_dir,
     )
 
 
-def resnet101(input_shape, num_classes, pretrained=False):
+def resnet101(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     """ return a ResNet 101 object
     """
     return _resnet(
@@ -285,10 +289,11 @@ def resnet101(input_shape, num_classes, pretrained=False):
         num_classes,
         pretrained,
         batch_norm=True,
+        model_dir=model_dir,
     )
 
 
-def resnet152(input_shape, num_classes, pretrained=False):
+def resnet152(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     """ return a ResNet 152 object
     """
     return _resnet(
@@ -299,10 +304,11 @@ def resnet152(input_shape, num_classes, pretrained=False):
         num_classes,
         pretrained,
         batch_norm=True,
+        model_dir=model_dir,
     )
 
 
-def wide_resnet18(input_shape, num_classes, pretrained=False):
+def wide_resnet18(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     """ return a ResNet 18 object
     """
     return _resnet(
@@ -313,10 +319,11 @@ def wide_resnet18(input_shape, num_classes, pretrained=False):
         num_classes,
         pretrained,
         batch_norm=True,
+        model_dir=model_dir,
     )
 
 
-def wide_resnet34(input_shape, num_classes, pretrained=False):
+def wide_resnet34(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     """ return a ResNet 34 object
     """
     return _resnet(
@@ -327,10 +334,11 @@ def wide_resnet34(input_shape, num_classes, pretrained=False):
         num_classes,
         pretrained,
         batch_norm=True,
+        model_dir=model_dir,
     )
 
 
-def wide_resnet50(input_shape, num_classes, pretrained=False):
+def wide_resnet50(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     """ return a ResNet 50 object
     """
     return _resnet(
@@ -341,10 +349,11 @@ def wide_resnet50(input_shape, num_classes, pretrained=False):
         num_classes,
         pretrained,
         batch_norm=True,
+        model_dir=model_dir,
     )
 
 
-def wide_resnet101(input_shape, num_classes, pretrained=False):
+def wide_resnet101(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     """ return a ResNet 101 object
     """
     return _resnet(
@@ -355,10 +364,11 @@ def wide_resnet101(input_shape, num_classes, pretrained=False):
         num_classes,
         pretrained,
         batch_norm=True,
+        model_dir=model_dir,
     )
 
 
-def wide_resnet152(input_shape, num_classes, pretrained=False):
+def wide_resnet152(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     """ return a ResNet 152 object
     """
     return _resnet(
@@ -369,10 +379,11 @@ def wide_resnet152(input_shape, num_classes, pretrained=False):
         num_classes,
         pretrained,
         batch_norm=True,
+        model_dir=model_dir,
     )
 
 
-def resnet18_nobn(input_shape, num_classes, pretrained=False):
+def resnet18_nobn(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     """ return a ResNet 18 object
     """
     return _resnet(
@@ -383,10 +394,11 @@ def resnet18_nobn(input_shape, num_classes, pretrained=False):
         num_classes,
         pretrained,
         batch_norm=False,
+        model_dir=model_dir,
     )
 
 
-def resnet34_nobn(input_shape, num_classes, pretrained=False):
+def resnet34_nobn(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     """ return a ResNet 34 object
     """
     return _resnet(
@@ -397,10 +409,11 @@ def resnet34_nobn(input_shape, num_classes, pretrained=False):
         num_classes,
         pretrained,
         batch_norm=False,
+        model_dir=model_dir,
     )
 
 
-def resnet50_nobn(input_shape, num_classes, pretrained=False):
+def resnet50_nobn(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     """ return a ResNet 50 object
     """
     return _resnet(
@@ -411,10 +424,11 @@ def resnet50_nobn(input_shape, num_classes, pretrained=False):
         num_classes,
         pretrained,
         batch_norm=False,
+        model_dir=model_dir,
     )
 
 
-def resnet101_nobn(input_shape, num_classes, pretrained=False):
+def resnet101_nobn(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     """ return a ResNet 101 object
     """
     return _resnet(
@@ -425,10 +439,11 @@ def resnet101_nobn(input_shape, num_classes, pretrained=False):
         num_classes,
         pretrained,
         batch_norm=False,
+        model_dir=model_dir,
     )
 
 
-def resnet152_nobn(input_shape, num_classes, pretrained=False):
+def resnet152_nobn(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     """ return a ResNet 152 object
     """
     return _resnet(
@@ -439,10 +454,11 @@ def resnet152_nobn(input_shape, num_classes, pretrained=False):
         num_classes,
         pretrained,
         batch_norm=False,
+        model_dir=model_dir,
     )
 
 
-def wide_resnet18_nobn(input_shape, num_classes, pretrained=False):
+def wide_resnet18_nobn(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     """ return a ResNet 18 object
     """
     return _resnet(
@@ -453,10 +469,11 @@ def wide_resnet18_nobn(input_shape, num_classes, pretrained=False):
         num_classes,
         pretrained,
         batch_norm=False,
+        model_dir=model_dir,
     )
 
 
-def wide_resnet34_nobn(input_shape, num_classes, pretrained=False):
+def wide_resnet34_nobn(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     """ return a ResNet 34 object
     """
     return _resnet(
@@ -467,10 +484,11 @@ def wide_resnet34_nobn(input_shape, num_classes, pretrained=False):
         num_classes,
         pretrained,
         batch_norm=False,
+        model_dir=model_dir,
     )
 
 
-def wide_resnet50_nobn(input_shape, num_classes, pretrained=False):
+def wide_resnet50_nobn(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     """ return a ResNet 50 object
     """
     return _resnet(
@@ -481,10 +499,11 @@ def wide_resnet50_nobn(input_shape, num_classes, pretrained=False):
         num_classes,
         pretrained,
         batch_norm=False,
+        model_dir=model_dir,
     )
 
 
-def wide_resnet101_nobn(input_shape, num_classes, pretrained=False):
+def wide_resnet101_nobn(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     """ return a ResNet 101 object
     """
     return _resnet(
@@ -495,10 +514,11 @@ def wide_resnet101_nobn(input_shape, num_classes, pretrained=False):
         num_classes,
         pretrained,
         batch_norm=False,
+        model_dir=model_dir,
     )
 
 
-def wide_resnet152_nobn(input_shape, num_classes, pretrained=False):
+def wide_resnet152_nobn(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     """ return a ResNet 152 object
     """
     return _resnet(
@@ -509,4 +529,5 @@ def wide_resnet152_nobn(input_shape, num_classes, pretrained=False):
         num_classes,
         pretrained,
         batch_norm=False,
+        model_dir=model_dir,
     )

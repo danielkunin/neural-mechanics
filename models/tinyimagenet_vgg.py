@@ -125,52 +125,53 @@ def make_layers(cfg, batch_norm=False):
     return nn.Sequential(*layer_list)
 
 
-def _vgg(arch, features, num_classes, pretrained):
+def _vgg(arch, features, num_classes, pretrained, model_dir="pretrained_models"):
     model = VGG(features, num_classes)
     if pretrained:
-        pretrained_path = "Models/pretrained/{}-cifar{}.pt".format(arch, num_classes)
+        pretrained_path = "{}/{}-cifar{}.pt".format(model_dir, arch, num_classes)
         pretrained_dict = torch.load(pretrained_path)
+        pretrained_dict = pretrained_dict["model_state_dict"] # necessary because of our ckpt format
         model_dict = model.state_dict()
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
     return model
 
 
-def vgg11(input_shape, num_classes, pretrained=False):
+def vgg11(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     features = make_layers(cfg["A"], batch_norm=False)
-    return _vgg("vgg11", features, num_classes, pretrained)
+    return _vgg("vgg11", features, num_classes, pretrained, model_dir)
 
 
-def vgg11_bn(input_shape, num_classes, pretrained=False):
+def vgg11_bn(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     features = make_layers(cfg["A"], batch_norm=True)
-    return _vgg("vgg11_bn", features, num_classes, pretrained)
+    return _vgg("vgg11_bn", features, num_classes, pretrained, model_dir)
 
 
-def vgg13(input_shape, num_classes, pretrained=False):
+def vgg13(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     features = make_layers(cfg["B"], batch_norm=False)
-    return _vgg("vgg13", features, num_classes, pretrained)
+    return _vgg("vgg13", features, num_classes, pretrained, model_dir)
 
 
-def vgg13_bn(input_shape, num_classes, pretrained=False):
+def vgg13_bn(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     features = make_layers(cfg["B"], batch_norm=True)
-    return _vgg("vgg13_bn", features, num_classes, pretrained)
+    return _vgg("vgg13_bn", features, num_classes, pretrained, model_dir)
 
 
-def vgg16(input_shape, num_classes, pretrained=False):
+def vgg16(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     features = make_layers(cfg["D"], batch_norm=False)
-    return _vgg("vgg16", features, num_classes, pretrained)
+    return _vgg("vgg16", features, num_classes, pretrained, model_dir)
 
 
-def vgg16_bn(input_shape, num_classes, pretrained=False):
+def vgg16_bn(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     features = make_layers(cfg["D"], batch_norm=True)
-    return _vgg("vgg16_bn", features, num_classes, pretrained)
+    return _vgg("vgg16_bn", features, num_classes, pretrained, model_dir)
 
 
-def vgg19(input_shape, num_classes, pretrained=False):
+def vgg19(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     features = make_layers(cfg["E"], batch_norm=False)
-    return _vgg("vgg19", features, num_classes, pretrained)
+    return _vgg("vgg19", features, num_classes, pretrained, model_dir)
 
 
-def vgg19_bn(input_shape, num_classes, pretrained=False):
+def vgg19_bn(input_shape, num_classes, pretrained=False, model_dir="pretrained_models"):
     features = make_layers(cfg["E"], batch_norm=True)
-    return _vgg("vgg19_bn", features, num_classes, pretrained)
+    return _vgg("vgg19_bn", features, num_classes, pretrained, model_dir)
