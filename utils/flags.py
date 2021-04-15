@@ -108,6 +108,21 @@ def train():
         help="load pretrained weights (default: False)",
     )
     train_args.add_argument(
+        "--model-dir",
+        type=str,
+        default="pretrained_models",
+        help="Directory for pretrained models. "
+             "Save pretrained models to use here. "
+             "Downloaded models will be stored here.",
+    )
+    train_args.add_argument(
+        "--loss",
+        type=str,
+        default="ce",
+        choices=["mse", "ce",],
+        help="loss funcion (default: ce)",
+    )
+    train_args.add_argument(
         "--optimizer",
         type=str,
         default="sgd",
@@ -134,6 +149,10 @@ def train():
     )
     train_args.add_argument(
         "--epochs", type=int, default=0, help="number of epochs to train (default: 0)",
+    )
+    train_args.add_argument(
+        "--anneal-steps", type=int, default=1,
+        help="number times to anneal hyperparameters(default: 1)",
     )
     train_args.add_argument(
         "--lr", type=float, default=0.001, help="learning rate (default: 0.001)"

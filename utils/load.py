@@ -2,6 +2,7 @@ import torch
 import numpy as np
 from torchvision import datasets, transforms
 import torch.optim as optim
+import torch.nn.functional as F
 from models import mlp
 from models import tinyimagenet_vgg
 from models import tinyimagenet_resnet
@@ -29,6 +30,27 @@ def device(gpu, tpu=None):
     else:
         use_cuda = torch.cuda.is_available()
         return torch.device(f"cuda:{gpu}" if use_cuda else "cpu")
+
+
+def MSELoss(output, target, reduction='mean'):
+    num_classes = output.size(1)
+    labels = F.one_hot(target, num_classes=num_classes)
+    if reduction is 'mean':
+        return torch.mean((output - labels)**2)
+    elif reduction is 'sum':
+        return torch.sum((output - labels)**2)
+    elif reduction is None:
+        return (output - labels)**2
+    else:
+        raise ValueError(reduction + " is not valid")
+
+
+def loss(name):
+    losses = {
+        "mse": MSELoss,
+        "ce": torch.nn.CrossEntropyLoss()
+    }
+    return losses[name]
 
 
 def dimension(dataset):

@@ -5,7 +5,7 @@ from torch.nn import functional as F
 
 
 def logistic(
-    input_shape, num_classes, pretrained=False,
+    input_shape, num_classes, pretrained=False, model_dir="models",
 ):
     size = np.prod(input_shape)
 
@@ -15,7 +15,12 @@ def logistic(
 
     # Pretrained model
     if pretrained:
-        print("WARNING: this model does not have pretrained weights.")
+        pretrained_path = f"{model_dir}/logistic_mnist{num_classes}.pt"
+        pretrained_dict = torch.load(pretrained_path)
+        pretrained_dict = pretrained_dict["model_state_dict"] # necessary because of our ckpt format
+        model_dict = model.state_dict()
+        model_dict.update(pretrained_dict)
+        model.load_state_dict(model_dict)
 
     return model
 
@@ -41,6 +46,7 @@ def fc(
     if pretrained:
         pretrained_path = f"{model_dir}/fc_mnist{num_classes}.pt"
         pretrained_dict = torch.load(pretrained_path)
+        pretrained_dict = pretrained_dict["model_state_dict"] # necessary because of our ckpt format
         model_dict = model.state_dict()
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
@@ -71,6 +77,7 @@ def fc_bn(
     if pretrained:
         pretrained_path = f"{model_dir}/fc-bn_mnist{num_classes}.pt"
         pretrained_dict = torch.load(pretrained_path)
+        pretrained_dict = pretrained_dict["model_state_dict"] # necessary because of our ckpt format
         model_dict = model.state_dict()
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
@@ -111,6 +118,7 @@ def conv(
     if pretrained:
         pretrained_path = f"{model_dir}/conv_mnist{num_classes}.pt"
         pretrained_dict = torch.load(pretrained_path)
+        pretrained_dict = pretrained_dict["model_state_dict"] # necessary because of our ckpt format
         model_dict = model.state_dict()
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
