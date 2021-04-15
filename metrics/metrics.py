@@ -105,4 +105,5 @@ metric_fns = {
     "network": network,
     "phase": phase,
     "weights_grads": weights_grads,
+    "weights_grads_full": weights_grads_full,
 }
