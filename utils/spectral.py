@@ -24,7 +24,7 @@ def subspace(loss, model, device, data_loader, dim, iters):
     model.train()
     m = sum(p.numel() for p in model.parameters())
     Q = torch.randn((m, dim)).to(device)
-    for i in tqdm(range(iters), , desc='Power iteration', leave=True):
+    for i in tqdm(range(iters), desc='Power iteration', leave=True):
         HV = torch.zeros((m, dim))
         for j in tqdm(range(dim), desc='Eigenvector', leave=True):
             HV[:,j] = Hvp(loss, Q[:,j], model, device, data_loader)
