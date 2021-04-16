@@ -60,7 +60,7 @@ def main():
             # Get the int keys for the names extracted above
             optimizer_keys = [
                 (i, name)
-                for i,name in enumerate(all_param_names)
+                for i,name in zip(checkpoint["optimizer_state_dict"]["state"].keys(), all_param_names)
                 if name in extracted_names
             ]
             for opt_key,name in optimizer_keys:

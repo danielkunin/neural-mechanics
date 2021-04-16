@@ -116,6 +116,12 @@ def train():
              "Downloaded models will be stored here.",
     )
     train_args.add_argument(
+        "--restore-path",
+        type=str,
+        default=None,
+        help="Path to a checkpoint to restore a model from.",
+    )
+    train_args.add_argument(
         "--loss",
         type=str,
         default="ce",
