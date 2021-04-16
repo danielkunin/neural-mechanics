@@ -5,7 +5,7 @@ from tqdm import tqdm
 # Computes Hessian vector product
 def Hvp(loss, v, model, device, data_loader):
     Hv = torch.zeros_like(v)
-    for batch_idx, (data, target) in enumerate(data_loader):
+    for batch_idx, (data, target) in tqdm(enumerate(data_loader), desc='Dataset', leave=True):
         data, target = data.to(device), target.to(device)
         output = model(data)
         L = loss(output, target) * data.size(0) / len(data_loader.dataset)
@@ -24,9 +24,9 @@ def subspace(loss, model, device, data_loader, dim, iters):
     model.train()
     m = sum(p.numel() for p in model.parameters())
     Q = torch.randn((m, dim)).to(device)
-    for i in tqdm(range(iters)):
+    for i in tqdm(range(iters), , desc='Power iteration', leave=True):
         HV = torch.zeros((m, dim))
-        for j in tqdm(range(dim), leave=False):
+        for j in tqdm(range(dim), desc='Eigenvector', leave=True):
             HV[:,j] = Hvp(loss, Q[:,j], model, device, data_loader)
         Q, R = torch.qr(HV)
         Q = Q.to(device)
