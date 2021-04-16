@@ -97,8 +97,8 @@ def weights_grads_full(model, feats_dir, steps, **kwargs):
         all_grads.append(np.array(weights_and_grads[layer]["grad"]))
 
     all_weights_and_grads = {
-        "weights": np.array(all_weights),
-        "grads": np.array(all_grads),
+        "weights": np.concatenate(all_weights, axis=1),
+        "grads": np.concatenate(all_grads, axis=1),
         "steps": steps[1:],
     }
 
