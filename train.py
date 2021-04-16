@@ -78,6 +78,14 @@ def main(ARGS):
         model_dir=ARGS.model_dir,
     ).to(device)
 
+    if ARGS.restore_path is not None:
+        print_fn("Restoring model weights from {}".format(ARGS.restore_path))
+        pretrained_dict = torch.load(ARGS.restore_path)
+        pretrained_dict = pretrained_dict["model_state_dict"]
+        model_dict = model.state_dict()
+        model_dict.update(pretrained_dict)
+        model.load_state_dict(model_dict)
+
     train_kwargs = {
         "batch_size": train_loader.batch_size,
         "dataset_size": len(train_loader.dataset),

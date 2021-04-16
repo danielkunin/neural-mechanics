@@ -254,9 +254,10 @@ def train_eval_loop(
                 tpu=(device.type == "xla"),
             )
         scheduler.step()
-    print_fn(
-        f"Final performance: "
-        f"\tTrain Loss: {train_loss:.4f}"
-        f"\tTest Loss: {test_loss:.4f}"
-        f"\tAccuracy: {accuracy1:.2f}%"
-    )
+    if epochs > 0:
+        print_fn(
+            f"Final performance: "
+            f"\tTrain Loss: {train_loss:.4f}"
+            f"\tTest Loss: {test_loss:.4f}"
+            f"\tAccuracy: {accuracy1:.2f}%"
+        )
