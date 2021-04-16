@@ -29,7 +29,9 @@ def subspace(loss, model, device, data_loader, dim, iters):
         for j in tqdm(range(dim), leave=False):
             HV[:,j] = Hvp(loss, Q[:,j], model, device, data_loader)
         Q, R = torch.qr(HV)
-    return Q.data.numpy(), torch.diag(R).data.numpy()
+        Q = Q.to(device)
+        R = R.to(device)
+    return Q.data.cpu().numpy(), torch.diag(R).data.cpu().numpy()
 
 # Computes complete Hessian matrix
 def hessian(loss, model, device, data_loader):
