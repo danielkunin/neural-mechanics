@@ -34,17 +34,16 @@ def extract_weights_and_grads(step, layers, load_kwargs, weights_and_grads, **kw
         )
 
     for layer in layers:
-        # Ignoring biases for now
         Wl_t = weights[layer][f"step_{step}"]
         bl_t = biases[layer][f"step_{step}"]
         weights_and_grads[layer]["weight"].append(
-            Wl_t.flatten()
+            np.concatenate((Wl_t.flatten(), bl_t.flatten()))
         )
 
         g_Wl_t = weight_buffers[layer][f"step_{step}"]
         g_bl_t = bias_buffers[layer][f"step_{step}"]
         weights_and_grads[layer]["grad"].append(
-            g_Wl_t.flatten()
+            np.concatenate((g_Wl_t.flatten(), g_bl_t.flatten()))
         )
 
 
@@ -77,7 +76,7 @@ def weights_grads_full(model, feats_dir, steps, **kwargs):
     lr = kwargs.get("lr")
     wd = kwargs.get("wd")
 
-    layers = [layer for layer in utils.get_layers(model) if "conv" in layer]
+    layers = [layer for layer in utils.get_layers(model)]# if "conv" in layer]
     load_kwargs = {
         "model": model,
         "feats_dir": feats_dir,
