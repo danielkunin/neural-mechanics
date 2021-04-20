@@ -78,40 +78,6 @@ def train(
     total_loss = 0
     total_samples = 0
     for batch_idx, (data, target) in enumerate(dataloader):
-        if device.type != "xla":
-            data, target = data.to(device), target.to(device)
-        curr_step = epoch * num_batches + batch_idx
-
-        optimizer.zero_grad()
-        output = model(data)
-        train_loss = loss(output, target)
-        total_loss += train_loss.item() * data.size(0)
-        total_samples += data.size(0)
-        train_loss.backward()
-        ####### Step the optimizer
-        ## NOTE: Optimizer step used to be here,
-        ##       moving after checkpoint to save the init
-
-        ###### Logging
-        if verbose and (batch_idx % log_interval == 0):
-            examples_seen = batch_idx * batch_size
-            per_worker_header = ""
-            if device.type == "xla" and verbose >= 2:
-                per_worker_header = (
-                    f"[xla:{xm_ordinal}, "
-                    f"rate: {tracker.rate():.2f}, "
-                    f"global_rate: {tracker.global_rate():.2f}]\t"
-                )
-                examples_seen *= xrt_world_size
-                examples_seen += xm_ordinal * batch_size
-            print_fn(
-                f"{per_worker_header}"
-                f"Train Epoch: {epoch} "
-                f"[{examples_seen}/{dataset_size} "
-                f"({100.0*batch_idx/num_batches:.0f}%)]"
-                f"\tLoss: {train_loss.item():.6f}"
-                f"\tStep: {curr_step}"
-            )
         # TODO: this is just to be able to save at any step (even mid-epoch)
         #       it might make more sense to checkpoint only on epoch: makes
         #       for a cleaner codebase and can include test metrics
@@ -136,13 +102,44 @@ def train(
                     metric_dict=metric_dict,
                     tpu=(device.type == "xla"),
                 )
-        ######### Step the optimizer
+        ###### Batch loading
+        if device.type != "xla":
+            data, target = data.to(device), target.to(device)
+        curr_step = epoch * num_batches + batch_idx
+
+        optimizer.zero_grad()
+        output = model(data)
+        train_loss = loss(output, target)
+        total_loss += train_loss.item() * data.size(0)
+        total_samples += data.size(0)
+        train_loss.backward()
         if device.type == "xla":
             xm.optimizer_step(optimizer)
             tracker.add(batch_size)
         else:
             optimizer.step()
         curr_step += 1
+
+        ###### Logging
+        if verbose and (batch_idx % log_interval == 0):
+            examples_seen = batch_idx * batch_size
+            per_worker_header = ""
+            if device.type == "xla" and verbose >= 2:
+                per_worker_header = (
+                    f"[xla:{xm_ordinal}, "
+                    f"rate: {tracker.rate():.2f}, "
+                    f"global_rate: {tracker.global_rate():.2f}]\t"
+                )
+                examples_seen *= xrt_world_size
+                examples_seen += xm_ordinal * batch_size
+            print_fn(
+                f"{per_worker_header}"
+                f"Train Epoch: {epoch} "
+                f"[{examples_seen}/{dataset_size} "
+                f"({100.0*batch_idx/num_batches:.0f}%)]"
+                f"\tLoss: {train_loss.item():.6f}"
+                f"\tStep: {curr_step}"
+            )
 
     average_loss = 1.0 * total_loss / total_samples
     if device.type == "xla":
