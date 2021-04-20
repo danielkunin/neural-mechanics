@@ -78,6 +78,7 @@ def train(
     total_loss = 0
     total_samples = 0
     for batch_idx, (data, target) in enumerate(dataloader):
+        curr_step = epoch * num_batches + batch_idx
         # TODO: this is just to be able to save at any step (even mid-epoch)
         #       it might make more sense to checkpoint only on epoch: makes
         #       for a cleaner codebase and can include test metrics
@@ -105,7 +106,6 @@ def train(
         ###### Batch loading
         if device.type != "xla":
             data, target = data.to(device), target.to(device)
-        curr_step = epoch * num_batches + batch_idx
 
         optimizer.zero_grad()
         output = model(data)
