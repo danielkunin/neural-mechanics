@@ -88,12 +88,11 @@ def train(
         total_loss += train_loss.item() * data.size(0)
         total_samples += data.size(0)
         train_loss.backward()
-        if device.type == "xla":
-            xm.optimizer_step(optimizer)
-            tracker.add(batch_size)
-        else:
-            optimizer.step()
-        curr_step += 1
+        ####### Step the optimizer
+        ## NOTE: Optimizer step used to be here,
+        ##       moving after checkpoint to save the init
+
+        ###### Logging
         if verbose and (batch_idx % log_interval == 0):
             examples_seen = batch_idx * batch_size
             per_worker_header = ""
@@ -117,10 +116,15 @@ def train(
         #       it might make more sense to checkpoint only on epoch: makes
         #       for a cleaner codebase and can include test metrics
         # TODO: additionally, could integrate tfutils.DBInterface here
+        ######## Checkpointing
         if save and save_path is not None and save_freq is not None:
             if curr_step % save_freq == 0 and epoch >= save_begin_epoch:
                 position, velocity = optimizer.track()
-                metric_dict = {"position": position, "velocity": velocity}
+                metric_dict = {
+                    "position": position,
+                    "velocity": velocity,
+                    "train_loss": train_loss.item()
+                }
                 checkpoint(
                     model,
                     optimizer,
@@ -132,6 +136,14 @@ def train(
                     metric_dict=metric_dict,
                     tpu=(device.type == "xla"),
                 )
+        ######### Step the optimizer
+        if device.type == "xla":
+            xm.optimizer_step(optimizer)
+            tracker.add(batch_size)
+        else:
+            optimizer.step()
+        curr_step += 1
+
     average_loss = 1.0 * total_loss / total_samples
     if device.type == "xla":
         average_loss = xm.mesh_reduce("train_average_loss", average_loss, np.mean)
