@@ -131,15 +131,31 @@ def main(ARGS):
 
     # Final metrics save
     spectral_metrics = {}
+    if ARGS.eigenvector or ARGS.hessian:
+        eigen_data_loader = load.dataloader(
+            dataset=ARGS.dataset,
+            batch_size=ARGS.eigen_batch_size,
+            train=True,
+            workers=ARGS.workers,
+            datadir=ARGS.data_dir,
+            tpu=ARGS.tpu,
+        )
     if ARGS.eigenvector:
         print("Computing Eigenvector")
-        V, Lamb = spectral.subspace(loss, model, device, train_loader, ARGS.eigen_dims, ARGS.power_iters)
+        V, Lamb = spectral.subspace(
+            loss,
+            model,
+            device,
+            eigen_data_loader,
+            ARGS.eigen_dims,
+            ARGS.power_iters
+        )
         spectral_metrics["eigenvector"] = V
         spectral_metrics["eigenvalues"] = Lamb
 
     if ARGS.hessian:
         print("Computing Hessian")
-        H = spectral.hessian(loss, model, device, train_loader)
+        H = spectral.hessian(loss, model, device, eigen_data_loader)
         spectral_metrics["hessian"] = H
     dd.io.save(f"{save_path}/metrics/spectral.h5", spectral_metrics)
 

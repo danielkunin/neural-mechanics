@@ -236,6 +236,12 @@ def train():
         help="Number of top eigenvectors and values to compute",
     )
     train_args.add_argument(
+        "--eigen-batch-size",
+        type=int,
+        default=256,
+        help="Number of top eigenvectors and values to compute",
+    )
+    train_args.add_argument(
         "--power-iters",
         type=int,
         default=5,
