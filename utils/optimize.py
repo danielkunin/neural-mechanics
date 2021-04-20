@@ -79,30 +79,8 @@ def train(
     total_samples = 0
     for batch_idx, (data, target) in enumerate(dataloader):
         curr_step = epoch * num_batches + batch_idx
-        # TODO: this is just to be able to save at any step (even mid-epoch)
-        #       it might make more sense to checkpoint only on epoch: makes
-        #       for a cleaner codebase and can include test metrics
-        # TODO: additionally, could integrate tfutils.DBInterface here
-        ######## Checkpointing
-        if save and save_path is not None and save_freq is not None:
-            if curr_step % save_freq == 0 and epoch >= save_begin_epoch:
-                position, velocity = optimizer.track()
-                metric_dict = {
-                    "position": position,
-                    "velocity": velocity,
-                    "train_loss": train_loss.item()
-                }
-                checkpoint(
-                    model,
-                    optimizer,
-                    scheduler,
-                    epoch,
-                    curr_step,
-                    save_path,
-                    verbose,
-                    metric_dict=metric_dict,
-                    tpu=(device.type == "xla"),
-                )
+        position, velocity = optimizer.track()
+
         ###### Batch loading
         if device.type != "xla":
             data, target = data.to(device), target.to(device)
@@ -140,6 +118,30 @@ def train(
                 f"\tLoss: {train_loss.item():.6f}"
                 f"\tStep: {curr_step}"
             )
+
+        # TODO: this is just to be able to save at any step (even mid-epoch)
+        #       it might make more sense to checkpoint only on epoch: makes
+        #       for a cleaner codebase and can include test metrics
+        # TODO: additionally, could integrate tfutils.DBInterface here
+        ######## Checkpointing
+        if save and save_path is not None and save_freq is not None:
+            if curr_step % save_freq == 0 and epoch >= save_begin_epoch:
+                metric_dict = {
+                    "position": position,
+                    "velocity": velocity,
+                    "train_loss": train_loss.item(),
+                }
+                checkpoint(
+                    model,
+                    optimizer,
+                    scheduler,
+                    epoch,
+                    curr_step,
+                    save_path,
+                    verbose,
+                    metric_dict=metric_dict,
+                    tpu=(device.type == "xla"),
+                )
 
     average_loss = 1.0 * total_loss / total_samples
     if device.type == "xla":
