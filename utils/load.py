@@ -36,7 +36,7 @@ def MSELoss(output, target, reduction='mean'):
     num_classes = output.size(1)
     labels = F.one_hot(target, num_classes=num_classes)
     if reduction is 'mean':
-        return torch.mean(torch.sum((output - labels)**2), dim=1)/2
+        return torch.mean(torch.sum((output - labels)**2, dim=1))/2
     elif reduction is 'sum':
         return torch.sum((output - labels)**2)/2
     elif reduction is None:

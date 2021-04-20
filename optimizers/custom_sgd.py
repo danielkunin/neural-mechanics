@@ -210,8 +210,10 @@ class SGD(Optimizer):
         for group in self.param_groups:
             for p in group["params"]:
                 param_state = self.state[p]
-                buf = param_state["momentum_buffer"]
-
+                if "momentum_buffer" in param_state:
+                    buf = param_state["momentum_buffer"]
+                else:
+                    buf = torch.zeros_like(p)
                 position.append(p.cpu().numpy().flatten())
                 velocity.append(buf.cpu().numpy().flatten())
         return np.concatenate(position), np.concatenate(velocity)
