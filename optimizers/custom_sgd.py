@@ -203,4 +203,17 @@ class SGD(Optimizer):
                 if "grad_norm" in self.save_buffers:
                     self._grad_norm_buffers(time, d_p, buffer_dict)
 
+    @torch.no_grad()
+        def track(self):
+        position = []
+        velocity = []
+        for group in self.param_groups:
+            for p in group["params"]:
+                param_state = self.state[p]
+                buf = param_state["momentum_buffer"]
+
+                position.append(p.cpu().numpy().flatten())
+                velocity.append(buf.cpu().numpy().flatten())
+        return np.concatenate(position), np.concatenate(velocity)
+
         return loss

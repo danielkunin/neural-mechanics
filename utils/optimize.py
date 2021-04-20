@@ -55,6 +55,7 @@ def train(
     verbose,
     save,
     save_freq,
+    save_begin_epoch,
     save_path,
     log_interval=10,
     **kwargs,
@@ -117,7 +118,9 @@ def train(
         #       for a cleaner codebase and can include test metrics
         # TODO: additionally, could integrate tfutils.DBInterface here
         if save and save_path is not None and save_freq is not None:
-            if curr_step % save_freq == 0:
+            if curr_step % save_freq == 0 and epoch >= save_begin_epoch:
+                position, velocity = optimizer.track()
+                metric_dict = {"position": position, "velocity": velocity}
                 checkpoint(
                     model,
                     optimizer,
@@ -126,6 +129,7 @@ def train(
                     curr_step,
                     save_path,
                     verbose,
+                    metric_dict=metric_dict,
                     tpu=(device.type == "xla"),
                 )
     average_loss = 1.0 * total_loss / total_samples
@@ -184,6 +188,7 @@ def train_eval_loop(
     verbose,
     save,
     save_freq=None,
+    save_begin_epoch=0,
     save_path=None,
     epoch_offset=0,
     **kwargs,
@@ -228,6 +233,7 @@ def train_eval_loop(
             verbose,
             save,
             save_freq=save_freq,
+            save_begin_epoch=save_begin_epoch,
             save_path=save_path,
             **kwargs,
         )

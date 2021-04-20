@@ -124,6 +124,7 @@ def main(ARGS):
         ARGS.verbose,
         ARGS.save,
         save_freq=ARGS.save_freq,
+        save_begin_epoch=ARGS.save_begin_epoch,
         save_path=save_path,
         **train_kwargs,
     )

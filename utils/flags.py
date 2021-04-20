@@ -216,6 +216,12 @@ def train():
         default=None,
         help="Frequency (in batches) to save model checkpoints at",
     )
+    train_args.add_argument(
+        "--save-begin-epoch",
+        type=int,
+        default=0,
+        help="Epoch at which to begin saving every save-freq steps",
+    )
     # Hessian metrics
     train_args.add_argument(
         "--eigenvector",
