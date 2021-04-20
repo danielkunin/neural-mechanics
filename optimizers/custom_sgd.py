@@ -204,7 +204,7 @@ class SGD(Optimizer):
                     self._grad_norm_buffers(time, d_p, buffer_dict)
 
     @torch.no_grad()
-        def track(self):
+    def track(self):
         position = []
         velocity = []
         for group in self.param_groups:
