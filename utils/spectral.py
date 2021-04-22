@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 from tqdm import tqdm
+from scipy.sparse.linalg import LinearOperator, eigsh
 
 # Computes Hessian vector product
 def Hvp(loss, v, model, device, data_loader):
@@ -19,7 +20,7 @@ def Hvp(loss, v, model, device, data_loader):
         Hv = xm.mesh_reduce("Hv", Hv, np.sum)
     return Hv
 
-# Computes top eigensubspace of Hessian via power series
+# Computes top eigensubspace of Hessian via power iteration
 def subspace(loss, model, device, data_loader, dim, iters):
     model.train()
     m = sum(p.numel() for p in model.parameters())
@@ -43,3 +44,31 @@ def hessian(loss, model, device, data_loader):
         v[i] = 1.0
         H[i] = Hvp(loss, v, model, device, data_loader)
     return H.data.numpy()
+
+# The following is based on: https://github.com/locuslab/edge-of-stability/blob/bec8069239d23d55bdb7f87456a844b5d8f24445/src/utilities.py
+# It has been modified to compute top and bottom evals
+def lanczos(matrix_vector, dim: int, neigs: int):
+    """ Invoke the Lanczos algorithm to compute the leading eigenvalues and eigenvectors of a matrix / linear operator
+    (which we can access via matrix-vector products). """
+
+    def mv(vec: np.ndarray):
+        gpu_vec = torch.tensor(vec, dtype=torch.float).cuda()
+        return matrix_vector(gpu_vec)
+
+    operator = LinearOperator((dim, dim), matvec=mv)
+    # Possible values for which: LM | SM | LA | SA | BE
+    # Also note fro docs: . If small eigenvalues are desired,
+    # consider using shift-invert mode for better performance.
+    evals, evecs = eigsh(operator, neigs, which="BE")
+    return torch.from_numpy(np.ascontiguousarray(evals[::-1]).copy()).float(), \
+           torch.from_numpy(np.ascontiguousarray(np.flip(evecs, -1)).copy()).float()
+
+
+def get_hessian_eigenvalues(loss, model, device, data_loader, neigs=6):
+    """ Compute the leading Hessian eigenvalues. """
+    hvp_delta = lambda delta: Hvp(loss, delta, model,
+                                  device, data_loader).detach().cpu()
+    nparams = sum(p.numel() for p in model.parameters())
+    evals, evecs = lanczos(hvp_delta, nparams, neigs=neigs)
+    return evals
+
