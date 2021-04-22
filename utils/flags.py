@@ -230,6 +230,12 @@ def train():
         help="Save Hessian eigenvectors (default: False)",
     )
     train_args.add_argument(
+        "--lanczos",
+        type=bool,
+        default=False,
+        help="Compute Hessian eigenvectors using Lanczos (default: False)",
+    )
+    train_args.add_argument(
         "--eigen-dims",
         type=int,
         default=1,

@@ -70,5 +70,5 @@ def get_hessian_eigenvalues(loss, model, device, data_loader, neigs=6):
                                   device, data_loader).detach().cpu()
     nparams = sum(p.numel() for p in model.parameters())
     evals, evecs = lanczos(hvp_delta, nparams, neigs=neigs)
-    return evals
+    return evals, evecs
 
