@@ -162,8 +162,8 @@ def main(ARGS):
             eigen_data_loader,
             ARGS.eigen_dims,
         )
-        spectral_metrics["eigenvector"] = V
-        spectral_metrics["eigenvalues"] = Lamb
+        spectral_metrics["eigenvector"] = V.cpu().numpy()
+        spectral_metrics["eigenvalues"] = Lamb.cpu().numpy()
 
     if ARGS.hessian:
         print("Computing Hessian")
