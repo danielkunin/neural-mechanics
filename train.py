@@ -139,6 +139,7 @@ def main(ARGS):
             workers=ARGS.workers,
             datadir=ARGS.data_dir,
             tpu=ARGS.tpu,
+            length=ARGS.eigen_data_length,
         )
     if ARGS.eigenvector:
         print("Computing Eigenvector")

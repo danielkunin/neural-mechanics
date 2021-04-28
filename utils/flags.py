@@ -248,6 +248,13 @@ def train():
         help="Number of top eigenvectors and values to compute",
     )
     train_args.add_argument(
+        "--eigen-data-length",
+        type=int,
+        default=None,
+        help="Number of examples to use to compute the Hessian-vector products."
+             "Must be between 1 and the size of the dataset",
+    )
+    train_args.add_argument(
         "--power-iters",
         type=int,
         default=5,
