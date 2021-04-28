@@ -218,7 +218,7 @@ def train():
     )
     train_args.add_argument(
         "--save-begin-epoch",
-        type=int,
+        type=float,
         default=0,
         help="Epoch at which to begin saving every save-freq steps",
     )

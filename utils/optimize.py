@@ -125,7 +125,7 @@ def train(
         # TODO: additionally, could integrate tfutils.DBInterface here
         ######## Checkpointing
         if save and save_path is not None and save_freq is not None:
-            if curr_step % save_freq == 0 and epoch >= save_begin_epoch:
+            if curr_step % save_freq == 0 and (epoch + batch_idx/num_batches) >= save_begin_epoch:
                 metric_dict = {
                     "position": position,
                     "velocity": velocity,
