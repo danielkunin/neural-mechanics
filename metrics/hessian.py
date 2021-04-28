@@ -5,8 +5,8 @@ import deepdish as dd
 
 def load_weight_and_grad(step, feats_dir):
     load_path = f"{feats_dir}/step{step}.h5"
-    weights = dd.io.load(load_path, f"/position")
-    grads = dd.io.load(load_path, f"/velocity")
+    weight = dd.io.load(load_path, f"/position")
+    grad = dd.io.load(load_path, f"/velocity")
     return weight, grad
 
 
@@ -26,8 +26,8 @@ def hessian_eigenprojection(model, feats_dir, steps, **kwargs):
     steps = np.unique(steps)
     steps.sort()
 
-    projected_weights = np.zeros((len(steps), eigenvectors.shape[0]))
-    projected_grads = np.zeros((len(steps), eigenvectors.shape[0]))
+    projected_weights = np.zeros((len(steps), eigenvalues.shape[0]))
+    projected_grads = np.zeros((len(steps), eigenvalues.shape[0]))
 
     for i in tqdm(range(0, len(steps))):
         step = steps[i]
